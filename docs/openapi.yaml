@@ -1,0 +1,1201 @@
+openapi: 3.1.0
+info:
+  title: AutWit Copilot API
+  version: 0.1.0
+  description: |
+    Session store and orchestration front-end for the AutWit manual-QA copilot.
+
+    Design invariants:
+      - This service is the ONLY writer to the autwit Postgres schema.
+      - Every operation that calls the orchestrator or takes >1s is a "run".
+      - Runs are submit-only: POST returns 202 with a run_id. Never block.
+      - Truth is always GET /sessions/{id}. SSE is a hint, not a guarantee.
+      - The orchestrator returns everything inline (no pre-signed URIs yet).
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local
+  - url: https://autwit-copilot.internal/api/v1
+    description: Internal
+
+tags:
+  - name: sessions
+  - name: runs
+  - name: timeline
+  - name: artifacts
+  - name: analysis
+  - name: skills
+  - name: stream
+
+paths:
+
+  # ---------------------------------------------------------------- sessions
+
+  /sessions:
+    post:
+      tags: [sessions]
+      summary: Start a test session
+      operationId: createSession
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateSessionRequest' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Session' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+
+    get:
+      tags: [sessions]
+      summary: List sessions
+      operationId: listSessions
+      parameters:
+        - name: status
+          in: query
+          schema: { $ref: '#/components/schemas/SessionStatus' }
+        - name: tester_id
+          in: query
+          schema: { type: string }
+        - name: env
+          in: query
+          schema: { type: string }
+        - $ref: '#/components/parameters/Limit'
+        - $ref: '#/components/parameters/Cursor'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SessionPage' }
+
+  /sessions/{sessionId}:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+    get:
+      tags: [sessions, timeline]
+      summary: Get session with full timeline
+      description: |
+        THE source of truth. The UI hydrates from this on load and refetches
+        after any run.succeeded / run.failed notification.
+      operationId: getSession
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SessionDetail' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+    patch:
+      tags: [sessions]
+      summary: Update session metadata (title, tags, subjects, retention)
+      operationId: updateSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/UpdateSessionRequest' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Session' }
+
+  /sessions/{sessionId}/end:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+    post:
+      tags: [sessions, runs]
+      summary: End session and render report
+      description: |
+        Enqueues a report-render run. Session status flips to 'ended' immediately;
+        the report artifact appears when the run completes.
+      operationId: endSession
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/EndSessionRequest' }
+      responses:
+        '202':
+          $ref: '#/components/responses/RunAccepted'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  /sessions/{sessionId}/report:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+      - name: format
+        in: query
+        schema: { type: string, enum: [html, md], default: html }
+    get:
+      tags: [sessions]
+      summary: Download the final report
+      operationId: getReport
+      responses:
+        '200':
+          description: OK
+          content:
+            text/html: { schema: { type: string } }
+            text/markdown: { schema: { type: string } }
+        '404':
+          description: Not generated yet
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  # ---------------------------------------------------------------- runs (submit-only)
+
+  /sessions/{sessionId}/messages:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+    post:
+      tags: [runs]
+      summary: Send a user utterance; enqueue an orchestrator run
+      description: |
+        Persists a step(kind=user_utterance) and enqueues a run. Returns
+        immediately. The step_id is known before the work executes, so the UI
+        can render an optimistic pending card.
+      operationId: postMessage
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PostMessageRequest' }
+      responses:
+        '202': { $ref: '#/components/responses/RunAccepted' }
+        '409': { $ref: '#/components/responses/Conflict' }
+
+  /sessions/{sessionId}/skills/{skillName}:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+      - name: skillName
+        in: path
+        required: true
+        schema: { type: string }
+    post:
+      tags: [runs, skills]
+      summary: Invoke a skill directly (from the ⌘K palette)
+      description: |
+        Bypasses LLM skill-selection but still goes through the same run
+        pipeline. One execution path.
+      operationId: invokeSkill
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/InvokeSkillRequest' }
+      responses:
+        '202': { $ref: '#/components/responses/RunAccepted' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+
+  /sessions/{sessionId}/milestones:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+    post:
+      tags: [runs, timeline]
+      summary: Mark a milestone (captures snapshot + event cursor)
+      description: |
+        Enqueues a run. The milestone row is created immediately in 'pending'
+        state; snapshot capture happens in the worker.
+      operationId: markMilestone
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/MarkMilestoneRequest' }
+      responses:
+        '202': { $ref: '#/components/responses/RunAccepted' }
+        '409':
+          description: Milestone name already used in this session
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /sessions/{sessionId}/comparisons:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+    post:
+      tags: [runs, analysis]
+      summary: Compare two snapshots
+      description: |
+        Also a run, even though the diff is local and fast. Uniformity beats
+        saving 200ms.
+      operationId: createComparison
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateComparisonRequest' }
+      responses:
+        '202': { $ref: '#/components/responses/RunAccepted' }
+
+  /runs/{runId}:
+    parameters:
+      - name: runId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [runs]
+      summary: Get run status
+      operationId: getRun
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Run' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /runs/{runId}/cancel:
+    parameters:
+      - name: runId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    post:
+      tags: [runs]
+      summary: Request cancellation
+      description: |
+        Cooperative. A queued run is cancelled immediately. A running run is
+        flagged; the worker checks between orchestrator calls. Not guaranteed.
+      operationId: cancelRun
+      responses:
+        '202':
+          description: Cancellation requested
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Run' }
+        '409':
+          description: Already terminal
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /sessions/{sessionId}/runs:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+      - name: status
+        in: query
+        schema: { $ref: '#/components/schemas/RunStatus' }
+      - name: active
+        in: query
+        description: Shorthand for status in (queued, running)
+        schema: { type: boolean }
+    get:
+      tags: [runs]
+      summary: List runs for a session (poll fallback when SSE is unavailable)
+      operationId: listRuns
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [runs]
+                properties:
+                  runs:
+                    type: array
+                    items: { $ref: '#/components/schemas/Run' }
+
+  # ---------------------------------------------------------------- timeline reads
+
+  /sessions/{sessionId}/steps:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+      - name: since_seq
+        in: query
+        schema: { type: integer }
+    get:
+      tags: [timeline]
+      summary: List steps
+      operationId: listSteps
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [steps]
+                properties:
+                  steps:
+                    type: array
+                    items: { $ref: '#/components/schemas/Step' }
+
+  /sessions/{sessionId}/snapshots:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+    get:
+      tags: [timeline]
+      summary: List snapshots with their parts
+      operationId: listSnapshots
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [snapshots]
+                properties:
+                  snapshots:
+                    type: array
+                    items: { $ref: '#/components/schemas/Snapshot' }
+
+  /sessions/{sessionId}/artifacts:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+      - name: artifact_type
+        in: query
+        schema: { $ref: '#/components/schemas/ArtifactType' }
+      - name: milestone_id
+        in: query
+        schema: { type: string, format: uuid }
+      - name: logical_name
+        in: query
+        schema: { type: string }
+    get:
+      tags: [artifacts]
+      summary: List artifact metadata (never bodies)
+      operationId: listArtifacts
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [artifacts]
+                properties:
+                  artifacts:
+                    type: array
+                    items: { $ref: '#/components/schemas/ArtifactRef' }
+
+  /artifacts/{artifactId}:
+    parameters:
+      - name: artifactId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [artifacts]
+      summary: Get artifact metadata + body
+      operationId: getArtifact
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Artifact' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '410':
+          description: Body purged by retention policy; metadata still available
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+
+  /artifacts/{artifactId}/raw:
+    parameters:
+      - name: artifactId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [artifacts]
+      summary: Download raw artifact body with its native content type
+      operationId: getArtifactRaw
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json: { schema: {} }
+            application/xml: { schema: { type: string } }
+            text/plain: { schema: { type: string } }
+            text/csv: { schema: { type: string } }
+            text/html: { schema: { type: string } }
+            application/octet-stream:
+              schema: { type: string, format: binary }
+
+  # ---------------------------------------------------------------- analysis
+
+  /sessions/{sessionId}/comparisons/list:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+    get:
+      tags: [analysis]
+      summary: List comparisons
+      operationId: listComparisons
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [comparisons]
+                properties:
+                  comparisons:
+                    type: array
+                    items: { $ref: '#/components/schemas/Comparison' }
+
+  /comparisons/{comparisonId}:
+    parameters:
+      - name: comparisonId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [analysis]
+      summary: Get comparison with findings
+      operationId: getComparison
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ComparisonDetail' }
+
+  /sessions/{sessionId}/findings:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+      - name: severity
+        in: query
+        schema: { $ref: '#/components/schemas/Severity' }
+      - name: category
+        in: query
+        schema: { type: string }
+    get:
+      tags: [analysis]
+      summary: Live findings feed
+      operationId: listFindings
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [findings]
+                properties:
+                  findings:
+                    type: array
+                    items: { $ref: '#/components/schemas/Finding' }
+
+  /sessions/{sessionId}/events:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+      - name: after_milestone_id
+        in: query
+        schema: { type: string, format: uuid }
+      - name: event_type
+        in: query
+        schema: { type: string }
+      - $ref: '#/components/parameters/Limit'
+      - $ref: '#/components/parameters/Cursor'
+    get:
+      tags: [analysis]
+      summary: List captured events
+      operationId: listEvents
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/EventPage' }
+
+  # ---------------------------------------------------------------- skills
+
+  /skills:
+    get:
+      tags: [skills]
+      summary: Skill catalog (cached projection of the orchestrator's registry)
+      description: |
+        Powers the ⌘K palette. Refreshed by polling the orchestrator's
+        GET /skills. Read-only: skills are defined in the orchestrator's repo,
+        never edited here.
+      operationId: listSkills
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [skills, catalog_version]
+                properties:
+                  catalog_version: { type: string }
+                  synced_at: { type: string, format: date-time }
+                  skills:
+                    type: array
+                    items: { $ref: '#/components/schemas/Skill' }
+
+  # ---------------------------------------------------------------- stream
+
+  /sessions/{sessionId}/stream:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+    get:
+      tags: [stream]
+      summary: SSE notification channel (thin hints only)
+      description: |
+        Fire-and-forget notifications sourced from Postgres LISTEN/NOTIFY.
+        Carries no payload the UI depends on — on any event the UI refetches
+        GET /sessions/{id}. If the connection drops, the UI falls back to
+        polling GET /sessions/{id}/runs?active=true.
+
+        Event types: run.queued, run.started, run.progress, run.succeeded,
+        run.failed, run.timed_out, run.cancelled, finding.raised,
+        analysis.note, session.ended
+      operationId: streamSession
+      responses:
+        '200':
+          description: text/event-stream
+          content:
+            text/event-stream:
+              schema: { type: string }
+
+components:
+
+  parameters:
+    SessionId:
+      name: sessionId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: false
+      description: |
+        Scoped to the session. Replaying a key returns the original run.
+        Send on every POST. Double-clicking "Fulfil order" must not place
+        two orders.
+      schema: { type: string, maxLength: 200 }
+    Limit:
+      name: limit
+      in: query
+      schema: { type: integer, default: 50, maximum: 200 }
+    Cursor:
+      name: cursor
+      in: query
+      schema: { type: string }
+
+  responses:
+    RunAccepted:
+      description: Accepted; work enqueued
+      headers:
+        Location:
+          schema: { type: string }
+          description: URL of the created run
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/RunAccepted' }
+    BadRequest:
+      description: Invalid request
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    NotFound:
+      description: Not found
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+    Conflict:
+      description: Conflicting state
+      content:
+        application/problem+json:
+          schema: { $ref: '#/components/schemas/Problem' }
+
+  schemas:
+
+    # ---- errors (RFC 7807)
+
+    Problem:
+      type: object
+      required: [type, title, status]
+      properties:
+        type: { type: string, default: about:blank }
+        title: { type: string }
+        status: { type: integer }
+        detail: { type: string }
+        instance: { type: string }
+        code:
+          type: string
+          description: Machine-readable code, e.g. session_ended, milestone_exists
+        errors:
+          type: array
+          items:
+            type: object
+            properties:
+              field: { type: string }
+              message: { type: string }
+
+    # ---- enums
+
+    SessionStatus:
+      type: string
+      enum: [active, ended, abandoned, archived]
+    RetentionClass:
+      type: string
+      enum: [ephemeral, standard, pinned]
+    StepKind:
+      type: string
+      enum: [user_utterance, skill_invocation, milestone, analysis, system]
+    StepStatus:
+      type: string
+      enum: [pending, running, succeeded, failed, skipped]
+    RunStatus:
+      type: string
+      enum: [queued, running, succeeded, failed, cancelled, timed_out]
+    ArtifactType:
+      type: string
+      enum:
+        - rdbms_table
+        - dynamo_doc
+        - event_batch
+        - api_response
+        - xml_payload
+        - log
+        - diff_report
+        - analysis
+        - final_report
+        - other
+    ArtifactFormat:
+      type: string
+      enum: [json, jsonb, xml, text, csv, html, md, binary]
+    Severity:
+      type: string
+      enum: [info, low, medium, high, critical]
+    Verdict:
+      type: string
+      enum: [pass, fail, warn, inconclusive]
+    SideEffects:
+      type: string
+      enum: [none, mutating]
+
+    # ---- session
+
+    CreateSessionRequest:
+      type: object
+      required: [tester_id, env]
+      properties:
+        tester_id: { type: string }
+        env: { type: string, examples: [qa2, stage] }
+        title: { type: string }
+        tags:
+          type: object
+          additionalProperties: true
+        subjects:
+          $ref: '#/components/schemas/Subjects'
+        retention_class:
+          $ref: '#/components/schemas/RetentionClass'
+        ttl_days: { type: integer, default: 7 }
+
+    UpdateSessionRequest:
+      type: object
+      properties:
+        title: { type: string }
+        tags: { type: object, additionalProperties: true }
+        subjects: { $ref: '#/components/schemas/Subjects' }
+        retention_class: { $ref: '#/components/schemas/RetentionClass' }
+
+    EndSessionRequest:
+      type: object
+      properties:
+        format:
+          type: string
+          enum: [html, md, both]
+          default: html
+        notes: { type: string }
+
+    Subjects:
+      type: object
+      description: |
+        Business identifiers under test. Indexed (GIN) so sessions can be found
+        by order_id later.
+      additionalProperties: { type: string }
+      examples:
+        - order_id: "XXXX"
+          member_id: "M-1234"
+
+    Session:
+      type: object
+      required: [session_id, correlation_id, tester_id, env, status, started_at]
+      properties:
+        session_id: { type: string, format: uuid }
+        correlation_id:
+          type: string
+          description: Propagated downstream as X-Autwit-Correlation-Id
+        tester_id: { type: string }
+        env: { type: string }
+        title: { type: string }
+        status: { $ref: '#/components/schemas/SessionStatus' }
+        retention_class: { $ref: '#/components/schemas/RetentionClass' }
+        started_at: { type: string, format: date-time }
+        ended_at: { type: string, format: date-time }
+        expires_at: { type: string, format: date-time }
+        tags: { type: object, additionalProperties: true }
+        subjects: { $ref: '#/components/schemas/Subjects' }
+
+    SessionDetail:
+      allOf:
+        - $ref: '#/components/schemas/Session'
+        - type: object
+          required: [steps, milestones, snapshots, findings, active_runs]
+          properties:
+            steps:
+              type: array
+              items: { $ref: '#/components/schemas/Step' }
+            milestones:
+              type: array
+              items: { $ref: '#/components/schemas/Milestone' }
+            snapshots:
+              type: array
+              items: { $ref: '#/components/schemas/Snapshot' }
+            comparisons:
+              type: array
+              items: { $ref: '#/components/schemas/Comparison' }
+            findings:
+              type: array
+              items: { $ref: '#/components/schemas/Finding' }
+            active_runs:
+              type: array
+              items: { $ref: '#/components/schemas/Run' }
+            counts:
+              type: object
+              properties:
+                artifacts: { type: integer }
+                events: { type: integer }
+                findings_by_severity:
+                  type: object
+                  additionalProperties: { type: integer }
+
+    SessionPage:
+      type: object
+      required: [sessions]
+      properties:
+        sessions:
+          type: array
+          items: { $ref: '#/components/schemas/Session' }
+        next_cursor: { type: string }
+
+    # ---- step
+
+    Step:
+      type: object
+      required: [step_id, session_id, seq, kind, actor, status, started_at]
+      properties:
+        step_id: { type: string, format: uuid }
+        session_id: { type: string, format: uuid }
+        seq: { type: integer }
+        kind: { $ref: '#/components/schemas/StepKind' }
+        label: { type: string }
+        actor: { type: string, enum: [user, agent, system] }
+        status: { $ref: '#/components/schemas/StepStatus' }
+        started_at: { type: string, format: date-time }
+        ended_at: { type: string, format: date-time }
+        parent_step_id: { type: string, format: uuid }
+        detail:
+          type: object
+          additionalProperties: true
+          description: Kind-specific payload (utterance text, skill args, note body)
+        run_id: { type: string, format: uuid }
+        invocations:
+          type: array
+          items: { $ref: '#/components/schemas/SkillInvocation' }
+        artifact_refs:
+          type: array
+          items: { $ref: '#/components/schemas/ArtifactRef' }
+
+    SkillInvocation:
+      type: object
+      required: [invocation_id, skill_name, skill_version, status]
+      properties:
+        invocation_id: { type: string, format: uuid }
+        step_id: { type: string, format: uuid }
+        skill_name: { type: string }
+        skill_version: { type: string }
+        input: { type: object, additionalProperties: true }
+        output_inline: { type: object, additionalProperties: true }
+        output_ref: { type: string, format: uuid }
+        status: { $ref: '#/components/schemas/StepStatus' }
+        error: { $ref: '#/components/schemas/Problem' }
+        exit_code: { type: integer }
+        duration_ms: { type: integer }
+        started_at: { type: string, format: date-time }
+
+    # ---- runs
+
+    PostMessageRequest:
+      type: object
+      required: [message]
+      properties:
+        message: { type: string }
+        subjects:
+          $ref: '#/components/schemas/Subjects'
+          description: Merged into session.subjects — e.g. user says "I created order XXXX"
+        skill_hint:
+          type: string
+          description: Optional nudge for the orchestrator's skill selection
+
+    InvokeSkillRequest:
+      type: object
+      required: [input]
+      properties:
+        input:
+          type: object
+          additionalProperties: true
+          description: Must validate against the skill's input_schema
+        label: { type: string }
+        confirm:
+          type: boolean
+          default: false
+          description: Required true for skills with side_effects=mutating
+
+    MarkMilestoneRequest:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+          examples: [order_created, ready_for_member, fulfilled]
+        scopes:
+          type: array
+          items: { type: string }
+          default: [order_flow]
+          description: Snapshot scopes to capture at this milestone
+        capture_events:
+          type: boolean
+          default: true
+        note: { type: string }
+
+    CreateComparisonRequest:
+      type: object
+      required: [from_snapshot_id, to_snapshot_id, compare_type]
+      properties:
+        from_snapshot_id: { type: string, format: uuid }
+        to_snapshot_id: { type: string, format: uuid }
+        compare_type:
+          type: string
+          enum: [structural, financial_validation, consistency]
+        rules:
+          type: object
+          additionalProperties: true
+          description: |
+            Ignore rules and validation config. Overrides scope defaults.
+            e.g. {"ignore_columns":["updated_at"],"tolerance":{"amount":0.01}}
+
+    RunAccepted:
+      type: object
+      required: [run_id, step_id, status]
+      properties:
+        run_id: { type: string, format: uuid }
+        step_id:
+          type: string
+          format: uuid
+          description: Known before execution — render an optimistic pending card
+        status: { $ref: '#/components/schemas/RunStatus' }
+        queued_at: { type: string, format: date-time }
+        milestone_id: { type: string, format: uuid }
+        comparison_id: { type: string, format: uuid }
+
+    Run:
+      type: object
+      required: [run_id, session_id, step_id, status, queued_at]
+      properties:
+        run_id: { type: string, format: uuid }
+        session_id: { type: string, format: uuid }
+        step_id: { type: string, format: uuid }
+        status: { $ref: '#/components/schemas/RunStatus' }
+        request: { type: object, additionalProperties: true }
+        progress:
+          type: object
+          description: Coarse, optional. e.g. {"message":"capturing shipment tables (7/9)"}
+          properties:
+            message: { type: string }
+            current: { type: integer }
+            total: { type: integer }
+        result_summary: { type: object, additionalProperties: true }
+        error: { $ref: '#/components/schemas/Problem' }
+        attempts: { type: integer }
+        cancel_requested: { type: boolean }
+        idempotency_key: { type: string }
+        queued_at: { type: string, format: date-time }
+        started_at: { type: string, format: date-time }
+        ended_at: { type: string, format: date-time }
+        elapsed_ms:
+          type: integer
+          description: Server-computed. UI shows elapsed time, never a fake progress bar.
+
+    # ---- artifacts
+
+    ArtifactRef:
+      type: object
+      required: [artifact_id, artifact_type, logical_name, format, size_bytes]
+      properties:
+        artifact_id: { type: string, format: uuid }
+        artifact_type: { $ref: '#/components/schemas/ArtifactType' }
+        source_system: { type: string, examples: [oms_pg, shipment_pg, "dynamo:orders_doc", kafka] }
+        logical_name: { type: string, examples: [orders, order_items, shipment_legs] }
+        format: { $ref: '#/components/schemas/ArtifactFormat' }
+        size_bytes: { type: integer, format: int64 }
+        row_count: { type: integer }
+        content_hash: { type: string }
+        captured_at: { type: string, format: date-time }
+        milestone_id: { type: string, format: uuid }
+        step_id: { type: string, format: uuid }
+        body_available:
+          type: boolean
+          description: False once purged by retention
+        meta:
+          type: object
+          additionalProperties: true
+          description: pk columns, source query, masked columns, ignore rules
+
+    Artifact:
+      allOf:
+        - $ref: '#/components/schemas/ArtifactRef'
+        - type: object
+          properties:
+            body:
+              description: |
+                Shape follows `format`: parsed JSON for json/jsonb, string for
+                xml/text/csv/html/md, base64 for binary. Null if purged.
+              oneOf:
+                - type: object
+                - type: array
+                - type: string
+                - type: 'null'
+
+    # ---- milestones
+
+    Milestone:
+      type: object
+      required: [milestone_id, session_id, name, seq, status, marked_at]
+      properties:
+        milestone_id: { type: string, format: uuid }
+        session_id: { type: string, format: uuid }
+        step_id: { type: string, format: uuid }
+        name:
+          type: string
+          examples: [order_created, ready_for_member, fulfilled]
+        seq: { type: integer }
+        status:
+          type: string
+          enum: [pending, complete, partial, failed]
+          description: |
+            'pending' between the 202 and the worker finishing capture.
+            'partial' when the orchestrator returned only some snapshot parts.
+        marked_at: { type: string, format: date-time }
+        snapshot_id: { type: string, format: uuid }
+        event_cursor:
+          type: object
+          additionalProperties: true
+          description: |
+            Per-topic offsets, e.g. {"orders.events":{"0":10432}}. Analysis reads
+            offset windows, not time windows — time windows are lossy under load.
+          examples:
+            - orders.events: { "0": 10432 }
+        note: { type: string }
+
+    # ---- snapshots
+
+    Snapshot:
+      type: object
+      required: [snapshot_id, session_id, label, scope, captured_at, status]
+      properties:
+        snapshot_id: { type: string, format: uuid }
+        session_id: { type: string, format: uuid }
+        milestone_id: { type: string, format: uuid }
+        label: { type: string, examples: [after_order_created] }
+        scope: { type: string, examples: [order_flow] }
+        scope_def:
+          type: object
+          additionalProperties: true
+          description: The resolved selectors actually executed
+        status: { type: string, enum: [pending, complete, partial, failed] }
+        captured_at: { type: string, format: date-time }
+        composite_hash: { type: string }
+        parts:
+          type: array
+          items: { $ref: '#/components/schemas/SnapshotPart' }
+
+    SnapshotPart:
+      type: object
+      required: [part_key, artifact_id]
+      properties:
+        part_key:
+          type: string
+          description: Stable across snapshots — makes comparison a key-wise join
+          examples: ["oms.orders", "shipment.legs", "dynamo.order_doc"]
+        artifact_id: { type: string, format: uuid }
+        row_count: { type: integer }
+        content_hash: { type: string }
+
+    # ---- analysis
+
+    Comparison:
+      type: object
+      required: [comparison_id, session_id, from_snapshot_id, to_snapshot_id, compare_type]
+      properties:
+        comparison_id: { type: string, format: uuid }
+        session_id: { type: string, format: uuid }
+        step_id: { type: string, format: uuid }
+        from_snapshot_id: { type: string, format: uuid }
+        to_snapshot_id: { type: string, format: uuid }
+        compare_type: { type: string, enum: [structural, financial_validation, consistency] }
+        rules: { type: object, additionalProperties: true }
+        verdict: { $ref: '#/components/schemas/Verdict' }
+        summary: { type: string }
+        report_ref: { type: string, format: uuid }
+        created_at: { type: string, format: date-time }
+        finding_counts:
+          type: object
+          additionalProperties: { type: integer }
+
+    ComparisonDetail:
+      allOf:
+        - $ref: '#/components/schemas/Comparison'
+        - type: object
+          properties:
+            findings:
+              type: array
+              items: { $ref: '#/components/schemas/Finding' }
+            part_results:
+              type: array
+              items:
+                type: object
+                properties:
+                  part_key: { type: string }
+                  rows_added: { type: integer }
+                  rows_removed: { type: integer }
+                  rows_modified: { type: integer }
+                  rows_unchanged: { type: integer }
+                  ignored_columns:
+                    type: array
+                    items: { type: string }
+                    description: |
+                      Surfaced deliberately. If updated_at diffs are hidden
+                      silently, nobody trusts the report.
+
+    Finding:
+      type: object
+      required: [finding_id, session_id, severity, message, created_at]
+      properties:
+        finding_id: { type: string, format: uuid }
+        session_id: { type: string, format: uuid }
+        comparison_id: { type: string, format: uuid }
+        step_id: { type: string, format: uuid }
+        severity: { $ref: '#/components/schemas/Severity' }
+        category: { type: string, examples: [financial, consistency, missing_event] }
+        part_key: { type: string }
+        entity_key: { type: string }
+        field: { type: string }
+        before_value: {}
+        after_value: {}
+        message: { type: string }
+        created_at: { type: string, format: date-time }
+
+    # ---- events
+
+    EventRecord:
+      type: object
+      required: [event_id, session_id, source, payload, captured_at]
+      properties:
+        event_id: { type: string, format: uuid }
+        session_id: { type: string, format: uuid }
+        artifact_id: { type: string, format: uuid }
+        source: { type: string }
+        topic: { type: string }
+        event_type: { type: string }
+        event_key: { type: string }
+        source_offset: { type: string }
+        occurred_at: { type: string, format: date-time }
+        captured_at: { type: string, format: date-time }
+        after_milestone_id: { type: string, format: uuid }
+        payload: { type: object, additionalProperties: true }
+
+    EventPage:
+      type: object
+      required: [events]
+      properties:
+        events:
+          type: array
+          items: { $ref: '#/components/schemas/EventRecord' }
+        next_cursor: { type: string }
+
+    # ---- skills
+
+    Skill:
+      type: object
+      required: [skill_name, version, impl_type, side_effects, input_schema]
+      properties:
+        skill_name: { type: string, examples: [snapshot.capture, order.place] }
+        version: { type: string }
+        title: { type: string }
+        description: { type: string }
+        impl_type: { type: string, enum: [prompt, shell, http, composite] }
+        side_effects: { $ref: '#/components/schemas/SideEffects' }
+        input_schema:
+          type: object
+          description: JSON Schema — drives palette form generation and validation
+        output_schema: { type: object }
+        enabled: { type: boolean }
+
+    # ---- SSE envelope (documentation only; not a JSON endpoint)
+
+    StreamEvent:
+      type: object
+      description: |
+        SSE `event:` = type, `data:` = this object. Thin by design: the UI
+        refetches GET /sessions/{id} on receipt rather than applying payloads.
+      required: [type, session_id, at]
+      properties:
+        type:
+          type: string
+          enum:
+            - run.queued
+            - run.started
+            - run.progress
+            - run.succeeded
+            - run.failed
+            - run.timed_out
+            - run.cancelled
+            - finding.raised
+            - analysis.note
+            - session.ended
+        session_id: { type: string, format: uuid }
+        run_id: { type: string, format: uuid }
+        step_id: { type: string, format: uuid }
+        at: { type: string, format: date-time }
+        message:
+          type: string
+          description: For analysis.note and run.progress — renders in chat
+        severity: { $ref: '#/components/schemas/Severity' }
+
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+
+security:
+  - bearerAuth: []
