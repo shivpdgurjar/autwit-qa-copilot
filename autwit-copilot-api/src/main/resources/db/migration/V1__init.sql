@@ -131,7 +131,11 @@ CREATE UNIQUE INDEX uq_run_idempotency
   WHERE idempotency_key IS NOT NULL;
 
 COMMENT ON COLUMN autwit.run.max_attempts IS
-  'Stays 1 for mutating skills. Never auto-retry a run that may have placed an order.';
+  'Stays 1 for mutating skills. Never auto-retry a run that may have placed an order. '
+  'Read on the dequeue path: attempts < max_attempts gates reclaim, and its mirror '
+  'gates the reaper, which is what keeps the two disjoint (ADR-001). Set per run_type '
+  'by RunEnqueuer, not left to this default: 1 for invoke (skill unknown at enqueue), '
+  '1 for a mutating skill_execute, 2 for milestone/comparison/report.';
 COMMENT ON COLUMN autwit.run.lease_until IS
   'Set to now()+12m — MUST exceed the 10m HTTP client timeout, or a slow-but-alive '
   'run gets reclaimed and re-executed while still running.';
@@ -365,7 +369,8 @@ CREATE INDEX idx_agent_memory_ttl ON autwit.agent_memory (ttl_at) WHERE ttl_at I
 -- ============================================================ operational SQL
 -- Reference implementations. The Java side issues these verbatim.
 
--- Dequeue. Reclaims runs whose worker died (lease expired).
+-- Dequeue. Claims fresh work, and reclaims runs whose worker died (lease expired)
+-- ONLY where a retry is permitted. See ADR-001.
 --   UPDATE autwit.run SET
 --     status='running', worker_id=:workerId, attempts=attempts+1,
 --     started_at=COALESCE(started_at, now()),
@@ -373,11 +378,20 @@ CREATE INDEX idx_agent_memory_ttl ON autwit.agent_memory (ttl_at) WHERE ttl_at I
 --   WHERE run_id = (
 --     SELECT run_id FROM autwit.run
 --     WHERE status='queued'
---        OR (status='running' AND lease_until < now())
+--        OR (status='running' AND lease_until < now() AND attempts < max_attempts)
 --     ORDER BY queued_at
 --     FOR UPDATE SKIP LOCKED LIMIT 1
 --   )
 --   RETURNING *;
+--
+-- The `attempts < max_attempts` guard is load-bearing, not defensive. Without it
+-- this statement and the reaper below both match a dead worker's run, and whoever
+-- fires first decides whether it is retried or buried. With it, the two predicates
+-- are disjoint and every row belongs to exactly one of them. A run with
+-- max_attempts=1 is invisible here once attempted and can only ever end
+-- timed_out — which is what invariant 8 requires of anything that may have placed
+-- an order. RunEnqueuer sets max_attempts per run_type: 1 for invoke (the LLM picks
+-- the skill after enqueue, so mutability is unknown ⇒ assume mutating).
 
 -- Per-session serialization. Held by the worker for the run's duration.
 -- Runs in one session must not interleave: a snapshot at step 5 must not race
@@ -390,9 +404,16 @@ CREATE INDEX idx_agent_memory_ttl ON autwit.agent_memory (ttl_at) WHERE ttl_at I
 --   UPDATE autwit.run
 --   SET status='timed_out', ended_at=now(),
 --       error=jsonb_build_object('code','lease_expired','worker_id',worker_id)
---   WHERE status='running' AND lease_until < now();
+--   WHERE status='running' AND lease_until < now() AND attempts >= max_attempts;
 --
 -- timed_out != failed: outcome is UNKNOWN. Never auto-retry.
+--
+-- `attempts >= max_attempts` is the exact mirror of the dequeue's guard above, and
+-- the pair is what makes the two statements disjoint (ADR-001). This one buries
+-- only what must never be retried; the dequeue reclaims only what may be. Safe
+-- under READ COMMITTED with no extra locking: if a worker reclaims a row mid-sweep,
+-- this UPDATE blocks on the row lock, re-evaluates its WHERE against the committed
+-- row, sees the renewed lease_until, and skips it.
 
 -- Notify (thin hint; truth is always GET /sessions/{id}).
 -- Payload cap is 8000 bytes and it's fire-and-forget — fine, because a dropped
