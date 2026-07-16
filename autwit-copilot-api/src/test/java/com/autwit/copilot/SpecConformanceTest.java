@@ -40,6 +40,11 @@ class SpecConformanceTest extends AbstractPostgresIT {
             "progress", "result_summary", "error", "attempts", "cancel_requested",
             "idempotency_key", "queued_at", "started_at", "ended_at", "elapsed_ms");
 
+    /** openapi.yaml Snapshot.properties. */
+    private static final Set<String> SNAPSHOT_FIELDS = Set.of(
+            "snapshot_id", "session_id", "milestone_id", "step_id", "label", "scope",
+            "scope_def", "status", "captured_at", "composite_hash", "parts");
+
     @Test
     void sessionEmitsOnlyDocumentedFields() {
         var session = new Session(java.util.UUID.randomUUID(), "autwit-qa2-x", "priya", "qa2", "t",
@@ -63,6 +68,22 @@ class SpecConformanceTest extends AbstractPostgresIT {
         // How the queue works is not the client's business: a UI that can see the lease
         // will eventually start doing arithmetic with it.
         assertThat(fields).doesNotContain("lease_until", "worker_id", "terminal");
+    }
+
+    @Test
+    void snapshotEmitsOnlyDocumentedFieldsIncludingTheOneTheTimelineAnchorsOn() {
+        var snapshot = new com.autwit.copilot.snapshot.Snapshot(
+                java.util.UUID.randomUUID(), java.util.UUID.randomUUID(), null,
+                java.util.UUID.randomUUID(), "after_order_created", "order_flow", Map.of(),
+                "complete", java.time.Instant.now(), null, java.util.List.of());
+
+        var fields = fieldsOf(snapshot);
+
+        assertThat(fields).isSubsetOf(SNAPSHOT_FIELDS);
+        // milestone_id is null for a snapshot captured straight from the palette, so a
+        // UI keying its timeline off it renders nothing and the tester sees their
+        // capture vanish. step_id is always set; it must stay on the wire.
+        assertThat(fields).contains("step_id");
     }
 
     @Test

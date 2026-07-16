@@ -765,7 +765,13 @@ components:
           $ref: '#/components/schemas/Subjects'
         retention_class:
           $ref: '#/components/schemas/RetentionClass'
-        ttl_days: { type: integer, default: 7 }
+        ttl_days:
+          type: integer
+          description: |
+            Omit to use the server's configured default (autwit.session.default-ttl,
+            currently 7d). Deliberately declares no `default:` here — the server owns
+            that value, and a client that helpfully filled in a spec-declared 7 would
+            silently override an operator who had configured 14.
 
     UpdateSessionRequest:
       type: object
@@ -1147,7 +1153,18 @@ components:
       properties:
         snapshot_id: { type: string, format: uuid }
         session_id: { type: string, format: uuid }
-        milestone_id: { type: string, format: uuid }
+        milestone_id:
+          type: string
+          format: uuid
+          description: |
+            Null for a snapshot captured directly from the ⌘K palette rather than at a
+            milestone. Do not key a timeline off this — use step_id, which is always set.
+        step_id:
+          type: string
+          format: uuid
+          description: |
+            The step this snapshot was captured by. Always present, which makes it the
+            reliable anchor for placing a snapshot on the timeline.
         label: { type: string, examples: [after_order_created] }
         scope: { type: string, examples: [order_flow] }
         scope_def:

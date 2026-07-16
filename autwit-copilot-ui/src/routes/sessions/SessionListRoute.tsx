@@ -1,5 +1,6 @@
-import { useQuery } from '@tanstack/react-query';
-import { Link } from 'react-router-dom';
+import { useState } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Link, useNavigate } from 'react-router-dom';
 import { api, unwrap, type Session } from '../../api/client';
 import { Ago, Card, EmptyState, Mono, Muted, Spinner } from '../../components/ui';
 
@@ -9,6 +10,10 @@ import { Ago, Card, EmptyState, Mono, Muted, Spinner } from '../../components/ui
  * product.
  */
 export default function SessionListRoute() {
+  const navigate = useNavigate();
+  const queryClient = useQueryClient();
+  const [creating, setCreating] = useState(false);
+
   const { data, isLoading, error } = useQuery({
     queryKey: ['sessions'],
     queryFn: async ({ signal }) =>
@@ -17,7 +22,25 @@ export default function SessionListRoute() {
 
   return (
     <div className="mx-auto max-w-3xl p-6">
-      <h1 className="mb-4 text-lg font-semibold">Sessions</h1>
+      <div className="mb-4 flex items-center">
+        <h1 className="text-lg font-semibold">Sessions</h1>
+        <button
+          onClick={() => setCreating(true)}
+          className="ml-auto rounded bg-sky-700 px-3 py-1.5 text-[12px] font-medium text-white hover:bg-sky-600"
+        >
+          New session
+        </button>
+      </div>
+
+      {creating && (
+        <NewSessionForm
+          onCancel={() => setCreating(false)}
+          onCreated={(session) => {
+            void queryClient.invalidateQueries({ queryKey: ['sessions'] });
+            navigate(`/sessions/${session.session_id}`);
+          }}
+        />
+      )}
 
       {isLoading && (
         <p className="flex items-center gap-2 text-sm text-ink-400">
@@ -72,5 +95,90 @@ export default function SessionListRoute() {
         ))}
       </ul>
     </div>
+  );
+}
+
+function NewSessionForm({
+  onCancel,
+  onCreated,
+}: {
+  onCancel: () => void;
+  onCreated: (session: Session) => void;
+}) {
+  const [testerId, setTesterId] = useState('priya');
+  const [env, setEnv] = useState('qa2');
+  const [title, setTitle] = useState('');
+  const [orderId, setOrderId] = useState('');
+
+  const create = useMutation({
+    retry: false,
+    mutationFn: async () =>
+      unwrap(
+        await api.POST('/sessions', {
+          body: {
+            tester_id: testerId,
+            env,
+            title: title || undefined,
+            // Subjects are GIN-indexed, which is how this session gets found by order
+            // id months later when someone asks "did we ever test this?"
+            subjects: orderId ? { order_id: orderId } : undefined,
+          },
+        }),
+      ) as Session,
+    onSuccess: onCreated,
+  });
+
+  const field = 'w-full rounded border border-ink-700 bg-ink-950 px-2 py-1 text-[12px] outline-none focus:border-sky-700';
+
+  return (
+    <Card className="mb-4">
+      <div className="grid grid-cols-2 gap-2">
+        <label className="block">
+          <span className="mb-1 block text-[11px] text-ink-400">tester_id</span>
+          <input className={field} value={testerId} onChange={(e) => setTesterId(e.target.value)} />
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-[11px] text-ink-400">env</span>
+          <input className={field} value={env} onChange={(e) => setEnv(e.target.value)} />
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-[11px] text-ink-400">title</span>
+          <input
+            className={field}
+            value={title}
+            placeholder="Order flow"
+            onChange={(e) => setTitle(e.target.value)}
+          />
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-[11px] text-ink-400">order_id (subject)</span>
+          <input
+            className={field}
+            value={orderId}
+            placeholder="XXXX"
+            onChange={(e) => setOrderId(e.target.value)}
+          />
+        </label>
+      </div>
+
+      {create.error != null && (
+        <p className="mt-2 text-[11px] text-red-300">
+          {(create.error as { detail?: string }).detail ?? 'Could not create the session.'}
+        </p>
+      )}
+
+      <div className="mt-2.5 flex gap-2">
+        <button onClick={onCancel} className="rounded border border-ink-700 px-2 py-1 text-[11px]">
+          Cancel
+        </button>
+        <button
+          onClick={() => create.mutate()}
+          disabled={!testerId.trim() || !env.trim() || create.isPending}
+          className="ml-auto rounded bg-sky-700 px-3 py-1 text-[12px] font-medium text-white hover:bg-sky-600 disabled:opacity-40"
+        >
+          {create.isPending ? 'Starting…' : 'Start session'}
+        </button>
+      </div>
+    </Card>
   );
 }

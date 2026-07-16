@@ -25,6 +25,7 @@ export type Artifact = Schemas['Artifact'];
 export type ArtifactRef = Schemas['ArtifactRef'];
 export type Finding = Schemas['Finding'];
 export type Comparison = Schemas['Comparison'];
+export type Skill = Schemas['Skill'];
 export type Run = Schemas['Run'];
 export type RunStatus = Schemas['RunStatus'];
 export type StepKind = Schemas['StepKind'];

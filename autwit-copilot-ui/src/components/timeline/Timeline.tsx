@@ -6,13 +6,19 @@ import { MilestoneCard } from './MilestoneCard';
 import { SnapshotCard } from './SnapshotCard';
 
 /**
- * The session timeline, ordered by step seq.
+ * The session timeline: the record of what was captured.
  *
  * Everything here is derived from GET /sessions/{id} and nothing from an SSE payload —
  * that is what makes a dropped notification harmless (invariant 4).
  *
- * analysis steps are excluded: SKILL_CONTRACT §5 says notes "render in chat, not the
- * timeline". They are the running commentary, not the record.
+ * The chat column owns the conversation, so this excludes:
+ * - analysis — SKILL_CONTRACT §5: notes "render in chat, not the timeline"
+ * - user_utterance — it is already a chat bubble, and showing the same sentence twice
+ *   side by side just makes both columns harder to scan
+ *
+ * What is left is what the session actually produced: milestones, snapshots,
+ * comparisons and the skills that ran. The server-rendered report still carries every
+ * step, so nothing is lost from the record itself.
  */
 export function Timeline({
   session,
@@ -23,17 +29,25 @@ export function Timeline({
   onOpenSnapshot: (snapshot: Snapshot) => void;
   onCancelRun?: (runId: string) => void;
 }) {
-  const steps = (session.steps ?? []).filter((s) => s.kind !== 'analysis');
+  const steps = (session.steps ?? []).filter(
+    (s) => s.kind !== 'analysis' && s.kind !== 'user_utterance',
+  );
   const activeByStep = new Map<string, Run>();
   (session.active_runs ?? []).forEach((r) => activeByStep.set(r.step_id, r));
 
   const milestoneByStep = new Map<string, Milestone>();
   (session.milestones ?? []).forEach((m) => m.step_id && milestoneByStep.set(m.step_id, m));
 
-  const snapshotByMilestone = new Map<string, Snapshot>();
-  (session.snapshots ?? []).forEach(
-    (s) => s.milestone_id && snapshotByMilestone.set(s.milestone_id, s),
-  );
+  /**
+   * Keyed by step_id, not milestone_id.
+   *
+   * A snapshot captured straight from the ⌘K palette has no milestone — it is a
+   * skill_execute run, not a milestone run. Indexing by milestone_id made those
+   * snapshots invisible: the tester runs snapshot.capture, nine artifacts land, and
+   * the timeline shows nothing. Every snapshot has a step_id; that is the honest key.
+   */
+  const snapshotByStep = new Map<string, Snapshot>();
+  (session.snapshots ?? []).forEach((s) => s.step_id && snapshotByStep.set(s.step_id, s));
 
   if (steps.length === 0) {
     return <EmptyState>Nothing yet. Say what you did and the copilot will capture it.</EmptyState>;
@@ -44,7 +58,7 @@ export function Timeline({
       {steps.map((step) => {
         const run = activeByStep.get(step.step_id);
         const milestone = milestoneByStep.get(step.step_id);
-        const snapshot = milestone ? snapshotByMilestone.get(milestone.milestone_id) : undefined;
+        const snapshot = snapshotByStep.get(step.step_id);
 
         return (
           <li key={step.step_id} className="space-y-2">
