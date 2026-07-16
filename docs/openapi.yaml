@@ -364,19 +364,20 @@ paths:
   /sessions/{sessionId}/artifacts:
     parameters:
       - $ref: '#/components/parameters/SessionId'
-      - name: artifact_type
-        in: query
-        schema: { $ref: '#/components/schemas/ArtifactType' }
-      - name: milestone_id
-        in: query
-        schema: { type: string, format: uuid }
-      - name: logical_name
-        in: query
-        schema: { type: string }
     get:
       tags: [artifacts]
       summary: List artifact metadata (never bodies)
       operationId: listArtifacts
+      parameters:
+        - name: artifact_type
+          in: query
+          schema: { $ref: '#/components/schemas/ArtifactType' }
+        - name: milestone_id
+          in: query
+          schema: { type: string, format: uuid }
+        - name: logical_name
+          in: query
+          schema: { type: string }
       responses:
         '200':
           description: OK
@@ -389,6 +390,62 @@ paths:
                   artifacts:
                     type: array
                     items: { $ref: '#/components/schemas/ArtifactRef' }
+
+    post:
+      tags: [artifacts]
+      summary: Attach a tester-supplied artifact to the session
+      description: |
+        The second of two ways an artifact enters the schema. The first is the
+        orchestrator's result envelope (SKILL_CONTRACT §6.1), persisted by the
+        worker; this one is a human attaching evidence directly — a pasted XML
+        payload, an API response, a HAR file, a log.
+
+        Both paths converge on the same write path and the same integrity rules:
+        content_hash is verified when supplied and computed when not, and the
+        body/external_uri exclusivity of the DB's one_body constraint holds.
+
+        This does NOT weaken invariant 1. That invariant forbids the ORCHESTRATOR
+        calling back into copilot-api; copilot-api remains the sole writer to the
+        autwit schema, and this endpoint is a tester-facing surface, not an
+        /internal/* inbound one. The orchestrator holds no credential for this API.
+
+        Not a run: it touches no orchestrator and is a local insert, so it returns
+        201 synchronously rather than 202 (invariant 2 scopes runs to orchestrator
+        work and anything >1s).
+      operationId: createArtifact
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateArtifactRequest' }
+      responses:
+        '201':
+          description: Created
+          headers:
+            Location:
+              schema: { type: string }
+              description: URL of the created artifact
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Artifact' }
+        '400':
+          description: |
+            Invalid request. code=content_hash_mismatch when a supplied
+            content_hash does not match the body — the same truncation check the
+            worker applies to orchestrator artifacts.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
+        '409': { $ref: '#/components/responses/Conflict' }
+        '413':
+          description: |
+            Body exceeds autwit.artifact.max-inline-bytes (8MB, SKILL_CONTRACT §6.1).
+            v0.1 is inline-only; §7's pre-signed URI path is not implemented.
+          content:
+            application/problem+json:
+              schema: { $ref: '#/components/schemas/Problem' }
 
   /artifacts/{artifactId}:
     parameters:
@@ -947,6 +1004,57 @@ components:
           description: Server-computed. UI shows elapsed time, never a fake progress bar.
 
     # ---- artifacts
+
+    CreateArtifactRequest:
+      type: object
+      description: |
+        A tester-supplied artifact. Deliberately a subset of the orchestrator's
+        ArtifactDescriptor (SKILL_CONTRACT §6.1): no client_ref, since that is a
+        within-envelope handle for wiring snapshot parts to artifacts before real
+        UUIDs exist, and no external_uri, which stays unused until v0.2.
+      required: [artifact_type, source_system, logical_name, format, body]
+      properties:
+        artifact_type: { $ref: '#/components/schemas/ArtifactType' }
+        source_system:
+          type: string
+          description: Free-form provenance, e.g. manual, postman, browser_har
+          examples: [manual, oms_pg, postman]
+        logical_name: { type: string, examples: [orders, checkout_response] }
+        format: { $ref: '#/components/schemas/ArtifactFormat' }
+        body:
+          description: |
+            Shape follows `format`: parsed JSON for json/jsonb, string for
+            xml/text/csv/html/md, base64 for binary.
+          oneOf:
+            - type: object
+            - type: array
+            - type: string
+        row_count: { type: integer }
+        content_hash:
+          type: string
+          description: |
+            Optional. sha256 over the canonical body. Verified when supplied and
+            rejected on mismatch (400 content_hash_mismatch); computed server-side
+            when omitted.
+          examples: ["sha256:9f86d0..."]
+        step_id:
+          type: string
+          format: uuid
+          description: Optional timeline anchor. Must belong to this session.
+        milestone_id:
+          type: string
+          format: uuid
+          description: Optional milestone anchor. Must belong to this session.
+        meta:
+          type: object
+          additionalProperties: true
+          description: |
+            pk_columns, query, masked_columns, ignore_columns. pk_columns is
+            REQUIRED when artifact_type is rdbms_table — the diff engine cannot do
+            a key-wise join without it and will not guess (BUILD_BRIEF §7).
+          examples:
+            - pk_columns: [order_id]
+              ignore_columns: [updated_at]
 
     ArtifactRef:
       type: object
