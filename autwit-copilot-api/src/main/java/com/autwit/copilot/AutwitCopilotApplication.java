@@ -1,5 +1,6 @@
 package com.autwit.copilot;
 
+import com.autwit.copilot.compare.FinancialProperties;
 import com.autwit.copilot.config.AutwitProperties;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -18,7 +19,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  * is a config change rather than a rewrite.
  */
 @SpringBootApplication
-@EnableConfigurationProperties(AutwitProperties.class)
+@EnableConfigurationProperties({AutwitProperties.class, FinancialProperties.class})
 @EnableScheduling
 public class AutwitCopilotApplication {
 

@@ -6,6 +6,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import com.autwit.copilot.common.ApiException;
+import com.autwit.copilot.compare.ComparisonRepository;
 import com.autwit.copilot.registry.SkillRepository;
 import com.autwit.copilot.session.MilestoneRepository;
 import com.autwit.copilot.session.SessionRepository;
@@ -32,14 +33,16 @@ public class RunEnqueuer {
     private final SessionRepository sessions;
     private final MilestoneRepository milestones;
     private final SkillRepository skills;
+    private final ComparisonRepository comparisons;
 
     public RunEnqueuer(RunRepository runs, StepRepository steps, SessionRepository sessions,
-            MilestoneRepository milestones, SkillRepository skills) {
+            MilestoneRepository milestones, SkillRepository skills, ComparisonRepository comparisons) {
         this.runs = runs;
         this.steps = steps;
         this.sessions = sessions;
         this.milestones = milestones;
         this.skills = skills;
+        this.comparisons = comparisons;
     }
 
     /** POST /sessions/{id}/messages. */
@@ -147,6 +150,69 @@ public class RunEnqueuer {
 
         return accept(sessionId, step.stepId(), RunType.MILESTONE, RunType.MILESTONE.defaultMaxAttempts(),
                 request, idempotencyKey, milestone.milestoneId(), null);
+    }
+
+    /** POST /sessions/{id}/comparisons. A run, even though the diff is local and fast. */
+    @Transactional
+    public Accepted enqueueComparison(UUID sessionId, UUID fromSnapshotId, UUID toSnapshotId,
+            String compareType, Map<String, Object> rules, String idempotencyKey) {
+
+        lockAndRequireActive(sessionId);
+        var replay = replay(sessionId, idempotencyKey);
+        if (replay.isPresent()) {
+            return replay.get();
+        }
+
+        var step = steps.insert(sessionId, "analysis", "Compare snapshots (%s)".formatted(compareType),
+                "user", "pending", null, Map.of("compare_type", compareType));
+
+        // Created up-front so the 202's comparison_id is real and the UI can open the
+        // card before the diff has run.
+        var comparisonId = comparisons.insertPending(sessionId, step.stepId(), fromSnapshotId,
+                toSnapshotId, compareType, rules);
+
+        var request = new LinkedHashMap<String, Object>();
+        request.put("comparison_id", comparisonId.toString());
+        request.put("from_snapshot_id", fromSnapshotId.toString());
+        request.put("to_snapshot_id", toSnapshotId.toString());
+        request.put("compare_type", compareType);
+        request.put("rules", rules != null ? rules : Map.of());
+
+        return accept(sessionId, step.stepId(), RunType.COMPARISON,
+                RunType.COMPARISON.defaultMaxAttempts(), request, idempotencyKey, null, comparisonId);
+    }
+
+    /**
+     * POST /sessions/{id}/end. The session flips to ended immediately; the report
+     * artifact appears when the run completes.
+     */
+    @Transactional
+    public Accepted enqueueReport(UUID sessionId, String format, String notes, String idempotencyKey) {
+        lockAndRequireActive(sessionId);
+        var replay = replay(sessionId, idempotencyKey);
+        if (replay.isPresent()) {
+            return replay.get();
+        }
+
+        var step = steps.insert(sessionId, "system", "End session and render report", "user", "pending",
+                null, Map.of("format", format));
+
+        var request = new LinkedHashMap<String, Object>();
+        request.put("format", format);
+        if (notes != null) {
+            request.put("notes", notes);
+        }
+
+        var accepted = accept(sessionId, step.stepId(), RunType.REPORT,
+                RunType.REPORT.defaultMaxAttempts(), request, idempotencyKey, null, null);
+
+        // Ended before the render, deliberately: the tester is done, and the report is a
+        // consequence of that rather than a precondition. It also stops new runs racing
+        // the render -- lockAndRequireActive rejects them from here on.
+        sessions.end(sessionId, java.time.Instant.now());
+        runs.notifyRun(sessionId, accepted.run().runId(), step.stepId(), "ended", "session.ended");
+
+        return accepted;
     }
 
     private Accepted accept(UUID sessionId, UUID stepId, RunType type, int maxAttempts,

@@ -35,6 +35,12 @@
       <artifactId>spring-boot-starter-validation</artifactId>
     </dependency>
 
+    <!-- Report rendering (BUILD_BRIEF §3). Not a view layer: the API serves JSON. -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-thymeleaf</artifactId>
+    </dependency>
+
     <!-- Flyway 10 splits per-database support out of core. Without
          flyway-database-postgresql the migration silently finds no dialect. -->
     <dependency>

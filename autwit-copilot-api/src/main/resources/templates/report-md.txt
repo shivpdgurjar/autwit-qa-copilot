@@ -1,0 +1,68 @@
+# AutWit session report — [(${session.title()} ?: 'QA session')]
+
+- **Correlation id:** `[(${session.correlationId()})]`
+- **Env:** [(${session.env()})]
+- **Tester:** [(${session.testerId()})]
+- **Started:** [(${session.startedAt()})]
+- **Generated:** [(${generatedAt})]
+[# th:if="${notes}"]
+- **Notes:** [(${notes})]
+[/]
+
+## Summary
+
+| | |
+|---|---|
+| Artifacts | [(${artifactCount})] |
+| Events | [(${eventCount})] |
+| Snapshots | [(${#lists.size(snapshots)})] |
+| Comparisons | [(${#lists.size(comparisons)})] |
+| Findings | [(${#lists.size(findings)})] |
+
+## Subjects under test
+
+| Subject | Value |
+|---|---|
+[# th:each="s : ${session.subjects()}"]| [(${s.key})] | `[(${s.value})]` |
+[/]
+
+## Findings
+[# th:if="${#lists.isEmpty(findings)}"]
+_No findings._
+[/][# th:unless="${#lists.isEmpty(findings)}"]
+| Severity | Category | Part | Entity | Message |
+|---|---|---|---|---|
+[# th:each="sev : ${severityOrder}"][# th:each="f : ${findings}" th:if="${f.severity() == sev}"]| **[(${f.severity()})]** | [(${f.category()})] | `[(${f.partKey()} ?: '—')]` | `[(${f.entityKey()} ?: '—')]` | [(${f.message()})] |
+[/][/]
+[/]
+
+## Milestones
+[# th:if="${#lists.isEmpty(milestones)}"]
+_No milestones marked._
+[/][# th:unless="${#lists.isEmpty(milestones)}"]
+| # | Name | Status | Marked at |
+|---|---|---|---|
+[# th:each="m : ${milestones}"]| [(${m.seq()})] | [(${m.name()})] | [(${m.status()})] | [(${m.markedAt()})] |
+[/]
+[/]
+
+## Comparisons
+[# th:if="${#lists.isEmpty(comparisons)}"]
+_No comparisons run._
+[/][# th:each="c : ${comparisons}"]
+### [(${c.compareType()})] — [(${c.verdict()})]
+
+[(${c.summary()})]
+
+| Part | Added | Removed | Modified | Unchanged | Ignored columns |
+|---|---|---|---|---|---|
+[# th:each="p : ${c.partResults()}"]| `[(${p.partKey()})]` | [(${p.inconclusive()} ? '—' : ${p.rowsAdded()})] | [(${p.inconclusive()} ? '—' : ${p.rowsRemoved()})] | [(${p.inconclusive()} ? '—' : ${p.rowsModified()})] | [(${p.inconclusive()} ? '—' : ${p.rowsUnchanged()})] | [(${#lists.isEmpty(p.ignoredColumns())} ? 'none' : ${#strings.listJoin(p.ignoredColumns(), ', ')})] |
+[/]
+[/]
+
+## Timeline
+
+| # | Kind | Actor | Status | Label |
+|---|---|---|---|---|
+[# th:each="s : ${steps}"]| [(${s.seq()})] | [(${s.kind()})] | [(${s.actor()})] | [(${s.status()})] | [(${s.label()})] |
+[/]

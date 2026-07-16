@@ -50,6 +50,7 @@ public class RunWorker {
     private final EnvelopePersister persister;
     private final AutwitProperties props;
     private final com.autwit.copilot.session.SessionRepository sessions;
+    private final LocalRunExecutor localRuns;
 
     private final String workerId = "worker-" + UUID.randomUUID().toString().substring(0, 8);
     private final AtomicBoolean running = new AtomicBoolean(false);
@@ -57,7 +58,8 @@ public class RunWorker {
 
     public RunWorker(RunRepository runs, StepRepository steps, SessionLocks locks,
             OrchestratorClient orchestrator, SessionContextBuilder contexts, EnvelopePersister persister,
-            AutwitProperties props, com.autwit.copilot.session.SessionRepository sessions) {
+            AutwitProperties props, com.autwit.copilot.session.SessionRepository sessions,
+            LocalRunExecutor localRuns) {
         this.runs = runs;
         this.steps = steps;
         this.locks = locks;
@@ -66,6 +68,7 @@ public class RunWorker {
         this.persister = persister;
         this.props = props;
         this.sessions = sessions;
+        this.localRuns = localRuns;
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -125,8 +128,16 @@ public class RunWorker {
         }
     }
 
-    /** @return true if a run was claimed (whatever its outcome). */
-    boolean pollOnce() {
+    /**
+     * Claims and executes at most one run.
+     *
+     * <p>Public so tests can drive the queue a step at a time with worker-concurrency=0
+     * — the bean exists, no background loops run, and each test executes exactly the run
+     * it enqueued instead of racing four pollers.
+     *
+     * @return true if a run was claimed, whatever its outcome
+     */
+    public boolean pollOnce() {
         var claimed = runs.dequeue(workerId, props.run().lease());
         if (claimed.isEmpty()) {
             return false;
@@ -165,6 +176,17 @@ public class RunWorker {
         }
 
         try {
+            // Comparison and report are local: they read snapshots we already hold and
+            // never touch the orchestrator. They are still runs (invariant 2 —
+            // "Everything that touches the orchestrator OR takes >1s is a run. Uniform.
+            // Even a local diff"), so they go through the same queue, lock and lease.
+            // Only the execution differs.
+            if (localRuns.handles(run.runType())) {
+                localRuns.execute(run);
+                runs.notifyRun(run.sessionId(), run.runId(), run.stepId(), "succeeded", "run.succeeded");
+                return;
+            }
+
             var envelope = call(run);
 
             if (envelope.isFailed()) {

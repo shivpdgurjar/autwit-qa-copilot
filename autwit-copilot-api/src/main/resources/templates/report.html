@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <title th:text="'AutWit session report — ' + ${session.correlationId()}">AutWit session report</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body { font: 15px/1.55 -apple-system, Segoe UI, Roboto, sans-serif; max-width: 60rem;
+           margin: 2rem auto; padding: 0 1rem; }
+    h1 { margin-bottom: .25rem; }
+    .sub { color: #666; margin-top: 0; }
+    table { border-collapse: collapse; width: 100%; margin: .5rem 0 1.5rem; }
+    th, td { text-align: left; padding: .4rem .6rem; border-bottom: 1px solid #ddd;
+             vertical-align: top; }
+    th { background: #f5f5f5; font-weight: 600; }
+    code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .9em; }
+    .sev { font-weight: 600; text-transform: uppercase; font-size: .75em; letter-spacing: .04em; }
+    .sev-critical { color: #b3001b; }
+    .sev-high     { color: #d64500; }
+    .sev-medium   { color: #9a6700; }
+    .sev-low      { color: #57606a; }
+    .sev-info     { color: #57606a; }
+    .verdict { display: inline-block; padding: .1rem .5rem; border-radius: .25rem;
+               font-weight: 600; font-size: .8em; text-transform: uppercase; }
+    .verdict-pass { background: #dafbe1; color: #116329; }
+    .verdict-fail { background: #ffebe9; color: #b3001b; }
+    .verdict-warn { background: #fff8c5; color: #7d4e00; }
+    .verdict-inconclusive { background: #eee; color: #444; }
+    .ignored { color: #666; font-size: .85em; }
+    .empty { color: #888; font-style: italic; }
+    @media (prefers-color-scheme: dark) {
+      th { background: #222; } th, td { border-bottom-color: #333; }
+      .sub, .ignored, .empty { color: #999; }
+    }
+  </style>
+</head>
+<body>
+
+<h1 th:text="${session.title()} ?: 'QA session'">QA session</h1>
+<p class="sub">
+  <span class="mono" th:text="${session.correlationId()}">autwit-qa2-…</span>
+  · <span th:text="${session.env()}">qa2</span>
+  · <span th:text="${session.testerId()}">priya</span>
+  · started <span th:text="${session.startedAt()}">…</span>
+</p>
+
+<h2>Summary</h2>
+<table>
+  <tr><th>Artifacts</th><td th:text="${artifactCount}">0</td></tr>
+  <tr><th>Events</th><td th:text="${eventCount}">0</td></tr>
+  <tr><th>Snapshots</th><td th:text="${#lists.size(snapshots)}">0</td></tr>
+  <tr><th>Comparisons</th><td th:text="${#lists.size(comparisons)}">0</td></tr>
+  <tr><th>Findings</th><td th:text="${#lists.size(findings)}">0</td></tr>
+  <tr th:if="${notes}"><th>Notes</th><td th:text="${notes}"></td></tr>
+</table>
+
+<h2>Subjects under test</h2>
+<table>
+  <tr th:each="s : ${session.subjects()}">
+    <th th:text="${s.key}">order_id</th>
+    <td class="mono" th:text="${s.value}">XXXX</td>
+  </tr>
+</table>
+
+<h2>Findings</h2>
+<p th:if="${#lists.isEmpty(findings)}" class="empty">No findings.</p>
+<table th:unless="${#lists.isEmpty(findings)}">
+  <thead>
+    <tr><th>Severity</th><th>Category</th><th>Part</th><th>Entity</th><th>Message</th></tr>
+  </thead>
+  <tbody>
+    <!-- Worst first: a report nobody reads past the first screen must lead with what matters. -->
+    <th:block th:each="sev : ${severityOrder}">
+      <tr th:each="f : ${findings}" th:if="${f.severity() == sev}">
+        <td><span class="sev" th:classappend="'sev-' + ${f.severity()}" th:text="${f.severity()}">high</span></td>
+        <td th:text="${f.category()}">consistency</td>
+        <td class="mono" th:text="${f.partKey()} ?: '—'">oms.orders</td>
+        <td class="mono" th:text="${f.entityKey()} ?: '—'">XXXX</td>
+        <td th:text="${f.message()}">…</td>
+      </tr>
+    </th:block>
+  </tbody>
+</table>
+
+<h2>Milestones</h2>
+<p th:if="${#lists.isEmpty(milestones)}" class="empty">No milestones marked.</p>
+<table th:unless="${#lists.isEmpty(milestones)}">
+  <thead><tr><th>#</th><th>Name</th><th>Status</th><th>Marked at</th><th>Event cursor</th></tr></thead>
+  <tbody>
+    <tr th:each="m : ${milestones}">
+      <td th:text="${m.seq()}">1</td>
+      <td th:text="${m.name()}">order_created</td>
+      <td th:text="${m.status()}">complete</td>
+      <td th:text="${m.markedAt()}">…</td>
+      <td class="mono" th:text="${m.eventCursor()}">{}</td>
+    </tr>
+  </tbody>
+</table>
+
+<h2>Comparisons</h2>
+<p th:if="${#lists.isEmpty(comparisons)}" class="empty">No comparisons run.</p>
+<div th:each="c : ${comparisons}" th:unless="${#lists.isEmpty(comparisons)}">
+  <h3>
+    <span th:text="${c.compareType()}">structural</span>
+    <span class="verdict" th:classappend="'verdict-' + ${c.verdict()}" th:text="${c.verdict()}">pass</span>
+  </h3>
+  <p th:text="${c.summary()}">…</p>
+  <table>
+    <thead>
+      <tr><th>Part</th><th>Added</th><th>Removed</th><th>Modified</th><th>Unchanged</th>
+          <th>Ignored columns</th></tr>
+    </thead>
+    <tbody>
+      <tr th:each="p : ${c.partResults()}">
+        <td class="mono" th:text="${p.partKey()}">oms.orders</td>
+        <td th:text="${p.inconclusive()} ? '—' : ${p.rowsAdded()}">0</td>
+        <td th:text="${p.inconclusive()} ? '—' : ${p.rowsRemoved()}">0</td>
+        <td th:text="${p.inconclusive()} ? '—' : ${p.rowsModified()}">0</td>
+        <td th:text="${p.inconclusive()} ? '—' : ${p.rowsUnchanged()}">0</td>
+        <!--
+          Always rendered, never omitted. If updated_at diffs vanish without
+          explanation, nobody trusts the report and the tool dies (BUILD_BRIEF §7).
+        -->
+        <td class="ignored"
+            th:text="${#lists.isEmpty(p.ignoredColumns())} ? 'none' : ${#strings.listJoin(p.ignoredColumns(), ', ')}">
+          none
+        </td>
+      </tr>
+      <tr th:each="p : ${c.partResults()}" th:if="${p.inconclusive()}">
+        <td colspan="6" class="ignored">
+          <strong th:text="${p.partKey()}">part</strong>: inconclusive —
+          <span th:text="${p.reason()}">reason</span>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<h2>Timeline</h2>
+<table>
+  <thead><tr><th>#</th><th>Kind</th><th>Actor</th><th>Status</th><th>Label</th></tr></thead>
+  <tbody>
+    <tr th:each="s : ${steps}">
+      <td th:text="${s.seq()}">1</td>
+      <td th:text="${s.kind()}">user_utterance</td>
+      <td th:text="${s.actor()}">user</td>
+      <td th:text="${s.status()}">succeeded</td>
+      <td th:text="${s.label()}">…</td>
+    </tr>
+  </tbody>
+</table>
+
+<hr>
+<p class="sub">Generated by AutWit Copilot at <span th:text="${generatedAt}">…</span>.</p>
+
+</body>
+</html>

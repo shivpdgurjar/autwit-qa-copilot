@@ -16,6 +16,36 @@ autwit:
   session:
     default-ttl: 7d
 
+  # BUILD_BRIEF §7: "Put the rules in config, not in Java." These are business facts
+  # about an order flow, not code -- QA learns something new and edits this, not Java.
+  compare:
+    financial:
+      money-fields: [total_amount, amount, line_total, price, subtotal, tax, totalAmount]
+      # Not zero. Independent systems round differently, and a report that screams
+      # about 0.001 gets ignored -- which is worse than one that says nothing.
+      tolerance: 0.01
+      sum-invariants:
+        - name: order_total_equals_line_items
+          total-part: oms.orders
+          total-field: total_amount
+          entity-key: order_id
+          parts-part: oms.order_items
+          parts-field: line_total
+          severity: critical
+      cross-source:
+        - name: order_total_consistency
+          severity: high
+          sources:
+            - part-key: oms.orders
+              field: total_amount
+              entity-key: order_id
+            - part-key: dynamo.order_doc
+              field: totalAmount
+              entity-key: orderId
+            - part-key: api.order_response
+              field: totalAmount
+              entity-key: orderId
+
 spring:
   application:
     name: autwit-copilot-api

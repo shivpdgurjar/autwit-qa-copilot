@@ -1203,7 +1203,21 @@ components:
                     items: { type: string }
                     description: |
                       Surfaced deliberately. If updated_at diffs are hidden
-                      silently, nobody trusts the report.
+                      silently, nobody trusts the report. Only lists rules that
+                      actually matched a column present in the data — a rule for a
+                      column nobody has is noise.
+                  inconclusive:
+                    type: boolean
+                    default: false
+                    description: |
+                      The part could not be compared at all: meta.pk_columns was
+                      missing on an rdbms_table, or the part_key existed on only one
+                      side. The row counts are then zeroed and meaningless — render
+                      them as '—', never as 'no changes'. A part that could not be
+                      read and a part with nothing to report must never look alike.
+                  reason:
+                    type: string
+                    description: Why the part is inconclusive. Null otherwise.
 
     Finding:
       type: object
