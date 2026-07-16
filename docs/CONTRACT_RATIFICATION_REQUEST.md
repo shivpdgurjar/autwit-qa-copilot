@@ -4,13 +4,96 @@
 **Re:** `SKILL_CONTRACT.md` v0.1.0 (Draft — "must be ratified by both sessions before
 either side builds against it")
 **Date:** 2026-07-16
-**Status of our build:** steps 1–3 complete (the run queue, worker, reaper and
-fixture replay all pass). Steps 4–7 proceed against fixtures and are not blocked.
-**Step 8 (the swap to `HttpOrchestratorClient`) is blocked on Q1.**
+**Status of our build:** steps 1–7 complete. copilot-api and its UI are built and
+tested end to end against fixtures — 152 tests, a real Postgres, a real browser.
+**Step 8 (the swap from `FakeOrchestratorClient` to `HttpOrchestratorClient`) is the
+only thing left, and it is blocked on Q1.**
 
-Four questions. Q1 is the one that will silently break the integration. Q2 and Q3 are
-`SKILL_CONTRACT` §11 items 1 and 5, restated with what now depends on them. Q4 is a
-small one found while building step 3, which fails hard.
+Five questions. Q1 is the one that will silently break the integration. Q2 and Q3 are
+`SKILL_CONTRACT` §11 items 1 and 5, restated with what now depends on them. Q4 and Q5
+were found while building, and both fail in ways that are hard to see coming — Q5 in
+particular is the one place where your metadata is load-bearing in our safety logic.
+
+---
+
+## The handover set
+
+What accompanies this document, and — as importantly — what does not.
+
+### You should have
+
+| File | Why |
+|---|---|
+| `SKILL_CONTRACT.md` | **The contract.** Its own §0 is the rule: "This is the only shared surface between the two services. Neither side may add a dependency on the other outside this document." |
+| This document | The five open questions, with test vectors for Q1. |
+| `fixtures/orchestrator/*.json` (8 files) | **The contract made executable.** See below. |
+| `ADR-001-reclaim-vs-reap.md` | Optional, but it is the *why* behind Q2 and Q5. If either question seems pedantic, this explains what goes wrong. |
+
+### The fixtures are the most useful thing here
+
+§10 already nominates them as the tiebreaker: *"if the real orchestrator diverges from
+them, one of the two sides is wrong and the fixtures are the tiebreaker."* They pin the
+envelope far more precisely than prose can, and we generated them with a Python
+implementation of the canonical form in Q1 — so their `content_hash` values are real,
+and our Java verifies every one of them on the way in.
+
+| Fixture | Pins |
+|---|---|
+| `invoke_order_created.json` | 9 artifacts, 1 snapshot, `client_ref` → `parts[].artifact_ref` wiring, `subjects_discovered` |
+| `invoke_ready_for_member.json` | `api_response` + `event_batch` + 14 events + `cursors_advanced` |
+| `invoke_fulfilled.json` | A second snapshot with **byte-identical `part_key`s** (Q3) |
+| `invoke_events_dedupe.json` | Overlapping `dedupe_hash`es with the previous — the delta-for-free mechanism |
+| `invoke_partial.json` | `status: partial`, 7 of 9 parts, and the `severity: "warn"` problem in Q4 |
+| `invoke_failed.json` | RFC 7807, `upstream_unavailable` |
+| `invoke_slow.json` | The `deadline_exceeded` path |
+| `skills_catalog.json` | `GET /skills`, including a `mutating` skill and a disabled one |
+
+**If your `/invoke` can produce `invoke_order_created.json`, the integration works.**
+That is a more useful target than reading §5 and §6 carefully.
+
+### You should NOT have
+
+- **`openapi.yaml`** — deliberately withheld. That is copilot-api's public API, and you
+  must never call it. Invariant 1: "The orchestrator **returns** results. It never calls
+  back into copilot-api." Handing you our API would invite exactly the coupling the
+  design forbids, and there is no inbound surface for you even if you wanted one.
+- **`V1__init.sql`, `SCHEMA_VERIFICATION.md`** — our schema. You never write to the
+  `autwit` schema (§0 invariant 4); we are the only writer.
+- **`BUILD_BRIEF.md`** — our build plan. Its §2 invariants are worth knowing and are
+  already reflected in `SKILL_CONTRACT` §0, but §4–§9 are copilot-api's internals and
+  are not requirements on you.
+
+### What we consume, in full
+
+Four endpoints (§1). Everything behind them is yours:
+
+| Endpoint | What we do with it |
+|---|---|
+| `GET /skills` | Polled every 60s into a read-only projection. Drives our ⌘K palette's generated forms **and**, via `side_effects`, our retry safety (Q5). |
+| `POST /invoke` | The main path. One utterance in, one envelope out. We enforce a hard 10m deadline. |
+| `POST /skills/{name}/execute` | Same envelope, no LLM. What the palette and CI call. |
+| `GET /healthz` | Liveness. |
+
+Auth is a bearer service token, ours to send.
+
+### Things we depend on that may not be obvious
+
+1. **`part_key` must be emitted even when a table is empty.** An empty part and a
+   missing part mean entirely different things to us; the second is a `high` finding.
+2. **`meta.pk_columns` is required on every `rdbms_table`.** We refuse to guess a row
+   key — the part goes inconclusive instead (§6.1, and BUILD_BRIEF §7).
+3. **Keep `input_schema` enums populated.** They generate the palette's form controls
+   directly: a populated enum is a select, an empty one is a text box the tester has to
+   guess into.
+4. **`side_effects` decides whether we auto-retry.** See Q5.
+5. **`status: partial` beats a truncated body**, always (§6.1). We handle partial; we
+   cannot detect truncation except via `content_hash`, which is Q1.
+
+### Explicitly yours, not ours
+
+§11 items 2 and 4 already say this and we agree: how you isolate skill execution,
+whether you hold DB credentials or go through autwit-core, which model picks the skill,
+how you read Kafka. None of it changes this contract and we have no opinion.
 
 ---
 
@@ -210,6 +293,58 @@ raised at `medium`.
 suggest `medium`), and a §5 wording fix from "a `warn` finding" to "a `medium`
 finding". If you would rather partial be `high`, say so — we will follow. The
 normalisation stays either way as a compatibility shim.
+
+---
+
+## Q5 — Is `side_effects` guaranteed accurate? What happens when a skill's changes?
+
+**New. Not currently in §11. It is the one place where your metadata is load-bearing
+in our safety logic, and we do not think that is visible from your side.**
+
+### What we do with it
+
+`GET /skills` returns `side_effects: none | mutating` per skill. We cache it and read
+it at enqueue to decide `max_attempts` — which decides whether a run whose worker died
+mid-execution may be **re-executed** (`docs/ADR-001-reclaim-vs-reap.md`):
+
+| `side_effects` | `max_attempts` | What happens when a worker dies mid-run |
+|---|---|---|
+| `mutating` | 1 | Never reclaimed. Reaped to `timed_out`, a human decides. |
+| `none` | 2 | Reclaimed and **re-executed automatically**. |
+
+### Why this matters more than it looks
+
+**If a mutating skill is labelled `none`, we will re-run it after a worker dies — and
+place the order twice.** That is the precise failure invariant 8 and the whole
+12m-lease-over-10m-timeout design exist to prevent, and at that point none of it helps:
+every guard we have is downstream of trusting this field.
+
+The reverse is merely wasteful — a read-only skill labelled `mutating` just means a
+lost snapshot capture becomes manual work.
+
+We are deliberately conservative everywhere we can be. `invoke` is always
+`max_attempts: 1` because the LLM picks the skill *after* we enqueue, so we cannot
+consult this field at all and assume mutating. A skill missing from our cached catalog
+is also treated as mutating. But for `POST /skills/{name}/execute` we know the skill
+name, and this field is the only thing standing between "reclaim safely" and "order
+placed twice".
+
+### What we need
+
+1. **Confirmation that `side_effects` is accurate and reviewed** — that it is a
+   deliberate declaration rather than a default someone fills in as `none` to make a
+   YAML validate. If it is generated or optional on your side, tell us and we will stop
+   trusting it (every `skill_execute` becomes `max_attempts: 1`, at the cost of never
+   auto-recovering a dead worker's snapshot capture).
+2. **What happens when a skill changes from `none` to `mutating`?** Our catalog is a
+   60s-stale cache. If `order.reprice` becomes mutating in your repo, there is a window
+   where we would still reclaim it as safe. Does `catalog_version` change on that edit
+   (§2 says it changes "whenever any skill changes" — we are reading that as including
+   this field)? Is a `none → mutating` transition something you would treat as a
+   breaking change and coordinate, or a normal edit?
+3. **Is `side_effects` closed at two values**, or might a third appear (e.g.
+   `idempotent`)? We would use that: an idempotent-mutating skill could safely be
+   reclaimed, which is exactly the case we currently have to be pessimistic about.
 
 ---
 

@@ -444,3 +444,10 @@ tiebreaker.
    the DB's `finding_severity_check` rejects it, and every partial run fails.
    copilot-api normalises off-scale severities to `medium` rather than dropping
    the finding. See `CONTRACT_RATIFICATION_REQUEST.md` Q4.
+8. **Is §2's `side_effects` guaranteed accurate, and what happens when it
+   changes?** copilot-api reads it at enqueue to decide whether a run may be
+   re-executed after its worker dies (ADR-001). A mutating skill mislabelled
+   `none` gets auto-retried — the order-placed-twice bug that invariant 8 exists
+   to prevent, arriving through the one door none of our guards watch. Also: the
+   catalog is a 60s-stale cache, so a `none → mutating` edit has a window. See
+   `CONTRACT_RATIFICATION_REQUEST.md` Q5.
