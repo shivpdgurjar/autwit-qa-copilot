@@ -46,10 +46,17 @@
       <artifactId>flyway-database-postgresql</artifactId>
     </dependency>
 
+    <!--
+      Compile scope, not runtime. PgNotificationListener calls PGConnection.getNotifications
+      directly, which is a driver API with no JDBC equivalent. That is a coupling worth
+      naming rather than hiding: this service is already tied to Postgres by design —
+      invariant 5 makes autwit.run the queue via SKIP LOCKED, invariant 6 uses advisory
+      locks, and the schema leans on jsonb and partial indexes. LISTEN/NOTIFY is the same
+      bargain.
+    -->
     <dependency>
       <groupId>org.postgresql</groupId>
       <artifactId>postgresql</artifactId>
-      <scope>runtime</scope>
     </dependency>
 
     <dependency>

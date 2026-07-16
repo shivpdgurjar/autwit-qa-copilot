@@ -1,9 +1,11 @@
 package com.autwit.copilot.config;
 
+import java.time.Duration;
 import java.util.Optional;
 
 import com.autwit.copilot.registry.SkillCatalogSync;
 import com.autwit.copilot.run.RunReaper;
+import com.autwit.copilot.stream.SseHub;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Configuration;
@@ -26,14 +28,24 @@ public class SchedulingConfig implements SchedulingConfigurer {
 
     private static final Logger log = LoggerFactory.getLogger(SchedulingConfig.class);
 
+    /**
+     * Proxies cut a stream that says nothing for 30–60s, and this one is silent for
+     * minutes while a snapshot runs. Comfortably inside the tightest common idle
+     * timeout.
+     */
+    private static final Duration SSE_HEARTBEAT = Duration.ofSeconds(20);
+
     private final AutwitProperties props;
     private final Optional<RunReaper> reaper;
     private final SkillCatalogSync catalogSync;
+    private final SseHub sseHub;
 
-    public SchedulingConfig(AutwitProperties props, Optional<RunReaper> reaper, SkillCatalogSync catalogSync) {
+    public SchedulingConfig(AutwitProperties props, Optional<RunReaper> reaper, SkillCatalogSync catalogSync,
+            SseHub sseHub) {
         this.props = props;
         this.reaper = reaper;
         this.catalogSync = catalogSync;
+        this.sseHub = sseHub;
     }
 
     @Override
@@ -45,5 +57,7 @@ public class SchedulingConfig implements SchedulingConfigurer {
 
         registrar.addFixedDelayTask(catalogSync::sync, props.orchestrator().catalogSyncInterval());
         log.info("Skill catalog sync scheduled every {}", props.orchestrator().catalogSyncInterval());
+
+        registrar.addFixedDelayTask(sseHub::heartbeat, SSE_HEARTBEAT);
     }
 }
