@@ -1210,6 +1210,42 @@ components:
         finding_counts:
           type: object
           additionalProperties: { type: integer }
+        part_results:
+          type: array
+          description: |
+            On Comparison rather than ComparisonDetail deliberately: it is nine rows of
+            counts, and a timeline that had to fetch each comparison's detail just to
+            show how many ignore rules were applied would be an N+1 for information the
+            reader needs before deciding whether to open anything.
+          items: { $ref: '#/components/schemas/PartResult' }
+
+    PartResult:
+      type: object
+      properties:
+        part_key: { type: string }
+        rows_added: { type: integer }
+        rows_removed: { type: integer }
+        rows_modified: { type: integer }
+        rows_unchanged: { type: integer }
+        ignored_columns:
+          type: array
+          items: { type: string }
+          description: |
+            Surfaced deliberately. If updated_at diffs are hidden silently, nobody
+            trusts the report. Only lists rules that actually matched a column present
+            in the data — a rule for a column nobody has is noise.
+        inconclusive:
+          type: boolean
+          default: false
+          description: |
+            The part could not be compared at all: meta.pk_columns was missing on an
+            rdbms_table, or the part_key existed on only one side. The row counts are
+            then zeroed and meaningless — render them as '—', never as 'no changes'. A
+            part that could not be read and a part with nothing to report must never
+            look alike.
+        reason:
+          type: string
+          description: Why the part is inconclusive. Null otherwise.
 
     ComparisonDetail:
       allOf:
@@ -1219,36 +1255,6 @@ components:
             findings:
               type: array
               items: { $ref: '#/components/schemas/Finding' }
-            part_results:
-              type: array
-              items:
-                type: object
-                properties:
-                  part_key: { type: string }
-                  rows_added: { type: integer }
-                  rows_removed: { type: integer }
-                  rows_modified: { type: integer }
-                  rows_unchanged: { type: integer }
-                  ignored_columns:
-                    type: array
-                    items: { type: string }
-                    description: |
-                      Surfaced deliberately. If updated_at diffs are hidden
-                      silently, nobody trusts the report. Only lists rules that
-                      actually matched a column present in the data — a rule for a
-                      column nobody has is noise.
-                  inconclusive:
-                    type: boolean
-                    default: false
-                    description: |
-                      The part could not be compared at all: meta.pk_columns was
-                      missing on an rdbms_table, or the part_key existed on only one
-                      side. The row counts are then zeroed and meaningless — render
-                      them as '—', never as 'no changes'. A part that could not be
-                      read and a part with nothing to report must never look alike.
-                  reason:
-                    type: string
-                    description: Why the part is inconclusive. Null otherwise.
 
     Finding:
       type: object

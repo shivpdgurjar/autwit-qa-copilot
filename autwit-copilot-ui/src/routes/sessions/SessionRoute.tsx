@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { api, type Snapshot } from '../../api/client';
+import { api, type Comparison, type Snapshot } from '../../api/client';
 import { useSession, sessionKey } from '../../hooks/useSession';
 import { useSessionStream } from '../../hooks/useSessionStream';
 import { useEndSession } from '../../hooks/useSubmitRun';
@@ -9,14 +9,20 @@ import { Composer } from '../../components/chat/Composer';
 import { MessageList } from '../../components/chat/MessageList';
 import { SkillPalette } from '../../components/chat/SkillPalette';
 import { Timeline } from '../../components/timeline/Timeline';
+import { EventBatchCard } from '../../components/timeline/EventBatchCard';
 import { ArtifactDrawer } from '../../components/drawer/ArtifactViewer';
+import { DiffViewer } from '../../components/drawer/DiffViewer';
 import { FindingCounts, FindingsFeed } from '../../components/findings/FindingsFeed';
 import { Mono, Muted, Spinner } from '../../components/ui';
 
 export default function SessionRoute() {
   const { sessionId = '' } = useParams();
   const queryClient = useQueryClient();
-  const [drawer, setDrawer] = useState<Snapshot | null>(null);
+  // One drawer slot: opening a comparison replaces an open artifact and vice versa.
+  // Two overlapping drawers would fight for the same edge of the screen.
+  const [drawer, setDrawer] = useState<
+    { kind: 'snapshot'; snapshot: Snapshot } | { kind: 'comparison'; comparison: Comparison } | null
+  >(null);
   const [palette, setPalette] = useState(false);
 
   const stream = useSessionStream(sessionId);
@@ -109,9 +115,11 @@ export default function SessionRoute() {
           <Subjects subjects={session.subjects} />
           <Timeline
             session={session}
-            onOpenSnapshot={setDrawer}
+            onOpenSnapshot={(snapshot) => setDrawer({ kind: 'snapshot', snapshot })}
+            onOpenComparison={(comparison) => setDrawer({ kind: 'comparison', comparison })}
             onCancelRun={(id) => cancelRun.mutate(id)}
           />
+          <EventBatchCard sessionId={sessionId} count={session.counts?.events ?? 0} />
         </main>
 
         <aside className="flex w-80 shrink-0 flex-col border-l border-ink-700 bg-ink-900">
@@ -139,7 +147,14 @@ export default function SessionRoute() {
             screen, a fourth column would squeeze the timeline into a gutter. */}
         {drawer && (
           <div className="absolute inset-y-0 right-0 top-[3.25rem] z-40 shadow-2xl">
-            <ArtifactDrawer snapshot={drawer} onClose={() => setDrawer(null)} />
+            {drawer.kind === 'snapshot' ? (
+              <ArtifactDrawer snapshot={drawer.snapshot} onClose={() => setDrawer(null)} />
+            ) : (
+              <DiffViewer
+                comparisonId={drawer.comparison.comparison_id}
+                onClose={() => setDrawer(null)}
+              />
+            )}
           </div>
         )}
       </div>

@@ -10,6 +10,7 @@ import java.util.UUID;
 
 import com.autwit.copilot.artifact.ArtifactRepository;
 import com.autwit.copilot.common.ApiException;
+import com.autwit.copilot.compare.ComparisonRepository;
 import com.autwit.copilot.compare.FindingRepository;
 import com.autwit.copilot.config.AutwitProperties;
 import com.autwit.copilot.run.RunRepository;
@@ -28,13 +29,15 @@ public class SessionService {
     private final MilestoneRepository milestones;
     private final ArtifactRepository artifacts;
     private final SnapshotRepository snapshots;
+    private final ComparisonRepository comparisons;
     private final FindingRepository findings;
     private final RunRepository runs;
     private final AutwitProperties props;
 
     public SessionService(SessionRepository sessions, StepRepository steps, MilestoneRepository milestones,
-            ArtifactRepository artifacts, SnapshotRepository snapshots, FindingRepository findings,
-            RunRepository runs, AutwitProperties props) {
+            ArtifactRepository artifacts, SnapshotRepository snapshots, ComparisonRepository comparisons,
+            FindingRepository findings, RunRepository runs, AutwitProperties props) {
+        this.comparisons = comparisons;
         this.sessions = sessions;
         this.steps = steps;
         this.milestones = milestones;
@@ -74,6 +77,7 @@ public class SessionService {
                 steps.listBySession(sessionId, null),
                 milestones.listBySession(sessionId),
                 snapshots.listBySession(sessionId),
+                comparisons.listBySession(sessionId),
                 findings.listBySession(sessionId, null, null),
                 runs.listActive(sessionId),
                 new SessionDetail.Counts(

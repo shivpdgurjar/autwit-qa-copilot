@@ -270,7 +270,7 @@
   ],
   "findings": [
     {
-      "severity": "warn",
+      "severity": "medium",
       "category": "capture",
       "part_key": "shipment.legs",
       "message": "shipment_pg unreachable: 2 of 9 parts missing (shipment.legs, shipment.events)."

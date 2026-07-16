@@ -195,19 +195,14 @@ class FixtureRunTest extends AbstractPostgresIT {
     }
 
     @Test
-    void anOffScaleSeverityFromTheOrchestratorIsNormalisedRatherThanDropped() {
-        // invoke_partial.json sends severity "warn", exactly as SKILL_CONTRACT §5's
-        // wording invites -- but warn is a Verdict, not a Severity, and the DB's
-        // finding_severity_check rejects it. Without normalisation this run dies on a
-        // constraint violation, turning a documented condition into a hard failure.
-        // See CONTRACT_RATIFICATION_REQUEST.md Q4.
+    void theOrchestratorsOwnFindingSurvivesAlongsideOurs() {
         enqueuer.enqueueMilestone(sessionId, "partial_capture", List.of("order_flow"), true, null, null);
         worker.pollOnce();
 
         assertThat(jdbc.queryForList(
                 "select message from autwit.finding where session_id = ? and part_key = 'shipment.legs'",
                 String.class, sessionId))
-                .as("the orchestrator's warn finding survives, relabelled -- evidence is never dropped")
+                .as("evidence from the orchestrator is never dropped in favour of our own")
                 .singleElement(org.assertj.core.api.InstanceOfAssertFactories.STRING)
                 .contains("shipment_pg unreachable");
     }

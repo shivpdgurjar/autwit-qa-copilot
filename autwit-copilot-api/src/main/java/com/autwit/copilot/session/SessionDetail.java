@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.autwit.copilot.compare.Comparison;
 import com.autwit.copilot.compare.Finding;
 import com.autwit.copilot.run.Run;
 import com.autwit.copilot.snapshot.Snapshot;
@@ -17,8 +18,9 @@ import com.autwit.copilot.snapshot.Snapshot;
  * an allOf, and Jackson's @JsonUnwrapped does not apply cleanly to record components,
  * so the wire shape wins over the object model here.
  *
- * <p>comparisons stays empty until step 7 builds the diff engine; nothing writes that
- * table yet.
+ * <p>Events are deliberately absent — only their count. A session can hold thousands,
+ * and this endpoint is fetched on every SSE hint; GET /sessions/{id}/events paginates
+ * them instead.
  */
 public record SessionDetail(
         UUID sessionId,
@@ -37,7 +39,7 @@ public record SessionDetail(
         List<Step> steps,
         List<Milestone> milestones,
         List<Snapshot> snapshots,
-        List<Object> comparisons,
+        List<Comparison> comparisons,
         List<Finding> findings,
         List<Run> activeRuns,
         Counts counts) {
@@ -46,10 +48,11 @@ public record SessionDetail(
     }
 
     public static SessionDetail of(Session s, List<Step> steps, List<Milestone> milestones,
-            List<Snapshot> snapshots, List<Finding> findings, List<Run> activeRuns, Counts counts) {
+            List<Snapshot> snapshots, List<Comparison> comparisons, List<Finding> findings,
+            List<Run> activeRuns, Counts counts) {
         return new SessionDetail(
                 s.sessionId(), s.correlationId(), s.testerId(), s.env(), s.title(), s.status(),
                 s.retentionClass(), s.startedAt(), s.endedAt(), s.expiresAt(), s.tags(), s.subjects(),
-                steps, milestones, snapshots, List.of(), findings, activeRuns, counts);
+                steps, milestones, snapshots, comparisons, findings, activeRuns, counts);
     }
 }

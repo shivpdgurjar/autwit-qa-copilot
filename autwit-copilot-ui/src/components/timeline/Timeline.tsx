@@ -1,7 +1,8 @@
-import type { Milestone, Run, SessionDetail, Snapshot, Step } from '../../api/client';
+import type { Comparison, Milestone, Run, SessionDetail, Snapshot, Step } from '../../api/client';
 import { isActive } from '../../api/client';
 import { Card, EmptyState, Mono, Muted, Ago } from '../ui';
 import { FailedRunCard, PendingRunCard } from '../chat/PendingRunCard';
+import { VerdictBadge } from '../findings/SeverityBadge';
 import { MilestoneCard } from './MilestoneCard';
 import { SnapshotCard } from './SnapshotCard';
 
@@ -23,10 +24,12 @@ import { SnapshotCard } from './SnapshotCard';
 export function Timeline({
   session,
   onOpenSnapshot,
+  onOpenComparison,
   onCancelRun,
 }: {
   session: SessionDetail;
   onOpenSnapshot: (snapshot: Snapshot) => void;
+  onOpenComparison: (comparison: Comparison) => void;
   onCancelRun?: (runId: string) => void;
 }) {
   const steps = (session.steps ?? []).filter(
@@ -49,6 +52,9 @@ export function Timeline({
   const snapshotByStep = new Map<string, Snapshot>();
   (session.snapshots ?? []).forEach((s) => s.step_id && snapshotByStep.set(s.step_id, s));
 
+  const comparisonByStep = new Map<string, Comparison>();
+  (session.comparisons ?? []).forEach((c) => c.step_id && comparisonByStep.set(c.step_id, c));
+
   if (steps.length === 0) {
     return <EmptyState>Nothing yet. Say what you did and the copilot will capture it.</EmptyState>;
   }
@@ -59,6 +65,7 @@ export function Timeline({
         const run = activeByStep.get(step.step_id);
         const milestone = milestoneByStep.get(step.step_id);
         const snapshot = snapshotByStep.get(step.step_id);
+        const comparison = comparisonByStep.get(step.step_id);
 
         return (
           <li key={step.step_id} className="space-y-2">
@@ -73,6 +80,15 @@ export function Timeline({
             {snapshot && (
               <div className="ml-4">
                 <SnapshotCard snapshot={snapshot} onClick={() => onOpenSnapshot(snapshot)} />
+              </div>
+            )}
+
+            {comparison && (
+              <div className="ml-4">
+                <ComparisonCard
+                  comparison={comparison}
+                  onClick={() => onOpenComparison(comparison)}
+                />
               </div>
             )}
 
@@ -92,6 +108,56 @@ export function Timeline({
         );
       })}
     </ol>
+  );
+}
+
+/**
+ * A comparison on the timeline. Clicking opens the DiffViewer.
+ *
+ * The teaser shows how many parts changed and how many ignore rules were applied —
+ * the ignored count belongs here, not only in the drawer, because "5 of 9 changed" is
+ * an incomplete sentence without "…and updated_at was excluded from that judgement".
+ */
+function ComparisonCard({
+  comparison,
+  onClick,
+}: {
+  comparison: Comparison;
+  onClick: () => void;
+}) {
+  const parts = (comparison.part_results ?? []) as {
+    ignored_columns?: string[];
+    inconclusive?: boolean;
+    rows_added?: number;
+    rows_removed?: number;
+    rows_modified?: number;
+  }[];
+
+  const changed = parts.filter(
+    (p) => (p.rows_added ?? 0) + (p.rows_removed ?? 0) + (p.rows_modified ?? 0) > 0,
+  ).length;
+  const inconclusive = parts.filter((p) => p.inconclusive).length;
+  const ignored = parts.reduce((n, p) => n + (p.ignored_columns?.length ?? 0), 0);
+
+  return (
+    <Card onClick={onClick}>
+      <div className="flex items-center gap-2">
+        <span className="text-xs">🔍</span>
+        <span className="text-sm font-medium">Comparison</span>
+        <Mono className="rounded bg-ink-800 px-1.5 py-0.5 text-ink-300">
+          {comparison.compare_type}
+        </Mono>
+        {comparison.verdict && <VerdictBadge verdict={comparison.verdict} />}
+        <span className="ml-auto text-[11px]">
+          <Muted>
+            {changed} of {parts.length} changed
+            {inconclusive > 0 && ` · ${inconclusive} inconclusive`}
+            {ignored > 0 && ` · ${ignored} ignored`}
+          </Muted>
+        </span>
+      </div>
+      {comparison.summary && <p className="mt-1 text-[12px] text-ink-400">{comparison.summary}</p>}
+    </Card>
   );
 }
 
