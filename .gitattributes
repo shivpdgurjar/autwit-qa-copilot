@@ -1,0 +1,13 @@
+# Normalise to LF in the repository; let git decide the working-copy ending.
+* text=auto
+
+# mvnw is executed by /bin/sh. Checked out with CRLF it dies with
+# "bad interpreter: /bin/sh^M", so it must stay LF on every platform.
+mvnw text eol=lf
+gradlew text eol=lf
+
+# Windows-only scripts must stay CRLF.
+*.cmd text eol=crlf
+*.bat text eol=crlf
+
+*.jar binary

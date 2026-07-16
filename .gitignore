@@ -1,0 +1,24 @@
+# build output
+target/
+build/
+*.class
+
+# mvnw re-downloads this from wrapperUrl, so it need not be committed.
+# Leading ** matters: an unanchored path here would only match at the repo root.
+**/.mvn/wrapper/maven-wrapper.jar
+
+# IDE
+.idea/
+*.iml
+.vscode/
+.settings/
+.classpath
+.project
+
+# node (autwit-copilot-ui, step 5+)
+node_modules/
+dist/
+
+# local overrides
+application-local.yml
+.env

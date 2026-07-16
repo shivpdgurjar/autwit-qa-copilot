@@ -12,7 +12,7 @@ Reproduce with Testcontainers in `RunQueueTest` etc. — see `BUILD_BRIEF.md` §
 | Check | Result |
 |---|---|
 | `psql -v ON_ERROR_STOP=1 -f V1__init.sql` | clean, zero errors |
-| Tables created | 13 |
+| Tables created | 14 |
 | Circular FK `milestone.snapshot_id ↔ snapshot.milestone_id` | resolved via deferred `ALTER TABLE ADD CONSTRAINT` — no bootstrap deadlock |
 
 ---
