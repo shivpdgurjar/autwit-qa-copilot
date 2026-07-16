@@ -438,3 +438,9 @@ tiebreaker.
    trailing zero fails *every* artifact, not some. See
    `CONTRACT_RATIFICATION_REQUEST.md` Q1 for a proposed definition, a §6.1
    amendment, and language-independent test vectors.
+7. **§5 says a partial capture raises a `warn` finding, but there is no `warn`
+   severity.** The scale is info/low/medium/high/critical; `warn` is a *Verdict*
+   value. An implementation that follows §5's wording sends `severity: "warn"`,
+   the DB's `finding_severity_check` rejects it, and every partial run fails.
+   copilot-api normalises off-scale severities to `medium` rather than dropping
+   the finding. See `CONTRACT_RATIFICATION_REQUEST.md` Q4.

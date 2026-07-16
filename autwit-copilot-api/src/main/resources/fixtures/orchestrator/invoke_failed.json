@@ -1,0 +1,13 @@
+{
+  "_simulate": {
+    "error": true
+  },
+  "type": "https://autwit/errors/upstream-unavailable",
+  "title": "Upstream unavailable",
+  "status": 503,
+  "code": "upstream_unavailable",
+  "detail": "snapshot.capture exited 3: connection refused to shipment_pg",
+  "instance": "/invoke",
+  "skill_name": "snapshot.capture",
+  "retryable": true
+}

@@ -5,19 +5,20 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.autwit.copilot.compare.Finding;
+import com.autwit.copilot.run.Run;
+import com.autwit.copilot.snapshot.Snapshot;
+
 /**
  * openapi.yaml SessionDetail — "THE source of truth. The UI hydrates from this on
  * load and refetches after any run.succeeded / run.failed notification."
  *
  * <p>Session's fields are flattened in rather than composed. openapi models this as
- * an allOf, and Jackson's @JsonUnwrapped does not apply cleanly to record
- * components, so the wire shape wins over the object model here.
+ * an allOf, and Jackson's @JsonUnwrapped does not apply cleanly to record components,
+ * so the wire shape wins over the object model here.
  *
- * <p>snapshots, comparisons, findings and activeRuns are typed loosely and served
- * empty until the steps that write them land (3 for runs/snapshots, 7 for
- * comparisons/findings). They are present because openapi marks them required and
- * the UI's generated client expects the keys; nothing writes those tables at step 2,
- * so empty is accurate rather than a placeholder.
+ * <p>comparisons stays empty until step 7 builds the diff engine; nothing writes that
+ * table yet.
  */
 public record SessionDetail(
         UUID sessionId,
@@ -35,19 +36,20 @@ public record SessionDetail(
 
         List<Step> steps,
         List<Milestone> milestones,
-        List<Object> snapshots,
+        List<Snapshot> snapshots,
         List<Object> comparisons,
-        List<Object> findings,
-        List<Object> activeRuns,
+        List<Finding> findings,
+        List<Run> activeRuns,
         Counts counts) {
 
     public record Counts(int artifacts, int events, Map<String, Integer> findingsBySeverity) {
     }
 
-    public static SessionDetail of(Session s, List<Step> steps, List<Milestone> milestones, Counts counts) {
+    public static SessionDetail of(Session s, List<Step> steps, List<Milestone> milestones,
+            List<Snapshot> snapshots, List<Finding> findings, List<Run> activeRuns, Counts counts) {
         return new SessionDetail(
                 s.sessionId(), s.correlationId(), s.testerId(), s.env(), s.title(), s.status(),
                 s.retentionClass(), s.startedAt(), s.endedAt(), s.expiresAt(), s.tags(), s.subjects(),
-                steps, milestones, List.of(), List.of(), List.of(), List.of(), counts);
+                steps, milestones, snapshots, List.of(), findings, activeRuns, counts);
     }
 }

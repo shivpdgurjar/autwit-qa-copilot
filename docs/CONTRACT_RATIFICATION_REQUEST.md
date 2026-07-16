@@ -4,12 +4,13 @@
 **Re:** `SKILL_CONTRACT.md` v0.1.0 (Draft — "must be ratified by both sessions before
 either side builds against it")
 **Date:** 2026-07-16
-**Status of our build:** steps 1–2 complete. Steps 3–7 proceed against fixtures and
-are not blocked. **Step 8 (the swap to `HttpOrchestratorClient`) is blocked on Q1.**
+**Status of our build:** steps 1–3 complete (the run queue, worker, reaper and
+fixture replay all pass). Steps 4–7 proceed against fixtures and are not blocked.
+**Step 8 (the swap to `HttpOrchestratorClient`) is blocked on Q1.**
 
-Three questions. Q1 is new and is the one that will silently break the integration.
-Q2 and Q3 are `SKILL_CONTRACT` §11 items 1 and 5, restated with what now depends on
-them.
+Four questions. Q1 is the one that will silently break the integration. Q2 and Q3 are
+`SKILL_CONTRACT` §11 items 1 and 5, restated with what now depends on them. Q4 is a
+small one found while building step 3, which fails hard.
 
 ---
 
@@ -178,6 +179,37 @@ as a product bug. The tool is most confidently wrong exactly when this breaks.
 3. Where scope definitions live, and what the change process is when a scope gains or
    loses a table (§11 item 3 assumes: your repo, exposed via the `scope` enum in
    `snapshot.capture`'s `input_schema`).
+
+---
+
+## Q4 — `severity: "warn"` does not exist. What should a partial capture raise?
+
+**New. Found while building step 3. Small, and it fails hard.**
+
+§5 says:
+
+> `partial` means some artifacts landed and some didn't — copilot-api marks the
+> snapshot `partial` and the run `succeeded`, then raises a `warn` finding.
+
+There is no `warn` severity. The scale is `info | low | medium | high | critical`, in
+openapi.yaml and in the DB's `finding_severity_check`. `warn` belongs to **Verdict**
+(`pass | fail | warn | inconclusive`) — the two scales are conflated. §6.4's own
+finding example correctly uses `high`.
+
+**Why it matters:** an implementation that follows §5's wording sends
+`severity: "warn"`, our check constraint rejects the row, and the whole persist
+transaction unwinds — so *every* partial run fails. A documented, expected condition
+becomes a hard error. We hit this the moment our own fixture followed §5 literally.
+
+**What we did.** copilot-api normalises any off-scale severity to `medium` and logs
+it, rather than rejecting the finding. A finding is evidence; dropping one because its
+label is off-scale hides the thing the tester needs to see. Our own partial finding is
+raised at `medium`.
+
+**What we need:** confirmation of the intended severity for a partial capture (we
+suggest `medium`), and a §5 wording fix from "a `warn` finding" to "a `medium`
+finding". If you would rather partial be `high`, say so — we will follow. The
+normalisation stays either way as a compatibility shim.
 
 ---
 

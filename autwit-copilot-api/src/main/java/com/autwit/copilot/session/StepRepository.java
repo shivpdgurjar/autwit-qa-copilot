@@ -10,6 +10,7 @@ import com.autwit.copilot.common.Json;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 
 @Repository
 public class StepRepository {
@@ -47,16 +48,27 @@ public class StepRepository {
     }
 
     /**
-     * Inserts with a server-allocated seq.
+     * Inserts with a server-allocated seq, under the session row lock.
      *
-     * <p>next_step_seq is evaluated inside the insert rather than read first: a
-     * read-then-write would race two concurrent steps in the same session onto the
-     * same seq, and UNIQUE (session_id, seq) would reject the loser. The unique
-     * index still backstops this — it is the reason the race is a 409 and not a
-     * corrupted timeline.
+     * <p>The lock is what V1__init.sql means by "seq allocation: one sequence per
+     * session, assigned under the session row lock". Without it two concurrent inserts
+     * in the same session both evaluate next_step_seq, both get the same number, and
+     * UNIQUE (session_id, seq) rejects the loser with a 500. That is not hypothetical:
+     * a tester double-clicking, or the worker writing an analysis step while the API
+     * accepts the next message, is enough. The advisory lock does not help here — it
+     * serializes runs, not API calls.
+     *
+     * <p>Contention is per session and lasts only as long as the enclosing transaction.
+     * Steps in one session are inherently ordered anyway; that is what seq means.
+     *
+     * <p>@Transactional because the lock is worthless without one: outside a transaction
+     * every statement autocommits and the row lock is dropped the instant it is taken.
      */
+    @Transactional
     public Step insert(UUID sessionId, String kind, String label, String actor,
             String status, UUID parentStepId, Map<String, Object> detail) {
+
+        lockSession(sessionId);
 
         var inserted = jdbc.queryForObject(
                 """
@@ -69,6 +81,14 @@ public class StepRepository {
                 json.writeOrEmptyObject(detail));
 
         return find(inserted).orElseThrow();
+    }
+
+    /**
+     * Serializes seq allocation for a session. Re-taking it within the same transaction
+     * costs nothing, so callers that already hold it lose nothing by asking again.
+     */
+    public void lockSession(UUID sessionId) {
+        jdbc.query("select 1 from autwit.session where session_id = ? for update", rs -> null, sessionId);
     }
 
     public Optional<Step> find(UUID stepId) {
@@ -84,5 +104,17 @@ public class StepRepository {
     public int countBySession(UUID sessionId) {
         return jdbc.queryForObject(
                 "select count(*) from autwit.step where session_id = ?", Integer.class, sessionId);
+    }
+
+    /** ended_at is set only on a terminal status, so a running step keeps a null end. */
+    public void updateStatus(UUID stepId, String status) {
+        jdbc.update(
+                """
+                update autwit.step
+                set status = ?,
+                    ended_at = case when ? in ('succeeded','failed','skipped') then now() else ended_at end
+                where step_id = ?
+                """,
+                status, status, stepId);
     }
 }

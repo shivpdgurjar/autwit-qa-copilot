@@ -1,6 +1,7 @@
 package com.autwit.copilot.support;
 
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
@@ -23,6 +24,7 @@ import org.testcontainers.utility.DockerImageName;
  * (SCHEMA_VERIFICATION.md — PostgreSQL 16.14).
  */
 @SpringBootTest
+@ActiveProfiles("fake")
 public abstract class AbstractPostgresIT {
 
     protected static final PostgreSQLContainer<?> POSTGRES =
@@ -40,5 +42,11 @@ public abstract class AbstractPostgresIT {
         registry.add("spring.datasource.url", POSTGRES::getJdbcUrl);
         registry.add("spring.datasource.username", POSTGRES::getUsername);
         registry.add("spring.datasource.password", POSTGRES::getPassword);
+
+        // Park the schedulers. Tests drive the reaper and the catalog sync explicitly
+        // via reapNow()/syncNow(): a sweep firing on its own mid-assertion would make
+        // the queue tests flaky in a way that looks like a real race.
+        registry.add("autwit.run.reaper-interval", () -> "1h");
+        registry.add("autwit.orchestrator.catalog-sync-interval", () -> "1h");
     }
 }

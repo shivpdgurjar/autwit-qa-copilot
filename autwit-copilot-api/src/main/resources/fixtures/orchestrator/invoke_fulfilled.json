@@ -1,0 +1,343 @@
+{
+  "run_id": "REPLACED_BY_FAKE",
+  "status": "succeeded",
+  "started_at": "2026-07-16T09:14:02Z",
+  "ended_at": "2026-07-16T09:15:41Z",
+  "duration_ms": 99000,
+  "invocations": [
+    {
+      "skill_name": "snapshot.capture",
+      "skill_version": "1.4.0",
+      "input": {
+        "scope": "order_flow",
+        "label": "after_fulfilment"
+      },
+      "status": "succeeded",
+      "exit_code": 0,
+      "duration_ms": 91200,
+      "output_inline": {
+        "part_count": 9,
+        "total_rows": 8
+      }
+    }
+  ],
+  "artifacts": [
+    {
+      "client_ref": "a1",
+      "artifact_type": "rdbms_table",
+      "source_system": "oms_pg",
+      "logical_name": "orders",
+      "format": "json",
+      "body": [
+        {
+          "order_id": "XXXX",
+          "member_id": "M-1234",
+          "status": "FULFILLED",
+          "total_amount": "1450.00",
+          "currency": "GBP",
+          "updated_at": "2026-07-16T09:14:00Z"
+        }
+      ],
+      "content_hash": "sha256:b620dc1d237b4682753a92a8893768fa34a810c277bfb954b5839b7162b2b0af",
+      "row_count": 1,
+      "meta": {
+        "pk_columns": [
+          "order_id"
+        ],
+        "ignore_columns": [
+          "created_at",
+          "updated_at",
+          "trace_id"
+        ]
+      }
+    },
+    {
+      "client_ref": "a2",
+      "artifact_type": "rdbms_table",
+      "source_system": "oms_pg",
+      "logical_name": "order_items",
+      "format": "json",
+      "body": [
+        {
+          "order_id": "XXXX",
+          "line_no": 1,
+          "sku": "SKU-1",
+          "qty": 2,
+          "line_total": "800.00"
+        },
+        {
+          "order_id": "XXXX",
+          "line_no": 2,
+          "sku": "SKU-2",
+          "qty": 1,
+          "line_total": "400.00"
+        }
+      ],
+      "content_hash": "sha256:b94cfadcfc50b99a7f92cf75f4574a475555be6e10570e8d9cec2e5fb94ef341",
+      "row_count": 2,
+      "meta": {
+        "pk_columns": [
+          "order_id",
+          "line_no"
+        ],
+        "ignore_columns": [
+          "created_at",
+          "updated_at",
+          "trace_id"
+        ]
+      }
+    },
+    {
+      "client_ref": "a3",
+      "artifact_type": "rdbms_table",
+      "source_system": "oms_pg",
+      "logical_name": "order_payments",
+      "format": "json",
+      "body": [
+        {
+          "payment_id": "P-1",
+          "order_id": "XXXX",
+          "amount": "1450.00",
+          "state": "AUTHORISED"
+        }
+      ],
+      "content_hash": "sha256:cd6bb62e979afb7bea242597a21993f9b2c689a49fc2cba1fb9903524bc82ad7",
+      "row_count": 1,
+      "meta": {
+        "pk_columns": [
+          "payment_id"
+        ],
+        "ignore_columns": [
+          "created_at",
+          "updated_at",
+          "trace_id"
+        ]
+      }
+    },
+    {
+      "client_ref": "a4",
+      "artifact_type": "rdbms_table",
+      "source_system": "oms_pg",
+      "logical_name": "order_status_history",
+      "format": "json",
+      "body": [
+        {
+          "order_id": "XXXX",
+          "seq": 1,
+          "status": "FULFILLED",
+          "at": "2026-07-16T09:14:00Z"
+        }
+      ],
+      "content_hash": "sha256:17b8cbeb03b8456042ad6c012c4ac54c2517274ce9e82d4c2383ea3ac951744e",
+      "row_count": 1,
+      "meta": {
+        "pk_columns": [
+          "order_id",
+          "seq"
+        ],
+        "ignore_columns": [
+          "created_at",
+          "updated_at",
+          "trace_id"
+        ]
+      }
+    },
+    {
+      "client_ref": "a5",
+      "artifact_type": "rdbms_table",
+      "source_system": "oms_pg",
+      "logical_name": "order_addresses",
+      "format": "json",
+      "body": [
+        {
+          "order_id": "XXXX",
+          "kind": "SHIPPING",
+          "postcode": "SW1A 1AA",
+          "customer_email": "***MASKED***"
+        }
+      ],
+      "content_hash": "sha256:920287d382719994f2264f501bc544ae30110cacebafb8cbdb18c15eb1e21003",
+      "row_count": 1,
+      "meta": {
+        "pk_columns": [
+          "order_id",
+          "kind"
+        ],
+        "masked_columns": [
+          "customer_email"
+        ],
+        "ignore_columns": [
+          "updated_at"
+        ]
+      }
+    },
+    {
+      "client_ref": "a6",
+      "artifact_type": "rdbms_table",
+      "source_system": "oms_pg",
+      "logical_name": "order_discounts",
+      "format": "json",
+      "body": [],
+      "content_hash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "row_count": 0,
+      "meta": {
+        "pk_columns": [
+          "order_id",
+          "code"
+        ],
+        "ignore_columns": [
+          "created_at",
+          "updated_at",
+          "trace_id"
+        ]
+      }
+    },
+    {
+      "client_ref": "a7",
+      "artifact_type": "rdbms_table",
+      "source_system": "shipment_pg",
+      "logical_name": "shipments",
+      "format": "json",
+      "body": [
+        {
+          "shipment_id": "SHP-99",
+          "order_id": "XXXX",
+          "status": "DELIVERED"
+        }
+      ],
+      "content_hash": "sha256:7f13c3e7ba4565ad428f142bfcf4f484b2e9a7275733515e3085e3202433ded3",
+      "row_count": 1,
+      "meta": {
+        "pk_columns": [
+          "shipment_id"
+        ],
+        "ignore_columns": [
+          "created_at",
+          "updated_at",
+          "trace_id"
+        ]
+      }
+    },
+    {
+      "client_ref": "a8",
+      "artifact_type": "rdbms_table",
+      "source_system": "shipment_pg",
+      "logical_name": "shipment_legs",
+      "format": "json",
+      "body": [
+        {
+          "shipment_id": "SHP-99",
+          "leg_no": 1,
+          "carrier": "DPD",
+          "status": "DELIVERED"
+        }
+      ],
+      "content_hash": "sha256:8f2667f2791dbb284ffde01c2c0aef73b72ae9895d8c446a841366ce53723202",
+      "row_count": 1,
+      "meta": {
+        "pk_columns": [
+          "shipment_id",
+          "leg_no"
+        ],
+        "ignore_columns": [
+          "created_at",
+          "updated_at",
+          "trace_id"
+        ]
+      }
+    },
+    {
+      "client_ref": "a9",
+      "artifact_type": "rdbms_table",
+      "source_system": "shipment_pg",
+      "logical_name": "shipment_events",
+      "format": "json",
+      "body": [
+        {
+          "shipment_id": "SHP-99",
+          "seq": 1,
+          "event": "CREATED"
+        }
+      ],
+      "content_hash": "sha256:311f6f793c4c4f4db9a4481b7fd8e5f75c8fda7b2a2f81e1c274bc778a5e9f46",
+      "row_count": 1,
+      "meta": {
+        "pk_columns": [
+          "shipment_id",
+          "seq"
+        ],
+        "ignore_columns": [
+          "created_at",
+          "updated_at",
+          "trace_id"
+        ]
+      }
+    }
+  ],
+  "snapshots": [
+    {
+      "client_ref": "s1",
+      "label": "after_fulfilment",
+      "scope": "order_flow",
+      "scope_def": {
+        "tables": [
+          "oms.orders",
+          "oms.order_items",
+          "oms.order_payments",
+          "oms.order_status_history",
+          "oms.order_addresses",
+          "oms.order_discounts",
+          "shipment.shipments",
+          "shipment.legs",
+          "shipment.events"
+        ],
+        "resolved_at": "2026-07-16T09:14:02Z"
+      },
+      "status": "complete",
+      "parts": [
+        {
+          "part_key": "oms.orders",
+          "artifact_ref": "a1"
+        },
+        {
+          "part_key": "oms.order_items",
+          "artifact_ref": "a2"
+        },
+        {
+          "part_key": "oms.order_payments",
+          "artifact_ref": "a3"
+        },
+        {
+          "part_key": "oms.order_status_history",
+          "artifact_ref": "a4"
+        },
+        {
+          "part_key": "oms.order_addresses",
+          "artifact_ref": "a5"
+        },
+        {
+          "part_key": "oms.order_discounts",
+          "artifact_ref": "a6"
+        },
+        {
+          "part_key": "shipment.shipments",
+          "artifact_ref": "a7"
+        },
+        {
+          "part_key": "shipment.legs",
+          "artifact_ref": "a8"
+        },
+        {
+          "part_key": "shipment.events",
+          "artifact_ref": "a9"
+        }
+      ]
+    }
+  ],
+  "notes": [
+    {
+      "at": "2026-07-16T09:20:00Z",
+      "text": "orders.total_amount changed from 1200.00 to 1450.00 since order_created."
+    }
+  ]
+}

@@ -1,0 +1,6 @@
+{
+  "_simulate": {
+    "sleep_ms": 600000
+  },
+  "_comment": "Sleeps past autwit.orchestrator.timeout. The fake sleeps min(sleep_ms, timeout) and then raises Timeout, so TimeoutTest can set the timeout to ~1s instead of waiting 10m."
+}

@@ -19,6 +19,12 @@ autwit:
 spring:
   application:
     name: autwit-copilot-api
+  profiles:
+    # BUILD_BRIEF §5: --mode=api|worker|all, default all. 'fake' is here only until
+    # step 8 builds HttpOrchestratorClient -- there is no other OrchestratorClient
+    # implementation yet, so the context cannot start without it. Drop 'fake' from
+    # this default the moment the real client exists.
+    default: all,fake
   jackson:
     # openapi.yaml is snake_case throughout, and the UI generates its client from
     # that spec. This is what keeps the two in step.

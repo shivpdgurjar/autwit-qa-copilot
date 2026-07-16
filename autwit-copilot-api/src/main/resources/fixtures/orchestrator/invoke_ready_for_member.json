@@ -1,0 +1,435 @@
+{
+  "run_id": "REPLACED_BY_FAKE",
+  "status": "succeeded",
+  "started_at": "2026-07-16T09:14:02Z",
+  "ended_at": "2026-07-16T09:15:41Z",
+  "duration_ms": 99000,
+  "invocations": [
+    {
+      "skill_name": "api.fetch_order",
+      "skill_version": "1.0.0",
+      "input": {
+        "order_id": "XXXX"
+      },
+      "status": "succeeded",
+      "exit_code": 0,
+      "duration_ms": 220,
+      "output_inline": {
+        "http_status": 200
+      }
+    }
+  ],
+  "artifacts": [
+    {
+      "client_ref": "r1",
+      "artifact_type": "api_response",
+      "source_system": "oms_api",
+      "logical_name": "GET /orders/XXXX",
+      "format": "json",
+      "body": {
+        "orderId": "XXXX",
+        "status": "READY_FOR_MEMBER",
+        "totalAmount": "1200.00",
+        "readyAt": "2026-07-16T09:16:00Z"
+      },
+      "content_hash": "sha256:e60393f54a71985440eab93613bd81cfb0f0a813767ef76386dcdda69ce67a02",
+      "meta": {
+        "http_status": 200,
+        "url": "https://oms.qa2/orders/XXXX"
+      }
+    },
+    {
+      "client_ref": "r2",
+      "artifact_type": "event_batch",
+      "source_system": "kafka",
+      "logical_name": "orders.events",
+      "format": "json",
+      "body": [
+        {
+          "source": "kafka",
+          "topic": "orders.events",
+          "event_type": "PaymentCaptured",
+          "event_key": "XXXX",
+          "source_offset": "10432",
+          "occurred_at": "2026-07-16T09:15:00Z",
+          "payload": {
+            "orderId": "XXXX",
+            "status": "PAYMENTCAPTURED"
+          },
+          "dedupe_hash": "sha256:09baab6a41b95936ed9252dfd4696473c6f32f613f5863a9bdd38dd828387f72"
+        },
+        {
+          "source": "kafka",
+          "topic": "orders.events",
+          "event_type": "OrderUpdated",
+          "event_key": "XXXX",
+          "source_offset": "10433",
+          "occurred_at": "2026-07-16T09:15:01Z",
+          "payload": {
+            "orderId": "XXXX",
+            "status": "ORDERUPDATED"
+          },
+          "dedupe_hash": "sha256:c5529caa1c6167ca03ff2c39b92eab814170230d43ec2f84e514070bfb07c34a"
+        },
+        {
+          "source": "kafka",
+          "topic": "orders.events",
+          "event_type": "PaymentCaptured",
+          "event_key": "XXXX",
+          "source_offset": "10434",
+          "occurred_at": "2026-07-16T09:15:02Z",
+          "payload": {
+            "orderId": "XXXX",
+            "status": "PAYMENTCAPTURED"
+          },
+          "dedupe_hash": "sha256:3663b19624e3589d48d0c2291a12b4ee0d713dacc098d0e4dc4a819f647b3df2"
+        },
+        {
+          "source": "kafka",
+          "topic": "orders.events",
+          "event_type": "OrderUpdated",
+          "event_key": "XXXX",
+          "source_offset": "10435",
+          "occurred_at": "2026-07-16T09:15:03Z",
+          "payload": {
+            "orderId": "XXXX",
+            "status": "ORDERUPDATED"
+          },
+          "dedupe_hash": "sha256:962121a9b80f00539e2118d431f5ba2067c371ddd36921c2985241370dd1ebb1"
+        },
+        {
+          "source": "kafka",
+          "topic": "orders.events",
+          "event_type": "PaymentCaptured",
+          "event_key": "XXXX",
+          "source_offset": "10436",
+          "occurred_at": "2026-07-16T09:15:04Z",
+          "payload": {
+            "orderId": "XXXX",
+            "status": "PAYMENTCAPTURED"
+          },
+          "dedupe_hash": "sha256:332a3eef447d0d98528cdf008b7a9162b741020a7f1b5a1ed8d9f3729453ba65"
+        },
+        {
+          "source": "kafka",
+          "topic": "orders.events",
+          "event_type": "OrderUpdated",
+          "event_key": "XXXX",
+          "source_offset": "10437",
+          "occurred_at": "2026-07-16T09:15:05Z",
+          "payload": {
+            "orderId": "XXXX",
+            "status": "ORDERUPDATED"
+          },
+          "dedupe_hash": "sha256:ee0343a874236683746a953fc281a555f2d5747ca7e611edaa87b3131083a1ee"
+        },
+        {
+          "source": "kafka",
+          "topic": "orders.events",
+          "event_type": "PaymentCaptured",
+          "event_key": "XXXX",
+          "source_offset": "10438",
+          "occurred_at": "2026-07-16T09:15:06Z",
+          "payload": {
+            "orderId": "XXXX",
+            "status": "PAYMENTCAPTURED"
+          },
+          "dedupe_hash": "sha256:0aa4d54389d7c10cfa2d83ba3681708cb1b386a7ecee96222b77b8d0831d3541"
+        },
+        {
+          "source": "kafka",
+          "topic": "orders.events",
+          "event_type": "OrderUpdated",
+          "event_key": "XXXX",
+          "source_offset": "10439",
+          "occurred_at": "2026-07-16T09:15:07Z",
+          "payload": {
+            "orderId": "XXXX",
+            "status": "ORDERUPDATED"
+          },
+          "dedupe_hash": "sha256:b16d299295d683cc5f06ac02a2cbd74ace9192bef3b00f51079e81d0c7757c67"
+        },
+        {
+          "source": "kafka",
+          "topic": "orders.events",
+          "event_type": "PaymentCaptured",
+          "event_key": "XXXX",
+          "source_offset": "10440",
+          "occurred_at": "2026-07-16T09:15:08Z",
+          "payload": {
+            "orderId": "XXXX",
+            "status": "PAYMENTCAPTURED"
+          },
+          "dedupe_hash": "sha256:b56fe5f6724ef4b3db67abd534f0aaf2f59a13dee4e4e6470adfa5e802c82e99"
+        },
+        {
+          "source": "kafka",
+          "topic": "orders.events",
+          "event_type": "OrderUpdated",
+          "event_key": "XXXX",
+          "source_offset": "10441",
+          "occurred_at": "2026-07-16T09:15:09Z",
+          "payload": {
+            "orderId": "XXXX",
+            "status": "ORDERUPDATED"
+          },
+          "dedupe_hash": "sha256:20b7c2b9bfc6ff1cfab2b734aa988568fd5998bbac4f290e858dc3697be05d44"
+        },
+        {
+          "source": "kafka",
+          "topic": "orders.events",
+          "event_type": "PaymentCaptured",
+          "event_key": "XXXX",
+          "source_offset": "10442",
+          "occurred_at": "2026-07-16T09:16:10Z",
+          "payload": {
+            "orderId": "XXXX",
+            "status": "PAYMENTCAPTURED"
+          },
+          "dedupe_hash": "sha256:6974094a5006c94833749c9af8913a8e1890bcd3c4a178d2db5ca5cebb2cf5d2"
+        },
+        {
+          "source": "kafka",
+          "topic": "orders.events",
+          "event_type": "OrderUpdated",
+          "event_key": "XXXX",
+          "source_offset": "10443",
+          "occurred_at": "2026-07-16T09:16:11Z",
+          "payload": {
+            "orderId": "XXXX",
+            "status": "ORDERUPDATED"
+          },
+          "dedupe_hash": "sha256:89092c6864664d1f245982de9c4ea2c11448e5bc1149889788fdbdd09dfd818b"
+        },
+        {
+          "source": "kafka",
+          "topic": "orders.events",
+          "event_type": "PaymentCaptured",
+          "event_key": "XXXX",
+          "source_offset": "10444",
+          "occurred_at": "2026-07-16T09:16:12Z",
+          "payload": {
+            "orderId": "XXXX",
+            "status": "PAYMENTCAPTURED"
+          },
+          "dedupe_hash": "sha256:0c784dc2e91bf99b664b96b7332720ee26338bd6668ab94db452c4063e727436"
+        },
+        {
+          "source": "kafka",
+          "topic": "orders.events",
+          "event_type": "ReadyForMember",
+          "event_key": "XXXX",
+          "source_offset": "10445",
+          "occurred_at": "2026-07-16T09:16:00Z",
+          "payload": {
+            "orderId": "XXXX",
+            "status": "READYFORMEMBER"
+          },
+          "dedupe_hash": "sha256:2442a472047f415ebbf1878dbbd55746a7afa3bd613c8d231fc93815d59c540f"
+        }
+      ],
+      "content_hash": "sha256:810e2d23d58b0ecc3c5f3d651ac7f7a8ca54dfdbd0300a034e1a635940f34259",
+      "row_count": 14,
+      "meta": {
+        "topic": "orders.events",
+        "from_offset": "10432",
+        "to_offset": "10445"
+      }
+    }
+  ],
+  "events": [
+    {
+      "source": "kafka",
+      "topic": "orders.events",
+      "event_type": "PaymentCaptured",
+      "event_key": "XXXX",
+      "source_offset": "10432",
+      "occurred_at": "2026-07-16T09:15:00Z",
+      "payload": {
+        "orderId": "XXXX",
+        "status": "PAYMENTCAPTURED"
+      },
+      "dedupe_hash": "sha256:09baab6a41b95936ed9252dfd4696473c6f32f613f5863a9bdd38dd828387f72"
+    },
+    {
+      "source": "kafka",
+      "topic": "orders.events",
+      "event_type": "OrderUpdated",
+      "event_key": "XXXX",
+      "source_offset": "10433",
+      "occurred_at": "2026-07-16T09:15:01Z",
+      "payload": {
+        "orderId": "XXXX",
+        "status": "ORDERUPDATED"
+      },
+      "dedupe_hash": "sha256:c5529caa1c6167ca03ff2c39b92eab814170230d43ec2f84e514070bfb07c34a"
+    },
+    {
+      "source": "kafka",
+      "topic": "orders.events",
+      "event_type": "PaymentCaptured",
+      "event_key": "XXXX",
+      "source_offset": "10434",
+      "occurred_at": "2026-07-16T09:15:02Z",
+      "payload": {
+        "orderId": "XXXX",
+        "status": "PAYMENTCAPTURED"
+      },
+      "dedupe_hash": "sha256:3663b19624e3589d48d0c2291a12b4ee0d713dacc098d0e4dc4a819f647b3df2"
+    },
+    {
+      "source": "kafka",
+      "topic": "orders.events",
+      "event_type": "OrderUpdated",
+      "event_key": "XXXX",
+      "source_offset": "10435",
+      "occurred_at": "2026-07-16T09:15:03Z",
+      "payload": {
+        "orderId": "XXXX",
+        "status": "ORDERUPDATED"
+      },
+      "dedupe_hash": "sha256:962121a9b80f00539e2118d431f5ba2067c371ddd36921c2985241370dd1ebb1"
+    },
+    {
+      "source": "kafka",
+      "topic": "orders.events",
+      "event_type": "PaymentCaptured",
+      "event_key": "XXXX",
+      "source_offset": "10436",
+      "occurred_at": "2026-07-16T09:15:04Z",
+      "payload": {
+        "orderId": "XXXX",
+        "status": "PAYMENTCAPTURED"
+      },
+      "dedupe_hash": "sha256:332a3eef447d0d98528cdf008b7a9162b741020a7f1b5a1ed8d9f3729453ba65"
+    },
+    {
+      "source": "kafka",
+      "topic": "orders.events",
+      "event_type": "OrderUpdated",
+      "event_key": "XXXX",
+      "source_offset": "10437",
+      "occurred_at": "2026-07-16T09:15:05Z",
+      "payload": {
+        "orderId": "XXXX",
+        "status": "ORDERUPDATED"
+      },
+      "dedupe_hash": "sha256:ee0343a874236683746a953fc281a555f2d5747ca7e611edaa87b3131083a1ee"
+    },
+    {
+      "source": "kafka",
+      "topic": "orders.events",
+      "event_type": "PaymentCaptured",
+      "event_key": "XXXX",
+      "source_offset": "10438",
+      "occurred_at": "2026-07-16T09:15:06Z",
+      "payload": {
+        "orderId": "XXXX",
+        "status": "PAYMENTCAPTURED"
+      },
+      "dedupe_hash": "sha256:0aa4d54389d7c10cfa2d83ba3681708cb1b386a7ecee96222b77b8d0831d3541"
+    },
+    {
+      "source": "kafka",
+      "topic": "orders.events",
+      "event_type": "OrderUpdated",
+      "event_key": "XXXX",
+      "source_offset": "10439",
+      "occurred_at": "2026-07-16T09:15:07Z",
+      "payload": {
+        "orderId": "XXXX",
+        "status": "ORDERUPDATED"
+      },
+      "dedupe_hash": "sha256:b16d299295d683cc5f06ac02a2cbd74ace9192bef3b00f51079e81d0c7757c67"
+    },
+    {
+      "source": "kafka",
+      "topic": "orders.events",
+      "event_type": "PaymentCaptured",
+      "event_key": "XXXX",
+      "source_offset": "10440",
+      "occurred_at": "2026-07-16T09:15:08Z",
+      "payload": {
+        "orderId": "XXXX",
+        "status": "PAYMENTCAPTURED"
+      },
+      "dedupe_hash": "sha256:b56fe5f6724ef4b3db67abd534f0aaf2f59a13dee4e4e6470adfa5e802c82e99"
+    },
+    {
+      "source": "kafka",
+      "topic": "orders.events",
+      "event_type": "OrderUpdated",
+      "event_key": "XXXX",
+      "source_offset": "10441",
+      "occurred_at": "2026-07-16T09:15:09Z",
+      "payload": {
+        "orderId": "XXXX",
+        "status": "ORDERUPDATED"
+      },
+      "dedupe_hash": "sha256:20b7c2b9bfc6ff1cfab2b734aa988568fd5998bbac4f290e858dc3697be05d44"
+    },
+    {
+      "source": "kafka",
+      "topic": "orders.events",
+      "event_type": "PaymentCaptured",
+      "event_key": "XXXX",
+      "source_offset": "10442",
+      "occurred_at": "2026-07-16T09:16:10Z",
+      "payload": {
+        "orderId": "XXXX",
+        "status": "PAYMENTCAPTURED"
+      },
+      "dedupe_hash": "sha256:6974094a5006c94833749c9af8913a8e1890bcd3c4a178d2db5ca5cebb2cf5d2"
+    },
+    {
+      "source": "kafka",
+      "topic": "orders.events",
+      "event_type": "OrderUpdated",
+      "event_key": "XXXX",
+      "source_offset": "10443",
+      "occurred_at": "2026-07-16T09:16:11Z",
+      "payload": {
+        "orderId": "XXXX",
+        "status": "ORDERUPDATED"
+      },
+      "dedupe_hash": "sha256:89092c6864664d1f245982de9c4ea2c11448e5bc1149889788fdbdd09dfd818b"
+    },
+    {
+      "source": "kafka",
+      "topic": "orders.events",
+      "event_type": "PaymentCaptured",
+      "event_key": "XXXX",
+      "source_offset": "10444",
+      "occurred_at": "2026-07-16T09:16:12Z",
+      "payload": {
+        "orderId": "XXXX",
+        "status": "PAYMENTCAPTURED"
+      },
+      "dedupe_hash": "sha256:0c784dc2e91bf99b664b96b7332720ee26338bd6668ab94db452c4063e727436"
+    },
+    {
+      "source": "kafka",
+      "topic": "orders.events",
+      "event_type": "ReadyForMember",
+      "event_key": "XXXX",
+      "source_offset": "10445",
+      "occurred_at": "2026-07-16T09:16:00Z",
+      "payload": {
+        "orderId": "XXXX",
+        "status": "READYFORMEMBER"
+      },
+      "dedupe_hash": "sha256:2442a472047f415ebbf1878dbbd55746a7afa3bd613c8d231fc93815d59c540f"
+    }
+  ],
+  "cursors_advanced": {
+    "orders.events": {
+      "0": 10445
+    }
+  },
+  "notes": [
+    {
+      "at": "2026-07-16T09:16:01Z",
+      "text": "Order is READY_FOR_MEMBER. 14 events observed since order_created."
+    }
+  ]
+}

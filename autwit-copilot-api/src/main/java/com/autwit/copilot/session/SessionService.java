@@ -10,7 +10,10 @@ import java.util.UUID;
 
 import com.autwit.copilot.artifact.ArtifactRepository;
 import com.autwit.copilot.common.ApiException;
+import com.autwit.copilot.compare.FindingRepository;
 import com.autwit.copilot.config.AutwitProperties;
+import com.autwit.copilot.run.RunRepository;
+import com.autwit.copilot.snapshot.SnapshotRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -24,14 +27,21 @@ public class SessionService {
     private final StepRepository steps;
     private final MilestoneRepository milestones;
     private final ArtifactRepository artifacts;
+    private final SnapshotRepository snapshots;
+    private final FindingRepository findings;
+    private final RunRepository runs;
     private final AutwitProperties props;
 
     public SessionService(SessionRepository sessions, StepRepository steps, MilestoneRepository milestones,
-            ArtifactRepository artifacts, AutwitProperties props) {
+            ArtifactRepository artifacts, SnapshotRepository snapshots, FindingRepository findings,
+            RunRepository runs, AutwitProperties props) {
         this.sessions = sessions;
         this.steps = steps;
         this.milestones = milestones;
         this.artifacts = artifacts;
+        this.snapshots = snapshots;
+        this.findings = findings;
+        this.runs = runs;
         this.props = props;
     }
 
@@ -63,10 +73,13 @@ public class SessionService {
                 session,
                 steps.listBySession(sessionId, null),
                 milestones.listBySession(sessionId),
+                snapshots.listBySession(sessionId),
+                findings.listBySession(sessionId, null, null),
+                runs.listActive(sessionId),
                 new SessionDetail.Counts(
                         artifacts.countBySession(sessionId),
                         sessions.countEvents(sessionId),
-                        Map.of()));
+                        findings.countsBySeverity(sessionId)));
     }
 
     public List<Session> list(String status, String testerId, String env, int limit) {

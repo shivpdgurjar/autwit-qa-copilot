@@ -1,0 +1,285 @@
+{
+  "run_id": "REPLACED_BY_FAKE",
+  "status": "partial",
+  "started_at": "2026-07-16T09:14:02Z",
+  "ended_at": "2026-07-16T09:15:41Z",
+  "duration_ms": 99000,
+  "invocations": [
+    {
+      "skill_name": "snapshot.capture",
+      "skill_version": "1.4.0",
+      "input": {
+        "scope": "order_flow"
+      },
+      "status": "partial",
+      "exit_code": 3,
+      "duration_ms": 45000,
+      "output_inline": {
+        "part_count": 7,
+        "expected": 9
+      }
+    }
+  ],
+  "artifacts": [
+    {
+      "client_ref": "a1",
+      "artifact_type": "rdbms_table",
+      "source_system": "oms_pg",
+      "logical_name": "orders",
+      "format": "json",
+      "body": [
+        {
+          "order_id": "XXXX",
+          "member_id": "M-1234",
+          "status": "CREATED",
+          "total_amount": "1200.00",
+          "currency": "GBP",
+          "updated_at": "2026-07-16T09:14:00Z"
+        }
+      ],
+      "content_hash": "sha256:ee087ed17d509e9fb0a19f7e79124d587449a282f7990000da1bf0de2abe153e",
+      "row_count": 1,
+      "meta": {
+        "pk_columns": [
+          "order_id"
+        ],
+        "ignore_columns": [
+          "created_at",
+          "updated_at",
+          "trace_id"
+        ]
+      }
+    },
+    {
+      "client_ref": "a2",
+      "artifact_type": "rdbms_table",
+      "source_system": "oms_pg",
+      "logical_name": "order_items",
+      "format": "json",
+      "body": [
+        {
+          "order_id": "XXXX",
+          "line_no": 1,
+          "sku": "SKU-1",
+          "qty": 2,
+          "line_total": "800.00"
+        },
+        {
+          "order_id": "XXXX",
+          "line_no": 2,
+          "sku": "SKU-2",
+          "qty": 1,
+          "line_total": "400.00"
+        }
+      ],
+      "content_hash": "sha256:b94cfadcfc50b99a7f92cf75f4574a475555be6e10570e8d9cec2e5fb94ef341",
+      "row_count": 2,
+      "meta": {
+        "pk_columns": [
+          "order_id",
+          "line_no"
+        ],
+        "ignore_columns": [
+          "created_at",
+          "updated_at",
+          "trace_id"
+        ]
+      }
+    },
+    {
+      "client_ref": "a3",
+      "artifact_type": "rdbms_table",
+      "source_system": "oms_pg",
+      "logical_name": "order_payments",
+      "format": "json",
+      "body": [
+        {
+          "payment_id": "P-1",
+          "order_id": "XXXX",
+          "amount": "1200.00",
+          "state": "AUTHORISED"
+        }
+      ],
+      "content_hash": "sha256:48ed876beb62e296e031d449ab663e1330ec02bca80716efd6da1a5559e759a3",
+      "row_count": 1,
+      "meta": {
+        "pk_columns": [
+          "payment_id"
+        ],
+        "ignore_columns": [
+          "created_at",
+          "updated_at",
+          "trace_id"
+        ]
+      }
+    },
+    {
+      "client_ref": "a4",
+      "artifact_type": "rdbms_table",
+      "source_system": "oms_pg",
+      "logical_name": "order_status_history",
+      "format": "json",
+      "body": [
+        {
+          "order_id": "XXXX",
+          "seq": 1,
+          "status": "CREATED",
+          "at": "2026-07-16T09:14:00Z"
+        }
+      ],
+      "content_hash": "sha256:e504b3c801351baadf8d79ba9fbbf08fa04d2dd3d7012c4eca97145fa33116ab",
+      "row_count": 1,
+      "meta": {
+        "pk_columns": [
+          "order_id",
+          "seq"
+        ],
+        "ignore_columns": [
+          "created_at",
+          "updated_at",
+          "trace_id"
+        ]
+      }
+    },
+    {
+      "client_ref": "a5",
+      "artifact_type": "rdbms_table",
+      "source_system": "oms_pg",
+      "logical_name": "order_addresses",
+      "format": "json",
+      "body": [
+        {
+          "order_id": "XXXX",
+          "kind": "SHIPPING",
+          "postcode": "SW1A 1AA",
+          "customer_email": "***MASKED***"
+        }
+      ],
+      "content_hash": "sha256:920287d382719994f2264f501bc544ae30110cacebafb8cbdb18c15eb1e21003",
+      "row_count": 1,
+      "meta": {
+        "pk_columns": [
+          "order_id",
+          "kind"
+        ],
+        "masked_columns": [
+          "customer_email"
+        ],
+        "ignore_columns": [
+          "updated_at"
+        ]
+      }
+    },
+    {
+      "client_ref": "a6",
+      "artifact_type": "rdbms_table",
+      "source_system": "oms_pg",
+      "logical_name": "order_discounts",
+      "format": "json",
+      "body": [],
+      "content_hash": "sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "row_count": 0,
+      "meta": {
+        "pk_columns": [
+          "order_id",
+          "code"
+        ],
+        "ignore_columns": [
+          "created_at",
+          "updated_at",
+          "trace_id"
+        ]
+      }
+    },
+    {
+      "client_ref": "a7",
+      "artifact_type": "rdbms_table",
+      "source_system": "shipment_pg",
+      "logical_name": "shipments",
+      "format": "json",
+      "body": [
+        {
+          "shipment_id": "SHP-99",
+          "order_id": "XXXX",
+          "status": "PENDING"
+        }
+      ],
+      "content_hash": "sha256:90e7db3f06601b7553324449472cbefc8da86f7f41290dd029f60e4c0c6e8aff",
+      "row_count": 1,
+      "meta": {
+        "pk_columns": [
+          "shipment_id"
+        ],
+        "ignore_columns": [
+          "created_at",
+          "updated_at",
+          "trace_id"
+        ]
+      }
+    }
+  ],
+  "snapshots": [
+    {
+      "client_ref": "s1",
+      "label": "after_order_created_partial",
+      "scope": "order_flow",
+      "scope_def": {
+        "tables": [
+          "oms.orders",
+          "oms.order_items",
+          "oms.order_payments",
+          "oms.order_status_history",
+          "oms.order_addresses",
+          "oms.order_discounts",
+          "shipment.shipments"
+        ],
+        "resolved_at": "2026-07-16T09:14:02Z"
+      },
+      "status": "partial",
+      "parts": [
+        {
+          "part_key": "oms.orders",
+          "artifact_ref": "a1"
+        },
+        {
+          "part_key": "oms.order_items",
+          "artifact_ref": "a2"
+        },
+        {
+          "part_key": "oms.order_payments",
+          "artifact_ref": "a3"
+        },
+        {
+          "part_key": "oms.order_status_history",
+          "artifact_ref": "a4"
+        },
+        {
+          "part_key": "oms.order_addresses",
+          "artifact_ref": "a5"
+        },
+        {
+          "part_key": "oms.order_discounts",
+          "artifact_ref": "a6"
+        },
+        {
+          "part_key": "shipment.shipments",
+          "artifact_ref": "a7"
+        }
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "severity": "warn",
+      "category": "capture",
+      "part_key": "shipment.legs",
+      "message": "shipment_pg unreachable: 2 of 9 parts missing (shipment.legs, shipment.events)."
+    }
+  ],
+  "notes": [
+    {
+      "at": "2026-07-16T09:15:00Z",
+      "text": "Captured 7 of 9 tables; shipment_pg was unreachable."
+    }
+  ]
+}
