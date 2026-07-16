@@ -50,11 +50,18 @@ spring:
   application:
     name: autwit-copilot-api
   profiles:
-    # BUILD_BRIEF §5: --mode=api|worker|all, default all. 'fake' is here only until
-    # step 8 builds HttpOrchestratorClient -- there is no other OrchestratorClient
-    # implementation yet, so the context cannot start without it. Drop 'fake' from
-    # this default the moment the real client exists.
-    default: all,fake
+    # BUILD_BRIEF §5: --mode=api|worker|all, default all.
+    #
+    # 'fake' is deliberately NOT in the default any more, now that
+    # HttpOrchestratorClient exists. A default that silently replays fixtures is the
+    # worst possible failure mode for this product: every capture would look real, and
+    # the entire value of the tool is that a tester can trust what it shows them. An
+    # unconfigured orchestrator failing loudly is strictly better than a configured one
+    # lying quietly.
+    #
+    # Local dev and UI work opt in explicitly:
+    #   ./mvnw spring-boot:run -Dspring-boot.run.profiles=all,fake
+    default: all
   jackson:
     # openapi.yaml is snake_case throughout, and the UI generates its client from
     # that spec. This is what keeps the two in step.
