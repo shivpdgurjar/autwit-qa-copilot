@@ -1,0 +1,29 @@
+@import 'tailwindcss';
+
+/*
+  Dark by default: this thing is read next to a terminal and a database client, for
+  hours, by someone hunting a bug.
+*/
+@theme {
+  --color-ink-950: #0b0d10;
+  --color-ink-900: #12151a;
+  --color-ink-850: #171b22;
+  --color-ink-800: #1d222b;
+  --color-ink-700: #2a313d;
+  --color-ink-600: #3b4453;
+  --color-ink-400: #7c889b;
+  --color-ink-300: #a3adbd;
+  --color-ink-100: #e6eaf0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background: var(--color-ink-950);
+  color: var(--color-ink-100);
+  font-feature-settings: 'tnum' 1;
+}

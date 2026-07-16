@@ -982,7 +982,21 @@ components:
         run_id: { type: string, format: uuid }
         session_id: { type: string, format: uuid }
         step_id: { type: string, format: uuid }
+        run_type:
+          type: string
+          enum: [invoke, skill_execute, milestone, comparison, report]
+          description: |
+            comparison and report never touch the orchestrator; they are runs anyway,
+            because uniformity beats saving 200ms.
         status: { $ref: '#/components/schemas/RunStatus' }
+        max_attempts:
+          type: integer
+          description: |
+            Fixed at enqueue. 1 means this run will never be reclaimed after a worker
+            death — it goes to timed_out and a human decides. Always 1 for `invoke`
+            (the skill is chosen after enqueue, so it must be assumed mutating) and for
+            any mutating skill. The UI can use this to tell a tester whether a retry is
+            automatic or theirs to make.
         request: { type: object, additionalProperties: true }
         progress:
           type: object

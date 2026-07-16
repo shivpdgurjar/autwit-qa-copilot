@@ -55,7 +55,12 @@ public class LocalRunExecutor {
         if (!runs.succeed(run.runId(), run.workerId(), summary)) {
             throw new EnvelopePersister.LateResultException(run.runId());
         }
-        steps.updateStatus(run.stepId(), "succeeded");
+
+        // The verdict on the step itself: the timeline should say what the comparison
+        // concluded, not merely that one happened.
+        var verdict = summary.get("verdict");
+        steps.complete(run.stepId(), "succeeded",
+                verdict == null ? null : "Compared snapshots — " + verdict);
     }
 
     private Map<String, Object> runComparison(Run run) {

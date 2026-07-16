@@ -163,7 +163,11 @@ public class RunEnqueuer {
             return replay.get();
         }
 
-        var step = steps.insert(sessionId, "analysis", "Compare snapshots (%s)".formatted(compareType),
+        // kind=system, NOT analysis. SKILL_CONTRACT §5 defines analysis as the notes
+        // channel that "renders in chat, not the timeline" -- so an analysis step is by
+        // definition running commentary. A comparison is the opposite: it is a thing the
+        // tester did, and it belongs on the record beside the snapshots it compared.
+        var step = steps.insert(sessionId, "system", "Compare snapshots (%s)".formatted(compareType),
                 "user", "pending", null, Map.of("compare_type", compareType));
 
         // Created up-front so the 202's comparison_id is real and the UI can open the

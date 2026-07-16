@@ -1,0 +1,11 @@
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Regenerated from ../docs/openapi.yaml on every dev/build (see package.json). Not
+# committed: a stale checked-in copy is a second source of truth, and the spec is the
+# only one.
+src/api/generated/
+
+*.local
+.env

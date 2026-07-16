@@ -141,7 +141,7 @@ public class EnvelopePersister {
             throw new LateResultException(run.runId());
         }
 
-        steps.updateStatus(run.stepId(), "succeeded");
+        steps.complete(run.stepId(), "succeeded", labelFor(run, envelope));
         return new Result(snapshotId, byRef.size(), newEvents, summary);
     }
 
@@ -180,6 +180,33 @@ public class EnvelopePersister {
             snapshots.insertPart(snapshotId, part.partKey(), artifactId);
         }
         return snapshotId;
+    }
+
+    /**
+     * What an agent step becomes once we know what actually ran.
+     *
+     * <p>Only for skill_invocation steps, and deliberately so. Those are enqueued with
+     * a placeholder ("Working on it…") because the LLM chooses the skill after we
+     * enqueue, so this is the first moment their label can say anything true.
+     *
+     * <p>A milestone step already has a better name than any skill could give it — the
+     * milestone's own, which is what the tester typed and what they will look for.
+     * Overwriting "order_created" with "snapshot.capture" trades a domain fact for an
+     * implementation detail. Same for system steps, which name their own action.
+     *
+     * @return null to leave the existing label alone
+     */
+    private String labelFor(Run run, Envelope envelope) {
+        var kind = steps.find(run.stepId()).map(com.autwit.copilot.session.Step::kind).orElse(null);
+        if (!"skill_invocation".equals(kind)) {
+            return null;
+        }
+        var skills = envelope.invocationsOrEmpty().stream()
+                .map(Envelope.Invocation::skillName)
+                .filter(java.util.Objects::nonNull)
+                .distinct()
+                .toList();
+        return skills.isEmpty() ? null : String.join(", ", skills);
     }
 
     private static boolean isEventBatch(Envelope envelope, String clientRef) {

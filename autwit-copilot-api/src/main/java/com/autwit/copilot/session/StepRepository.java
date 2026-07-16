@@ -106,6 +106,28 @@ public class StepRepository {
                 "select count(*) from autwit.step where session_id = ?", Integer.class, sessionId);
     }
 
+    /**
+     * Terminal status plus a label that describes what actually happened.
+     *
+     * <p>An agent step is enqueued with a placeholder ("Working on it…") because the
+     * work has not been chosen yet — the LLM picks the skill inside the orchestrator.
+     * Leaving that placeholder on a finished step means the timeline reads "Working on
+     * it…" forever, next to a card that plainly is not working on it.
+     *
+     * @param label null leaves the existing label alone
+     */
+    public void complete(UUID stepId, String status, String label) {
+        jdbc.update(
+                """
+                update autwit.step
+                set status = ?,
+                    label = coalesce(?, label),
+                    ended_at = case when ? in ('succeeded','failed','skipped') then now() else ended_at end
+                where step_id = ?
+                """,
+                status, label, status, stepId);
+    }
+
     /** ended_at is set only on a terminal status, so a running step keeps a null end. */
     public void updateStatus(UUID stepId, String status) {
         jdbc.update(

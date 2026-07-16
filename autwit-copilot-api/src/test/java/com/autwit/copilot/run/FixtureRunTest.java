@@ -123,6 +123,36 @@ class FixtureRunTest extends AbstractPostgresIT {
     }
 
     @Test
+    void anAgentStepIsRelabelledWithWhatActuallyRan() {
+        // Enqueued as a placeholder because the LLM picks the skill after we enqueue.
+        var accepted = enqueuer.enqueueMessage(sessionId, "I created order XXXX", null, null, null);
+        assertThat(label(accepted.run().stepId())).isEqualTo("Working on it…");
+
+        worker.pollOnce();
+
+        // A finished step must not still read "Working on it…" next to a card that
+        // plainly is not working on it.
+        assertThat(label(accepted.run().stepId())).isEqualTo("snapshot.capture");
+    }
+
+    @Test
+    void aMilestoneStepKeepsItsOwnNameRatherThanTheSkillsName() {
+        var accepted = enqueuer.enqueueMilestone(sessionId, "order_created", List.of("order_flow"),
+                true, null, null);
+
+        worker.pollOnce();
+
+        // "order_created" is what the tester typed and what they will look for.
+        // Overwriting it with "snapshot.capture" would trade a domain fact for an
+        // implementation detail.
+        assertThat(label(accepted.run().stepId())).isEqualTo("order_created");
+    }
+
+    private String label(java.util.UUID stepId) {
+        return jdbc.queryForObject("select label from autwit.step where step_id = ?", String.class, stepId);
+    }
+
+    @Test
     void aMilestoneRunCompletesTheMilestoneAndItsSnapshot() {
         var accepted = enqueuer.enqueueMilestone(sessionId, "order_created", List.of("order_flow"),
                 true, "first checkpoint", null);
