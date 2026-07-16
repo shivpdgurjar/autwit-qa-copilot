@@ -430,3 +430,11 @@ tiebreaker.
 5. **Is `part_key` naming owned by the scope definition?** It must be, and it
    must be stable. Please confirm explicitly — the diff engine breaks silently
    if it drifts.
+6. **What exactly is the "canonical body" that §6.1's `content_hash` covers?**
+   Undefined today. sha256 is unambiguous; what you feed it is not. This blocks
+   step 8 and nothing earlier — and it cannot be caught before then, because each
+   side generates its fixtures with its own hasher, so the fixtures agree with
+   whatever each side got wrong. A divergence as small as key ordering or a
+   trailing zero fails *every* artifact, not some. See
+   `CONTRACT_RATIFICATION_REQUEST.md` Q1 for a proposed definition, a §6.1
+   amendment, and language-independent test vectors.
