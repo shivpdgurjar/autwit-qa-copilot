@@ -19,6 +19,23 @@ autwit:
 spring:
   application:
     name: autwit-copilot-api
+  jackson:
+    # openapi.yaml is snake_case throughout, and the UI generates its client from
+    # that spec. This is what keeps the two in step.
+    property-naming-strategy: SNAKE_CASE
+    default-property-inclusion: non_null
+    serialization:
+      write-dates-as-timestamps: false
+    deserialization:
+      fail-on-unknown-properties: false
+      # Non-negotiable for this product. Without it Jackson parses "1200.00" as a
+      # Double and renders it back as 1200.0: the content_hash then never matches
+      # the orchestrator's, and every money diff is computed on a value whose scale
+      # was silently destroyed in transit. BigDecimal preserves both.
+      use-big-decimal-for-floats: true
+  mvc:
+    problemdetails:
+      enabled: true
   # Required for SSE + 10-minute blocking orchestrator calls (invariant 12).
   threads:
     virtual:
@@ -34,6 +51,15 @@ spring:
   flyway:
     enabled: true
     locations: classpath:db/migration
+    # Pin the history table's schema. Without this Flyway asks the connection for its
+    # default schema, which Postgres resolves through search_path ('"$user", public').
+    # V1 creates a schema named autwit and the DB user is also named autwit, so once
+    # the migration has run, "$user" starts resolving and current_schema() flips from
+    # public to autwit. Flyway then looks for autwit.flyway_schema_history, does not
+    # find it, sees a non-empty autwit schema, and refuses to start -- so the app boots
+    # exactly once and fails on every boot thereafter. Naming this explicitly makes the
+    # history location independent of who connects.
+    default-schema: public
   lifecycle:
     # Must exceed the 10m orchestrator timeout so in-flight runs drain on SIGTERM
     # rather than landing as timed_out (BUILD_BRIEF §5).

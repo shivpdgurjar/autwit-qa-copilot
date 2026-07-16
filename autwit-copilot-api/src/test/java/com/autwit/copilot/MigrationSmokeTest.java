@@ -68,6 +68,24 @@ class MigrationSmokeTest extends AbstractPostgresIT {
     }
 
     @Test
+    void flywayHistoryLivesInPublicAndNotInTheSchemaItManages() {
+        // Regression guard. The DB user is named autwit and V1 creates a schema named
+        // autwit, so once the migration has run, search_path's "$user" entry resolves
+        // and current_schema() flips from public to autwit. If Flyway is left to infer
+        // its default schema from the connection it then hunts for
+        // autwit.flyway_schema_history, does not find it, sees a non-empty schema and
+        // refuses to start -- the app boots once and never again.
+        // spring.flyway.default-schema pins this; the assertion keeps it pinned.
+        assertThat(jdbc.queryForObject("select current_schema()", String.class))
+                .as("precondition: the user/schema name collision that causes the flip")
+                .isEqualTo("autwit");
+
+        assertThat(jdbc.queryForList(
+                "select schemaname from pg_tables where tablename = 'flyway_schema_history'", String.class))
+                .containsExactly("public");
+    }
+
+    @Test
     void pgcryptoIsInstalled() {
         // gen_random_uuid() is the default for every primary key in the schema.
         assertThat(jdbc.queryForObject("select gen_random_uuid()", String.class)).isNotBlank();
