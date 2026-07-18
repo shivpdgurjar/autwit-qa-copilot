@@ -1,0 +1,138 @@
+{
+  "catalog_version": "2026-07-16T09:12:00Z/a3f9c1",
+  "skills": [
+    {
+      "skill_name": "snapshot.capture",
+      "version": "1.4.0",
+      "title": "Capture DB snapshot",
+      "description": "Dumps all tables in a scope to artifacts.",
+      "impl_type": "shell",
+      "side_effects": "none",
+      "input_schema": {
+        "type": "object",
+        "required": [
+          "scope"
+        ],
+        "properties": {
+          "scope": {
+            "type": "string",
+            "enum": [
+              "order_flow",
+              "shipment_only"
+            ]
+          },
+          "label": {
+            "type": "string"
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object"
+      },
+      "enabled": true
+    },
+    {
+      "skill_name": "api.fetch_order",
+      "version": "1.0.0",
+      "title": "Fetch order via API",
+      "description": "GETs the order from the OMS API and stores the response.",
+      "impl_type": "http",
+      "side_effects": "none",
+      "input_schema": {
+        "type": "object",
+        "required": [
+          "order_id"
+        ],
+        "properties": {
+          "order_id": {
+            "type": "string"
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object"
+      },
+      "enabled": true
+    },
+    {
+      "skill_name": "events.capture_since",
+      "version": "1.2.0",
+      "title": "Capture an order's events since a producer time",
+      "description": "Searches the Event Store for an order's event headers, filters by producer time, and returns each event's contents.",
+      "impl_type": "http",
+      "side_effects": "none",
+      "input_schema": {
+        "type": "object",
+        "required": [
+          "order_id"
+        ],
+        "properties": {
+          "order_id": {
+            "type": "string"
+          },
+          "since_producer_time": {
+            "type": "integer"
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object"
+      },
+      "enabled": true
+    },
+    {
+      "skill_name": "order.place",
+      "version": "2.0.1",
+      "title": "Place an order",
+      "description": "Places a real order in the OMS. Mutating.",
+      "impl_type": "http",
+      "side_effects": "mutating",
+      "input_schema": {
+        "type": "object",
+        "required": [
+          "member_id",
+          "sku"
+        ],
+        "properties": {
+          "member_id": {
+            "type": "string"
+          },
+          "sku": {
+            "type": "string"
+          },
+          "qty": {
+            "type": "integer",
+            "default": 1
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object"
+      },
+      "enabled": true
+    },
+    {
+      "skill_name": "order.fulfil",
+      "version": "1.2.0",
+      "title": "Fulfil an order",
+      "description": "Marks an order fulfilled in the OMS. Mutating.",
+      "impl_type": "http",
+      "side_effects": "mutating",
+      "input_schema": {
+        "type": "object",
+        "required": [
+          "order_id"
+        ],
+        "properties": {
+          "order_id": {
+            "type": "string"
+          }
+        }
+      },
+      "output_schema": {
+        "type": "object"
+      },
+      "enabled": false
+    }
+  ]
+}
