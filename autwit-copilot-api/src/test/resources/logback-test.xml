@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Console only. Logback prefers this over logback-spring.xml whenever it is on the
+  classpath, which is exactly the test classpath and nowhere else.
+
+  The point is that tests must NOT open logs/copilot-api.log. That file belongs to a
+  running application, and on Windows a second process opening it for append breaks the
+  first one's appender. The symptom is not a logging error — it is unrelated-looking test
+  failures: runs not claimed, steps not relabelled, a reclaim finding nothing. Five tests
+  failed that way, all of them passing again the moment the file was not shared, which is
+  a long way from any wording about logging.
+
+  So the isolation is deliberate and worth keeping. Anyone reintroducing a file appender
+  here should expect the suite to fail whenever the app happens to be running locally —
+  which, now that integration runs are a normal thing to do, is often.
+-->
+<configuration>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%d{HH:mm:ss.SSS} %-5level %logger{36} - %msg%n</pattern>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+    </root>
+
+</configuration>

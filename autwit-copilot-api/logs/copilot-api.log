@@ -1,0 +1,1102 @@
+2026-07-19T11:43:37.226Z INFO  [background-preinit] o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-07-19T11:43:37.274Z INFO  [main] c.a.copilot.AutwitCopilotApplication - Starting AutwitCopilotApplication using Java 21.0.7 with PID 11560 (D:\autwit-ai\qa-copilot\autwit-copilot\autwit-copilot-api\target\classes started by ShivPrasadGurjar in D:\autwit-ai\qa-copilot\autwit-copilot\autwit-copilot-api)
+2026-07-19T11:43:37.274Z DEBUG [main] c.a.copilot.AutwitCopilotApplication - Running with Spring Boot v3.3.5, Spring v6.1.14
+2026-07-19T11:43:37.275Z INFO  [main] c.a.copilot.AutwitCopilotApplication - The following 2 profiles are active: "all", "integration"
+2026-07-19T11:43:39.369Z INFO  [main] o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-07-19T11:43:39.388Z INFO  [main] o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-07-19T11:43:39.395Z INFO  [main] o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-07-19T11:43:39.396Z INFO  [main] o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+2026-07-19T11:43:39.476Z INFO  [main] o.a.c.c.C.[.[localhost].[/api/v1] - Initializing Spring embedded WebApplicationContext
+2026-07-19T11:43:39.477Z INFO  [main] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 2114 ms
+2026-07-19T11:43:39.777Z INFO  [main] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-07-19T11:43:39.931Z INFO  [main] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@7926352f
+2026-07-19T11:43:39.933Z INFO  [main] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-07-19T11:43:40.002Z INFO  [main] org.flywaydb.core.FlywayExecutor - Database: jdbc:postgresql://localhost:55432/autwit (PostgreSQL 16.13)
+2026-07-19T11:43:40.109Z INFO  [main] o.f.core.internal.command.DbValidate - Successfully validated 1 migration (execution time 00:00.063s)
+2026-07-19T11:43:40.146Z INFO  [main] o.f.core.internal.command.DbMigrate - Current version of schema "public": 1
+2026-07-19T11:43:40.153Z INFO  [main] o.f.core.internal.command.DbMigrate - Schema "public" is up to date. No migration necessary.
+2026-07-19T11:43:40.536Z INFO  [main] c.a.copilot.config.ConfigAssertions - Config assertion passed: run.lease=PT12M > orchestrator.timeout=PT10M
+2026-07-19T11:43:40.666Z INFO  [main] c.a.c.o.HttpOrchestratorClient - HttpOrchestratorClient targeting http://localhost:9090 with a PT10M deadline
+2026-07-19T11:43:41.430Z INFO  [main] o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-07-19T11:43:41.459Z INFO  [main] o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/api/v1'
+2026-07-19T11:43:41.471Z INFO  [main] c.a.copilot.config.SchedulingConfig - Reaper scheduled every PT1M
+2026-07-19T11:43:41.472Z INFO  [main] c.a.copilot.config.SchedulingConfig - Skill catalog sync scheduled every PT1M
+2026-07-19T11:43:41.486Z INFO  [main] c.a.copilot.AutwitCopilotApplication - Started AutwitCopilotApplication in 5.077 seconds (process running for 5.848)
+2026-07-19T11:43:41.493Z INFO  [main] com.autwit.copilot.run.RunWorker - RunWorker worker-cc635f74 started with concurrency 4
+2026-07-19T11:43:41.550Z INFO  [pg-listener] c.a.c.stream.PgNotificationListener - Listening on autwit_run
+2026-07-19T11:47:55.489Z INFO  [tomcat-handler-0] o.a.c.c.C.[.[localhost].[/api/v1] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-07-19T11:47:55.490Z INFO  [tomcat-handler-0] o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-07-19T11:47:55.492Z INFO  [tomcat-handler-0] o.s.web.servlet.DispatcherServlet - Completed initialization in 2 ms
+2026-07-19T11:47:55.939Z DEBUG [tomcat-handler-1] com.autwit.copilot.run.RunEnqueuer - Enqueued skill_execute run 6b5d392b-1e9e-4b42-9334-9b573d39bfa8 for session 0a35d5e1-1bf9-4f55-93d2-3f7201baf5ff (max_attempts=2)
+2026-07-19T11:47:56.164Z DEBUG [virtual-50] c.autwit.copilot.orchestrator.wire - --> POST http://localhost:9090/skills/events.capture_since/execute correlation_id=autwit-qa2-20260719-73cc7036 run_id=6b5d392b-1e9e-4b42-9334-9b573d39bfa8 authorization=Bearer <EMPTY - no token configured>
+{"session_id":"0a35d5e1-1bf9-4f55-93d2-3f7201baf5ff","correlation_id":"autwit-qa2-20260719-73cc7036","run_id":"6b5d392b-1e9e-4b42-9334-9b573d39bfa8","input":{"order_id":"XXXX"},"session_context":{"env":"qa2","tester_id":"priya","subjects":{"order_id":"XXXX"},"milestones":[],"event_cursors":{},"recent_steps":[{"seq":1,"kind":"skill_invocation","label":"smoke"}]}}
+2026-07-19T11:47:56.175Z DEBUG [virtual-50] c.autwit.copilot.orchestrator.wire - <-- /skills/events.capture_since/execute HTTP 200 run_id=6b5d392b-1e9e-4b42-9334-9b573d39bfa8
+{"run_id":"6b5d392b-1e9e-4b42-9334-9b573d39bfa8","status":"succeeded","started_at":"2026-07-19T11:47:56.172Z","ended_at":"2026-07-19T11:47:56.174Z","duration_ms":2,"invocations":[{"skill_name":"events.capture_since","skill_version":"1.2.0","input":{"order_id":"XXXX"},"status":"succeeded","exit_code":0,"duration_ms":0,"output_inline":{"events":0,"total_headers":0,"filtered":0}}],"artifacts":[{"client_ref":"eb1","artifact_type":"event_batch","source_system":"eventstore","logical_name":"order_events","format":"json","body":[],"row_count":0,"content_hash":"sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"}],"events":[],"cursors_advanced":{},"milestone":null,"error":null}
+2026-07-19T11:47:56.252Z DEBUG [virtual-50] c.a.copilot.artifact.ArtifactService - artifact ok eventstore/order_events (json) hash=sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945 bytes=2 declared=matched
+2026-07-19T11:47:56.298Z INFO  [virtual-50] com.autwit.copilot.run.RunWorker - Run 6b5d392b-1e9e-4b42-9334-9b573d39bfa8 succeeded: 1 artifacts, 0 new events
+2026-07-19T11:50:27.625Z INFO  [background-preinit] o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-07-19T11:50:27.712Z INFO  [main] c.a.copilot.ArtifactIntegrityTest - Starting ArtifactIntegrityTest using Java 21.0.7 with PID 15244 (started by ShivPrasadGurjar in D:\autwit-ai\qa-copilot\autwit-copilot\autwit-copilot-api)
+2026-07-19T11:50:27.714Z INFO  [main] c.a.copilot.ArtifactIntegrityTest - The following 1 profile is active: "fake"
+2026-07-19T11:50:31.326Z INFO  [main] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-07-19T11:50:31.715Z INFO  [main] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@2f0e7fa8
+2026-07-19T11:50:31.721Z INFO  [main] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-07-19T11:50:31.803Z INFO  [main] org.flywaydb.core.FlywayExecutor - Database: jdbc:postgresql://localhost:32787/autwit (PostgreSQL 16.13)
+2026-07-19T11:50:31.987Z INFO  [main] o.f.c.i.s.JdbcTableSchemaHistory - Schema history table "public"."flyway_schema_history" does not exist yet
+2026-07-19T11:50:31.998Z INFO  [main] o.f.core.internal.command.DbValidate - Successfully validated 1 migration (execution time 00:00.111s)
+2026-07-19T11:50:32.059Z INFO  [main] o.f.c.i.s.JdbcTableSchemaHistory - Creating Schema History table "public"."flyway_schema_history" ...
+2026-07-19T11:50:32.177Z INFO  [main] o.f.core.internal.command.DbMigrate - Current version of schema "public": << Empty Schema >>
+2026-07-19T11:50:32.282Z INFO  [main] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "1 - init"
+2026-07-19T11:50:32.779Z INFO  [main] o.f.core.internal.command.DbMigrate - Successfully applied 1 migration to schema "public", now at version v1 (execution time 00:00.450s)
+2026-07-19T11:50:33.294Z INFO  [main] c.a.copilot.config.ConfigAssertions - Config assertion passed: run.lease=PT12M > orchestrator.timeout=PT10M
+2026-07-19T11:50:33.303Z WARN  [main] c.a.c.o.FakeOrchestratorClient - FakeOrchestratorClient active — replaying fixtures from fixtures/orchestrator/. This profile must never be enabled against a real environment.
+2026-07-19T11:50:34.904Z INFO  [main] c.a.copilot.config.SchedulingConfig - Reaper scheduled every PT1H
+2026-07-19T11:50:34.905Z INFO  [main] c.a.copilot.config.SchedulingConfig - Skill catalog sync scheduled every PT1H
+2026-07-19T11:50:34.926Z INFO  [main] c.a.copilot.ArtifactIntegrityTest - Started ArtifactIntegrityTest in 8.201 seconds (process running for 19.891)
+2026-07-19T11:50:35.310Z INFO  [scheduling-1] c.a.c.registry.SkillCatalogSync - Synced 5 skills at catalog_version v1/279960341625
+2026-07-19T11:50:37.304Z ERROR [main] c.a.copilot.artifact.ArtifactService - content_hash MISMATCH for oms_pg/orders (json): declared=sha256:deadbeef computed=sha256:00a283651a6029bab319b791742aa9908d6f4cef009770db451f0e62267a37e3 canonical_bytes=40
+canonical head: [{"order_id":"XXXX","status":"CREATED"}]
+2026-07-19T11:50:37.379Z ERROR [main] c.a.copilot.artifact.ArtifactService - content_hash MISMATCH for oms_pg/orders (json): declared=sha256:4a4c405c1f08ca5bf3e7a85e0425ecaeaff5cb49a7760a12d1805dd853b3d30d computed=sha256:9b865b27b3467a058e8e5c1944344c3859b0352bf7024bf2710d78adcbc21be3 canonical_bytes=18
+canonical head: [{"order_id":"A"}]
+2026-07-19T11:50:37.729Z INFO  [main] o.s.t.c.s.AnnotationConfigContextLoaderUtils - Could not detect default configuration classes for test class [com.autwit.copilot.CanonicalSessionTest]: CanonicalSessionTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-07-19T11:50:37.747Z INFO  [main] o.s.b.t.c.SpringBootTestContextBootstrapper - Found @SpringBootConfiguration com.autwit.copilot.AutwitCopilotApplication for test class com.autwit.copilot.CanonicalSessionTest
+2026-07-19T11:50:37.843Z INFO  [main] c.a.copilot.CanonicalSessionTest - Starting CanonicalSessionTest using Java 21.0.7 with PID 15244 (started by ShivPrasadGurjar in D:\autwit-ai\qa-copilot\autwit-copilot\autwit-copilot-api)
+2026-07-19T11:50:37.844Z INFO  [main] c.a.copilot.CanonicalSessionTest - The following 2 profiles are active: "fake", "all"
+2026-07-19T11:50:42.780Z INFO  [main] com.zaxxer.hikari.HikariDataSource - HikariPool-2 - Starting...
+2026-07-19T11:50:42.823Z INFO  [main] com.zaxxer.hikari.pool.HikariPool - HikariPool-2 - Added connection org.postgresql.jdbc.PgConnection@1b949de4
+2026-07-19T11:50:42.823Z INFO  [main] com.zaxxer.hikari.HikariDataSource - HikariPool-2 - Start completed.
+2026-07-19T11:50:42.830Z INFO  [main] org.flywaydb.core.FlywayExecutor - Database: jdbc:postgresql://localhost:32787/autwit (PostgreSQL 16.13)
+2026-07-19T11:50:42.889Z INFO  [main] o.f.core.internal.command.DbValidate - Successfully validated 1 migration (execution time 00:00.026s)
+2026-07-19T11:50:42.970Z INFO  [main] o.f.core.internal.command.DbMigrate - Current version of schema "public": 1
+2026-07-19T11:50:42.973Z INFO  [main] o.f.core.internal.command.DbMigrate - Schema "public" is up to date. No migration necessary.
+2026-07-19T11:50:43.159Z INFO  [main] c.a.copilot.config.ConfigAssertions - Config assertion passed: run.lease=PT12M > orchestrator.timeout=PT10M
+2026-07-19T11:50:43.163Z WARN  [main] c.a.c.o.FakeOrchestratorClient - FakeOrchestratorClient active — replaying fixtures from fixtures/orchestrator/. This profile must never be enabled against a real environment.
+2026-07-19T11:50:43.631Z INFO  [main] c.a.copilot.config.SchedulingConfig - Reaper scheduled every PT1H
+2026-07-19T11:50:43.632Z INFO  [main] c.a.copilot.config.SchedulingConfig - Skill catalog sync scheduled every PT1H
+2026-07-19T11:50:43.636Z INFO  [main] c.a.copilot.CanonicalSessionTest - Started CanonicalSessionTest in 5.872 seconds (process running for 28.6)
+2026-07-19T11:50:43.639Z INFO  [main] com.autwit.copilot.run.RunWorker - RunWorker worker-91fd641c started with concurrency 0
+2026-07-19T11:50:43.723Z INFO  [pg-listener] c.a.c.stream.PgNotificationListener - Listening on autwit_run
+2026-07-19T11:50:44.170Z INFO  [main] com.autwit.copilot.run.RunWorker - Run 883b0bf2-7467-4dff-8a47-279b8d379990 succeeded: 9 artifacts, 0 new events, snapshot 6f380bbf-8442-42d6-9572-7b7aaf9b0fbd
+2026-07-19T11:50:44.293Z INFO  [main] c.a.c.compare.ComparisonService - Comparison 938c5d86-b0f5-41f7-9099-a7967b5a77d0 -> pass (0 findings)
+2026-07-19T11:50:44.467Z INFO  [main] com.autwit.copilot.run.RunWorker - Run 8ea860f7-4e47-4aba-8302-f601bbe977be succeeded: 9 artifacts, 0 new events, snapshot ed0ca95d-a90d-45fb-a02d-481b0f03ee59
+2026-07-19T11:50:44.659Z INFO  [main] com.autwit.copilot.run.RunWorker - Run 6ff23c81-9446-485a-a4da-2d83549dbdc1 succeeded: 2 artifacts, 14 new events
+2026-07-19T11:50:44.869Z INFO  [main] com.autwit.copilot.run.RunWorker - Run 70340f07-5bab-4ed2-8c0a-1777d685d8f1 succeeded: 9 artifacts, 0 new events, snapshot 8f497969-dc31-4d35-b4e9-d75adcd8a92a
+2026-07-19T11:50:45.045Z INFO  [main] com.autwit.copilot.run.RunWorker - Run 83cefe18-090c-49fc-a6a9-4a0c054dd657 succeeded: 9 artifacts, 0 new events, snapshot 843725e1-98f3-43e5-b70d-2ccad030fb18
+2026-07-19T11:50:45.177Z INFO  [main] c.a.c.compare.ComparisonService - Comparison e9901c61-5765-493e-96f2-c113e0a5082b -> fail (7 findings)
+2026-07-19T11:50:46.188Z INFO  [main] c.a.copilot.report.ReportRenderer - Rendered 2 report artifact(s) for session d040fa92-9df9-47d0-b60c-23a14deded43
+2026-07-19T11:50:46.404Z INFO  [main] com.autwit.copilot.run.RunWorker - Run 6ad64ab4-7171-4eb8-a54a-32e596d85485 succeeded: 9 artifacts, 0 new events, snapshot ee41658b-3629-41b0-8b02-004302d43056
+2026-07-19T11:50:46.491Z INFO  [main] c.a.c.compare.ComparisonService - Comparison b6ebc840-29e9-4b11-9771-14e950f834eb -> pass (0 findings)
+2026-07-19T11:50:46.600Z INFO  [main] c.a.copilot.report.ReportRenderer - Rendered 1 report artifact(s) for session 04e7e066-d5fc-402b-beea-f567b56b8621
+2026-07-19T11:50:46.620Z INFO  [main] o.s.t.c.s.AnnotationConfigContextLoaderUtils - Could not detect default configuration classes for test class [com.autwit.copilot.CascadeTest]: CascadeTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-07-19T11:50:46.627Z INFO  [main] o.s.b.t.c.SpringBootTestContextBootstrapper - Found @SpringBootConfiguration com.autwit.copilot.AutwitCopilotApplication for test class com.autwit.copilot.CascadeTest
+2026-07-19T11:50:46.983Z WARN  [main] com.autwit.copilot.compare.Severity - Finding severity 'warn' is not one of [medium, high, critical, info, low]; storing it as 'medium'. SKILL_CONTRACT §5 says "warn finding" but warn is a Verdict, not a Severity — see CONTRACT_RATIFICATION_REQUEST.md Q4.
+2026-07-19T11:50:46.986Z WARN  [main] com.autwit.copilot.compare.Severity - Finding severity 'catastrophic' is not one of [medium, high, critical, info, low]; storing it as 'medium'. SKILL_CONTRACT §5 says "warn finding" but warn is a Verdict, not a Severity — see CONTRACT_RATIFICATION_REQUEST.md Q4.
+2026-07-19T11:50:46.986Z WARN  [main] com.autwit.copilot.compare.Severity - Finding severity '' is not one of [medium, high, critical, info, low]; storing it as 'medium'. SKILL_CONTRACT §5 says "warn finding" but warn is a Verdict, not a Severity — see CONTRACT_RATIFICATION_REQUEST.md Q4.
+2026-07-19T11:50:46.991Z INFO  [main] c.a.copilot.config.ConfigAssertions - Config assertion passed: run.lease=PT12M > orchestrator.timeout=PT10M
+2026-07-19T11:50:47.007Z INFO  [main] o.s.t.c.s.AnnotationConfigContextLoaderUtils - Could not detect default configuration classes for test class [com.autwit.copilot.MigrationSmokeTest]: MigrationSmokeTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-07-19T11:50:47.015Z INFO  [main] o.s.b.t.c.SpringBootTestContextBootstrapper - Found @SpringBootConfiguration com.autwit.copilot.AutwitCopilotApplication for test class com.autwit.copilot.MigrationSmokeTest
+2026-07-19T11:50:47.266Z INFO  [main] c.a.c.o.HttpOrchestratorClient - HttpOrchestratorClient targeting http://localhost:59496 with a PT10S deadline
+2026-07-19T11:50:47.429Z WARN  [main] c.a.c.o.HttpOrchestratorClient - Orchestrator /skills/snapshot.capture/execute returned 400 (input_schema_violation)
+2026-07-19T11:50:47.438Z INFO  [main] c.a.c.o.HttpOrchestratorClient - HttpOrchestratorClient targeting http://localhost:59496 with a PT0.5S deadline
+2026-07-19T11:50:47.971Z INFO  [main] c.a.c.o.HttpOrchestratorClient - HttpOrchestratorClient targeting http://localhost:59496 with a PT10S deadline
+2026-07-19T11:50:50.492Z INFO  [main] c.a.c.o.HttpOrchestratorClient - HttpOrchestratorClient targeting http://localhost:59496 with a PT10S deadline
+2026-07-19T11:50:50.503Z WARN  [main] c.a.c.o.HttpOrchestratorClient - Orchestrator /invoke returned 502 (upstream_error)
+2026-07-19T11:50:50.511Z INFO  [main] c.a.c.o.HttpOrchestratorClient - HttpOrchestratorClient targeting http://localhost:59496 with a PT10S deadline
+2026-07-19T11:50:50.547Z INFO  [main] c.a.c.o.HttpOrchestratorClient - HttpOrchestratorClient targeting http://localhost:1 with a PT5S deadline
+2026-07-19T11:50:50.560Z INFO  [main] c.a.c.o.HttpOrchestratorClient - HttpOrchestratorClient targeting http://localhost:59496 with a PT10S deadline
+2026-07-19T11:50:50.592Z INFO  [main] c.a.c.o.HttpOrchestratorClient - HttpOrchestratorClient targeting http://localhost:59496 with a PT10S deadline
+2026-07-19T11:50:50.596Z WARN  [main] c.a.c.o.HttpOrchestratorClient - Orchestrator /invoke returned 503 (upstream_unavailable)
+2026-07-19T11:50:50.602Z INFO  [main] c.a.c.o.HttpOrchestratorClient - HttpOrchestratorClient targeting http://localhost:59496 with a PT10S deadline
+2026-07-19T11:50:50.619Z INFO  [main] c.a.c.o.HttpOrchestratorClient - HttpOrchestratorClient targeting http://localhost:59496 with a PT10S deadline
+2026-07-19T11:50:50.634Z INFO  [main] c.a.c.o.HttpOrchestratorClient - HttpOrchestratorClient targeting http://localhost:59496 with a PT10S deadline
+2026-07-19T11:50:50.649Z INFO  [main] c.a.c.o.HttpOrchestratorClient - HttpOrchestratorClient targeting http://localhost:59496 with a PT10S deadline
+2026-07-19T11:50:50.668Z INFO  [main] o.s.t.c.s.AnnotationConfigContextLoaderUtils - Could not detect default configuration classes for test class [com.autwit.copilot.registry.SkillCatalogSyncTest]: SkillCatalogSyncTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-07-19T11:50:50.702Z INFO  [main] o.s.b.t.c.SpringBootTestContextBootstrapper - Found @SpringBootConfiguration com.autwit.copilot.AutwitCopilotApplication for test class com.autwit.copilot.registry.SkillCatalogSyncTest
+2026-07-19T11:50:50.774Z INFO  [main] c.a.c.registry.SkillCatalogSyncTest - Starting SkillCatalogSyncTest using Java 21.0.7 with PID 15244 (started by ShivPrasadGurjar in D:\autwit-ai\qa-copilot\autwit-copilot\autwit-copilot-api)
+2026-07-19T11:50:50.775Z INFO  [main] c.a.c.registry.SkillCatalogSyncTest - The following 2 profiles are active: "fake", "all"
+2026-07-19T11:50:51.438Z INFO  [main] com.zaxxer.hikari.HikariDataSource - HikariPool-3 - Starting...
+2026-07-19T11:50:51.464Z INFO  [main] com.zaxxer.hikari.pool.HikariPool - HikariPool-3 - Added connection org.postgresql.jdbc.PgConnection@2a0a178f
+2026-07-19T11:50:51.464Z INFO  [main] com.zaxxer.hikari.HikariDataSource - HikariPool-3 - Start completed.
+2026-07-19T11:50:51.470Z INFO  [main] org.flywaydb.core.FlywayExecutor - Database: jdbc:postgresql://localhost:32787/autwit (PostgreSQL 16.13)
+2026-07-19T11:50:51.536Z INFO  [main] o.f.core.internal.command.DbValidate - Successfully validated 1 migration (execution time 00:00.036s)
+2026-07-19T11:50:51.596Z INFO  [main] o.f.core.internal.command.DbMigrate - Current version of schema "public": 1
+2026-07-19T11:50:51.603Z INFO  [main] o.f.core.internal.command.DbMigrate - Schema "public" is up to date. No migration necessary.
+2026-07-19T11:50:51.783Z INFO  [main] c.a.copilot.config.ConfigAssertions - Config assertion passed: run.lease=PT12M > orchestrator.timeout=PT10M
+2026-07-19T11:50:51.793Z WARN  [main] c.a.c.o.FakeOrchestratorClient - FakeOrchestratorClient active — replaying fixtures from fixtures/orchestrator/. This profile must never be enabled against a real environment.
+2026-07-19T11:50:52.118Z INFO  [main] c.a.copilot.config.SchedulingConfig - Reaper scheduled every PT1H
+2026-07-19T11:50:52.118Z INFO  [main] c.a.copilot.config.SchedulingConfig - Skill catalog sync scheduled every PT1H
+2026-07-19T11:50:52.120Z INFO  [main] c.a.c.registry.SkillCatalogSyncTest - Started SkillCatalogSyncTest in 1.412 seconds (process running for 37.085)
+2026-07-19T11:50:52.128Z INFO  [main] com.autwit.copilot.run.RunWorker - RunWorker worker-80b36607 started with concurrency 4
+2026-07-19T11:50:52.212Z INFO  [pg-listener] c.a.c.stream.PgNotificationListener - Listening on autwit_run
+2026-07-19T11:50:52.253Z WARN  [main] c.a.c.registry.SkillCatalogSync - catalog_version v1/279960341625 is unchanged but the skill content differs — re-syncing anyway. The orchestrator's version did not move for a real change; treat its catalog as suspect.
+2026-07-19T11:50:52.272Z INFO  [main] c.a.c.registry.SkillCatalogSync - Synced 5 skills at catalog_version v1/279960341625
+2026-07-19T11:50:52.282Z INFO  [main] o.s.t.c.s.AnnotationConfigContextLoaderUtils - Could not detect default configuration classes for test class [com.autwit.copilot.run.EventDedupeTest]: EventDedupeTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-07-19T11:50:52.318Z INFO  [main] o.s.b.t.c.SpringBootTestContextBootstrapper - Found @SpringBootConfiguration com.autwit.copilot.AutwitCopilotApplication for test class com.autwit.copilot.run.EventDedupeTest
+2026-07-19T11:50:52.487Z INFO  [main] com.autwit.copilot.run.RunWorker - Run 2dd12f1f-5c05-41a6-8d29-f4c77370ce0e succeeded: 2 artifacts, 14 new events
+2026-07-19T11:50:52.636Z INFO  [main] com.autwit.copilot.run.RunWorker - Run 10690abe-6066-4ef2-8449-33afbcfb9da6 succeeded: 2 artifacts, 14 new events
+2026-07-19T11:50:52.756Z INFO  [main] com.autwit.copilot.run.RunWorker - Run 6b8daf92-b92e-4dd3-a21d-d6e167875f85 succeeded: 2 artifacts, 0 new events
+2026-07-19T11:50:52.927Z INFO  [main] com.autwit.copilot.run.RunWorker - Run 36938f92-9f3d-46c1-b232-71b4be4ea299 succeeded: 2 artifacts, 14 new events
+2026-07-19T11:50:53.057Z INFO  [main] com.autwit.copilot.run.RunWorker - Run 601288e3-2513-496b-895f-66388aa55d02 succeeded: 1 artifacts, 4 new events
+2026-07-19T11:50:53.169Z INFO  [main] com.autwit.copilot.run.RunWorker - Run ac044943-6874-4996-a5e8-88f473b791ae succeeded: 2 artifacts, 14 new events
+2026-07-19T11:50:53.249Z INFO  [main] com.autwit.copilot.run.RunWorker - Run fb7596bc-9082-473f-95b5-1f7956ca5bb3 succeeded: 1 artifacts, 4 new events
+2026-07-19T11:50:53.374Z INFO  [main] com.autwit.copilot.run.RunWorker - Run e913cc5a-9136-4822-a47c-29d8a6f8f06d succeeded: 2 artifacts, 14 new events
+2026-07-19T11:50:53.532Z INFO  [main] com.autwit.copilot.run.RunWorker - Run 126808e4-13ab-4f2d-8656-bb50b460a504 succeeded: 9 artifacts, 0 new events, snapshot c3b0b097-665d-4f63-80e8-bba935390921
+2026-07-19T11:50:53.648Z INFO  [main] com.autwit.copilot.run.RunWorker - Run 69a952eb-4d8c-4ec2-840b-3d6ae50dbe5a succeeded: 2 artifacts, 14 new events
+2026-07-19T11:50:53.664Z INFO  [main] o.s.t.c.s.AnnotationConfigContextLoaderUtils - Could not detect default configuration classes for test class [com.autwit.copilot.run.FixtureRunTest]: FixtureRunTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-07-19T11:50:53.674Z INFO  [main] o.s.b.t.c.SpringBootTestContextBootstrapper - Found @SpringBootConfiguration com.autwit.copilot.AutwitCopilotApplication for test class com.autwit.copilot.run.FixtureRunTest
+2026-07-19T11:50:53.786Z ERROR [virtual-101] com.autwit.copilot.run.RunWorker - Run 8c15f5bf-d2a3-483a-ac43-daa762fe6b30 failed unexpectedly
+java.util.NoSuchElementException: No value present
+	at java.base/java.util.Optional.orElseThrow(Optional.java:377)
+	at com.autwit.copilot.run.RunWorker.call(RunWorker.java:226)
+	at com.autwit.copilot.run.RunWorker.execute(RunWorker.java:190)
+	at com.autwit.copilot.run.RunWorker.pollOnce(RunWorker.java:160)
+	at com.autwit.copilot.run.RunWorker.loop(RunWorker.java:118)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.lang.VirtualThread.run(VirtualThread.java:329)
+2026-07-19T11:50:53.939Z INFO  [main] com.autwit.copilot.run.RunWorker - Run a8e4173d-c8da-4c66-8c47-525d65c7fa2d succeeded: 7 artifacts, 0 new events, snapshot 8e8f06d2-1f5d-4435-a548-5a9878470a80
+2026-07-19T11:50:54.133Z INFO  [main] com.autwit.copilot.run.RunWorker - Run c6340b60-da00-4901-9d4f-e3ededc1b361 succeeded: 9 artifacts, 0 new events, snapshot 20d98075-c56b-47fe-a95c-f4a228b93369
+2026-07-19T11:50:54.296Z INFO  [main] com.autwit.copilot.run.RunWorker - Run 60351838-3d6c-4845-a76b-05163c2afb50 succeeded: 9 artifacts, 0 new events, snapshot c6d81160-355c-49f9-994c-0310c0ec92b8
+2026-07-19T11:50:54.613Z INFO  [main] com.autwit.copilot.run.RunWorker - Run 5433330e-6050-44be-aeed-7601bfb8fd6b succeeded: 9 artifacts, 0 new events, snapshot c5077665-3f35-4655-9385-4e80f5c80216
+2026-07-19T11:50:54.769Z INFO  [main] com.autwit.copilot.run.RunWorker - Run e74e2f13-02db-4510-847a-79d991c50ce3 succeeded: 9 artifacts, 0 new events, snapshot 774daedd-2398-4979-b775-f9cec4d0ad0f
+2026-07-19T11:50:54.899Z INFO  [main] com.autwit.copilot.run.RunWorker - Run da74106c-08d2-4eab-b837-e35d9c755519 succeeded: 9 artifacts, 0 new events, snapshot 7202499f-e82e-47d9-a546-8bff4e262b9e
+2026-07-19T11:50:55.041Z INFO  [main] com.autwit.copilot.run.RunWorker - Run e471f066-c4af-4649-9de0-f432f38af7a8 succeeded: 9 artifacts, 0 new events, snapshot f03c470c-b028-4186-b8c7-520115110833
+2026-07-19T11:50:55.164Z INFO  [main] com.autwit.copilot.run.RunWorker - Run 7c82fc92-271f-46ec-b52c-a73a302d6ba5 succeeded: 9 artifacts, 0 new events, snapshot 35a12939-e2a5-45b1-8eda-1c233b244460
+2026-07-19T11:50:55.286Z INFO  [main] com.autwit.copilot.run.RunWorker - Run 25b363a3-213d-44bd-a0e4-7e6815b54177 succeeded: 9 artifacts, 0 new events, snapshot 1d0ed24e-2ff5-4400-a283-8282b688e854
+2026-07-19T11:50:55.370Z INFO  [main] com.autwit.copilot.run.RunWorker - Run a8769830-e211-4956-a0d7-43fddf1b435f succeeded: 9 artifacts, 0 new events, snapshot 10e5eed5-a7e3-4743-83ea-decff475c161
+2026-07-19T11:50:55.514Z INFO  [main] com.autwit.copilot.run.RunWorker - Run 34ba5593-fcb9-494b-b35d-f785931e1862 succeeded: 7 artifacts, 0 new events, snapshot a7b90582-0a5a-43e7-9b3b-4eda15e27450
+2026-07-19T11:50:55.537Z INFO  [main] o.s.t.c.s.AnnotationConfigContextLoaderUtils - Could not detect default configuration classes for test class [com.autwit.copilot.run.IdempotencyTest]: IdempotencyTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-07-19T11:50:55.543Z INFO  [main] o.s.b.t.c.SpringBootTestContextBootstrapper - Found @SpringBootConfiguration com.autwit.copilot.AutwitCopilotApplication for test class com.autwit.copilot.run.IdempotencyTest
+2026-07-19T11:50:55.728Z ERROR [virtual-101] com.autwit.copilot.run.RunWorker - Run 73d6fc38-d189-4e5d-8fbb-74e24a13b6b2 failed unexpectedly
+org.springframework.dao.DataIntegrityViolationException: PreparedStatementCallback; SQL [insert into autwit.artifact
+  (session_id, step_id, milestone_id, run_id, artifact_type, source_system,
+   logical_name, format, body_jsonb, body_text, body_bytes,
+   content_hash, size_bytes, row_count, meta)
+values (?, ?, ?, ?, ?, ?, ?, ?, ?::jsonb, ?, ?, ?, ?, ?, ?::jsonb)
+returning artifact_id
+]; ERROR: insert or update on table "artifact" violates foreign key constraint "artifact_session_id_fkey"
+  Detail: Key (session_id)=(a37b58ee-b2c6-4bcf-92e6-c228ab0cf1f3) is not present in table "session".
+	at org.springframework.jdbc.support.SQLStateSQLExceptionTranslator.doTranslate(SQLStateSQLExceptionTranslator.java:118)
+	at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:107)
+	at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:116)
+	at org.springframework.jdbc.core.JdbcTemplate.translateException(JdbcTemplate.java:1548)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:677)
+	at org.springframework.jdbc.core.JdbcTemplate.query(JdbcTemplate.java:723)
+	at org.springframework.jdbc.core.JdbcTemplate.query(JdbcTemplate.java:754)
+	at org.springframework.jdbc.core.JdbcTemplate.query(JdbcTemplate.java:767)
+	at org.springframework.jdbc.core.JdbcTemplate.queryForObject(JdbcTemplate.java:889)
+	at org.springframework.jdbc.core.JdbcTemplate.queryForObject(JdbcTemplate.java:916)
+	at com.autwit.copilot.artifact.ArtifactRepository.insert(ArtifactRepository.java:46)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:355)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:196)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163)
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:768)
+	at org.springframework.dao.support.PersistenceExceptionTranslationInterceptor.invoke(PersistenceExceptionTranslationInterceptor.java:138)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:768)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:720)
+	at com.autwit.copilot.artifact.ArtifactRepository$$SpringCGLIB$$0.insert(<generated>)
+	at com.autwit.copilot.artifact.ArtifactService.persist(ArtifactService.java:128)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:355)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:196)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163)
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:768)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:379)
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:768)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:720)
+	at com.autwit.copilot.artifact.ArtifactService$$SpringCGLIB$$0.persist(<generated>)
+	at com.autwit.copilot.run.EnvelopePersister.persistArtifact(EnvelopePersister.java:158)
+	at com.autwit.copilot.run.EnvelopePersister.persist(EnvelopePersister.java:76)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:355)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:196)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163)
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:768)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:379)
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:768)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:720)
+	at com.autwit.copilot.run.EnvelopePersister$$SpringCGLIB$$0.persist(<generated>)
+	at com.autwit.copilot.run.RunWorker.execute(RunWorker.java:199)
+	at com.autwit.copilot.run.RunWorker.pollOnce(RunWorker.java:160)
+	at com.autwit.copilot.run.RunWorker.loop(RunWorker.java:118)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.lang.VirtualThread.run(VirtualThread.java:329)
+Caused by: org.postgresql.util.PSQLException: ERROR: insert or update on table "artifact" violates foreign key constraint "artifact_session_id_fkey"
+  Detail: Key (session_id)=(a37b58ee-b2c6-4bcf-92e6-c228ab0cf1f3) is not present in table "session".
+	at org.postgresql.core.v3.QueryExecutorImpl.receiveErrorResponse(QueryExecutorImpl.java:2733)
+	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2420)
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:372)
+	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:517)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:434)
+	at org.postgresql.jdbc.PgPreparedStatement.executeWithFlags(PgPreparedStatement.java:194)
+	at org.postgresql.jdbc.PgPreparedStatement.executeQuery(PgPreparedStatement.java:137)
+	at com.zaxxer.hikari.pool.ProxyPreparedStatement.executeQuery(ProxyPreparedStatement.java:52)
+	at com.zaxxer.hikari.pool.HikariProxyPreparedStatement.executeQuery(HikariProxyPreparedStatement.java)
+	at org.springframework.jdbc.core.JdbcTemplate$1.doInPreparedStatement(JdbcTemplate.java:732)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:658)
+	... 50 common frames omitted
+2026-07-19T11:50:55.754Z ERROR [virtual-101] com.autwit.copilot.run.RunWorker - Run 9b700806-fc16-46e3-95c6-014972c78ddd failed unexpectedly
+java.util.NoSuchElementException: No value present
+	at java.base/java.util.Optional.orElseThrow(Optional.java:377)
+	at com.autwit.copilot.run.SessionContextBuilder.build(SessionContextBuilder.java:39)
+	at com.autwit.copilot.run.RunWorker.call(RunWorker.java:225)
+	at com.autwit.copilot.run.RunWorker.execute(RunWorker.java:190)
+	at com.autwit.copilot.run.RunWorker.pollOnce(RunWorker.java:160)
+	at com.autwit.copilot.run.RunWorker.loop(RunWorker.java:118)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.lang.VirtualThread.run(VirtualThread.java:329)
+2026-07-19T11:50:56.044Z ERROR [virtual-101] com.autwit.copilot.run.RunWorker - Run 70333c14-4195-412a-bf36-e3a587e95587 failed unexpectedly
+java.util.NoSuchElementException: No value present
+	at java.base/java.util.Optional.orElseThrow(Optional.java:377)
+	at com.autwit.copilot.run.RunWorker.call(RunWorker.java:226)
+	at com.autwit.copilot.run.RunWorker.execute(RunWorker.java:190)
+	at com.autwit.copilot.run.RunWorker.pollOnce(RunWorker.java:160)
+	at com.autwit.copilot.run.RunWorker.loop(RunWorker.java:118)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.lang.VirtualThread.run(VirtualThread.java:329)
+2026-07-19T11:50:56.387Z ERROR [virtual-99] com.autwit.copilot.run.RunWorker - Run 223f427d-8ab0-4ba0-a901-b9695ee45107 failed unexpectedly
+java.util.NoSuchElementException: No value present
+	at java.base/java.util.Optional.orElseThrow(Optional.java:377)
+	at com.autwit.copilot.run.SessionContextBuilder.build(SessionContextBuilder.java:39)
+	at com.autwit.copilot.run.RunWorker.call(RunWorker.java:225)
+	at com.autwit.copilot.run.RunWorker.execute(RunWorker.java:190)
+	at com.autwit.copilot.run.RunWorker.pollOnce(RunWorker.java:160)
+	at com.autwit.copilot.run.RunWorker.loop(RunWorker.java:118)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.lang.VirtualThread.run(VirtualThread.java:329)
+2026-07-19T11:50:56.478Z INFO  [main] o.s.t.c.s.AnnotationConfigContextLoaderUtils - Could not detect default configuration classes for test class [com.autwit.copilot.run.TimelineReadsTest]: TimelineReadsTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-07-19T11:50:56.487Z INFO  [main] o.s.b.t.c.SpringBootTestContextBootstrapper - Found @SpringBootConfiguration com.autwit.copilot.AutwitCopilotApplication for test class com.autwit.copilot.run.TimelineReadsTest
+2026-07-19T11:50:56.581Z INFO  [main] com.autwit.copilot.run.RunWorker - Run 455cf09c-cf07-45d6-b7d7-6c5aeaa979a2 succeeded: 2 artifacts, 14 new events
+2026-07-19T11:50:56.757Z INFO  [main] com.autwit.copilot.run.RunWorker - Run 0b3a0419-0960-45fa-b9d9-b30114579841 succeeded: 9 artifacts, 0 new events, snapshot 1a34d63c-7dc7-4bcf-91e0-290f73c31655
+2026-07-19T11:50:56.919Z INFO  [main] com.autwit.copilot.run.RunWorker - Run ab5d74f8-a8cf-4bbf-ac38-f0436ed24400 succeeded: 9 artifacts, 0 new events, snapshot 6384f492-eadf-4503-a85e-a8dfbcc91763
+2026-07-19T11:50:57.035Z INFO  [main] c.a.c.compare.ComparisonService - Comparison f8a652f8-3339-427a-98cf-eff7ef3025d1 -> fail (7 findings)
+2026-07-19T11:50:57.227Z INFO  [main] com.autwit.copilot.run.RunWorker - Run 62641e4c-0a94-478b-8d69-0a011379a459 succeeded: 9 artifacts, 0 new events, snapshot dab1f3c8-7215-4230-a4c5-2f2f31469337
+2026-07-19T11:50:57.335Z INFO  [main] com.autwit.copilot.run.RunWorker - Run b4cdd97f-9c42-47ee-81b7-22e4fbdced5d succeeded: 2 artifacts, 14 new events
+2026-07-19T11:50:57.437Z INFO  [main] com.autwit.copilot.run.RunWorker - Run 9ea9af2f-6ac7-4289-8c75-4b7ab2a4825c succeeded: 2 artifacts, 14 new events
+2026-07-19T11:50:57.532Z INFO  [main] com.autwit.copilot.run.RunWorker - Run cc77d3d1-95e6-4963-b033-06c1ab25aef4 succeeded: 2 artifacts, 14 new events
+2026-07-19T11:50:57.629Z INFO  [main] com.autwit.copilot.run.RunWorker - Run 7a016a2f-950c-4c15-8041-61570087b74a succeeded: 2 artifacts, 14 new events
+2026-07-19T11:50:57.645Z INFO  [main] o.s.t.c.s.AnnotationConfigContextLoaderUtils - Could not detect default configuration classes for test class [com.autwit.copilot.run.TimeoutTest]: TimeoutTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-07-19T11:50:57.651Z INFO  [main] o.s.b.t.c.SpringBootTestContextBootstrapper - Found @SpringBootConfiguration com.autwit.copilot.AutwitCopilotApplication for test class com.autwit.copilot.run.TimeoutTest
+2026-07-19T11:50:57.700Z INFO  [main] com.autwit.copilot.run.TimeoutTest - Starting TimeoutTest using Java 21.0.7 with PID 15244 (started by ShivPrasadGurjar in D:\autwit-ai\qa-copilot\autwit-copilot\autwit-copilot-api)
+2026-07-19T11:50:57.700Z INFO  [main] com.autwit.copilot.run.TimeoutTest - The following 2 profiles are active: "fake", "all"
+2026-07-19T11:50:58.335Z INFO  [main] com.zaxxer.hikari.HikariDataSource - HikariPool-4 - Starting...
+2026-07-19T11:50:58.376Z INFO  [main] com.zaxxer.hikari.pool.HikariPool - HikariPool-4 - Added connection org.postgresql.jdbc.PgConnection@27d38370
+2026-07-19T11:50:58.377Z INFO  [main] com.zaxxer.hikari.HikariDataSource - HikariPool-4 - Start completed.
+2026-07-19T11:50:58.381Z INFO  [main] org.flywaydb.core.FlywayExecutor - Database: jdbc:postgresql://localhost:32787/autwit (PostgreSQL 16.13)
+2026-07-19T11:50:58.422Z INFO  [main] o.f.core.internal.command.DbValidate - Successfully validated 1 migration (execution time 00:00.022s)
+2026-07-19T11:50:58.467Z INFO  [main] o.f.core.internal.command.DbMigrate - Current version of schema "public": 1
+2026-07-19T11:50:58.469Z INFO  [main] o.f.core.internal.command.DbMigrate - Schema "public" is up to date. No migration necessary.
+2026-07-19T11:50:58.561Z INFO  [main] c.a.copilot.config.ConfigAssertions - Config assertion passed: run.lease=PT12M > orchestrator.timeout=PT1S
+2026-07-19T11:50:58.565Z WARN  [main] c.a.c.o.FakeOrchestratorClient - FakeOrchestratorClient active — replaying fixtures from fixtures/orchestrator/. This profile must never be enabled against a real environment.
+2026-07-19T11:50:58.809Z INFO  [main] c.a.copilot.config.SchedulingConfig - Reaper scheduled every PT1H
+2026-07-19T11:50:58.809Z INFO  [main] c.a.copilot.config.SchedulingConfig - Skill catalog sync scheduled every PT1H
+2026-07-19T11:50:58.811Z INFO  [main] com.autwit.copilot.run.TimeoutTest - Started TimeoutTest in 1.156 seconds (process running for 43.776)
+2026-07-19T11:50:58.813Z INFO  [main] com.autwit.copilot.run.RunWorker - RunWorker worker-9a2ef711 started with concurrency 0
+2026-07-19T11:50:58.854Z INFO  [pg-listener] c.a.c.stream.PgNotificationListener - Listening on autwit_run
+2026-07-19T11:50:59.097Z INFO  [main] c.a.copilot.run.EnvelopePersister - Run 4409873d-b5a7-4668-b196-d906683b8fdf went terminal while the orchestrator was working; discarding the result (9 artifacts, 0 events)
+2026-07-19T11:50:59.217Z INFO  [main] c.a.copilot.run.EnvelopePersister - Run 328ef62b-7dc0-4ae1-8fa7-759cc85f294e went terminal while the orchestrator was working; discarding the result (9 artifacts, 0 events)
+2026-07-19T11:50:59.280Z ERROR [virtual-100] com.autwit.copilot.run.RunWorker - Run 589236ca-dbce-4137-a639-b79bd20b150d failed unexpectedly
+java.util.NoSuchElementException: No value present
+	at java.base/java.util.Optional.orElseThrow(Optional.java:377)
+	at com.autwit.copilot.run.SessionContextBuilder.build(SessionContextBuilder.java:39)
+	at com.autwit.copilot.run.RunWorker.call(RunWorker.java:225)
+	at com.autwit.copilot.run.RunWorker.execute(RunWorker.java:190)
+	at com.autwit.copilot.run.RunWorker.pollOnce(RunWorker.java:160)
+	at com.autwit.copilot.run.RunWorker.loop(RunWorker.java:118)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.lang.VirtualThread.run(VirtualThread.java:329)
+2026-07-19T11:50:59.367Z INFO  [main] c.a.c.o.FakeOrchestratorClient - Fixture invoke_slow.json simulates a slow call: sleeping 1000ms against a PT1S timeout
+2026-07-19T11:51:00.368Z WARN  [main] com.autwit.copilot.run.RunWorker - Run 4770e293-b521-4164-93b2-eb4446c70389 timed out after PT1S: outcome is UNKNOWN
+2026-07-19T11:51:00.429Z INFO  [main] c.a.c.o.FakeOrchestratorClient - Fixture invoke_slow.json simulates a slow call: sleeping 1000ms against a PT1S timeout
+2026-07-19T11:51:01.431Z WARN  [main] com.autwit.copilot.run.RunWorker - Run 351d1971-b8db-4062-8569-2ca64205fd7b timed out after PT1S: outcome is UNKNOWN
+2026-07-19T11:51:01.472Z INFO  [main] c.a.c.o.FakeOrchestratorClient - Fixture invoke_slow.json simulates a slow call: sleeping 1000ms against a PT1S timeout
+2026-07-19T11:51:02.472Z WARN  [main] com.autwit.copilot.run.RunWorker - Run 0321a46b-3351-447e-b6d2-e793967fabfc timed out after PT1S: outcome is UNKNOWN
+2026-07-19T11:51:02.496Z INFO  [main] o.s.t.c.s.AnnotationConfigContextLoaderUtils - Could not detect default configuration classes for test class [com.autwit.copilot.RunQueueTest]: RunQueueTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-07-19T11:51:02.502Z INFO  [main] o.s.b.t.c.SpringBootTestContextBootstrapper - Found @SpringBootConfiguration com.autwit.copilot.AutwitCopilotApplication for test class com.autwit.copilot.RunQueueTest
+2026-07-19T11:51:02.727Z ERROR [virtual-101] com.autwit.copilot.run.RunWorker - Run 52e0f764-9a40-475a-91bf-cca1dae2b764 failed unexpectedly
+com.autwit.copilot.common.ApiException$NotFound: snapshot null not found
+	at com.autwit.copilot.compare.ComparisonService.load(ComparisonService.java:122)
+	at com.autwit.copilot.compare.ComparisonService.run(ComparisonService.java:53)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:355)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:196)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163)
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:768)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:379)
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:768)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:720)
+	at com.autwit.copilot.compare.ComparisonService$$SpringCGLIB$$0.run(<generated>)
+	at com.autwit.copilot.run.LocalRunExecutor.runComparison(LocalRunExecutor.java:68)
+	at com.autwit.copilot.run.LocalRunExecutor.execute(LocalRunExecutor.java:52)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:355)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:196)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163)
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:768)
+	at org.springframework.transaction.interceptor.TransactionAspectSupport.invokeWithinTransaction(TransactionAspectSupport.java:379)
+	at org.springframework.transaction.interceptor.TransactionInterceptor.invoke(TransactionInterceptor.java:119)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:768)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:720)
+	at com.autwit.copilot.run.LocalRunExecutor$$SpringCGLIB$$0.execute(<generated>)
+	at com.autwit.copilot.run.RunWorker.execute(RunWorker.java:185)
+	at com.autwit.copilot.run.RunWorker.pollOnce(RunWorker.java:160)
+	at com.autwit.copilot.run.RunWorker.loop(RunWorker.java:118)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.lang.VirtualThread.run(VirtualThread.java:329)
+2026-07-19T11:51:02.986Z ERROR [virtual-100] com.autwit.copilot.run.RunWorker - Run 5a8c26e2-fc52-4ff2-b98c-3c06d47953d3 failed unexpectedly
+java.util.NoSuchElementException: No value present
+	at java.base/java.util.Optional.orElseThrow(Optional.java:377)
+	at com.autwit.copilot.run.RunWorker.call(RunWorker.java:226)
+	at com.autwit.copilot.run.RunWorker.execute(RunWorker.java:190)
+	at com.autwit.copilot.run.RunWorker.pollOnce(RunWorker.java:160)
+	at com.autwit.copilot.run.RunWorker.loop(RunWorker.java:118)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.lang.VirtualThread.run(VirtualThread.java:329)
+2026-07-19T11:51:03.131Z INFO  [main] o.s.t.c.s.AnnotationConfigContextLoaderUtils - Could not detect default configuration classes for test class [com.autwit.copilot.SessionTimelineTest]: SessionTimelineTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-07-19T11:51:03.150Z INFO  [main] o.s.b.t.c.SpringBootTestContextBootstrapper - Found @SpringBootConfiguration com.autwit.copilot.AutwitCopilotApplication for test class com.autwit.copilot.SessionTimelineTest
+2026-07-19T11:51:03.209Z INFO  [main] c.autwit.copilot.SessionTimelineTest - Starting SessionTimelineTest using Java 21.0.7 with PID 15244 (started by ShivPrasadGurjar in D:\autwit-ai\qa-copilot\autwit-copilot\autwit-copilot-api)
+2026-07-19T11:51:03.209Z INFO  [main] c.autwit.copilot.SessionTimelineTest - The following 1 profile is active: "fake"
+2026-07-19T11:51:03.806Z INFO  [main] com.zaxxer.hikari.HikariDataSource - HikariPool-5 - Starting...
+2026-07-19T11:51:03.858Z INFO  [main] com.zaxxer.hikari.pool.HikariPool - HikariPool-5 - Added connection org.postgresql.jdbc.PgConnection@442612a6
+2026-07-19T11:51:03.858Z INFO  [main] com.zaxxer.hikari.HikariDataSource - HikariPool-5 - Start completed.
+2026-07-19T11:51:03.862Z INFO  [main] org.flywaydb.core.FlywayExecutor - Database: jdbc:postgresql://localhost:32787/autwit (PostgreSQL 16.13)
+2026-07-19T11:51:03.894Z INFO  [main] o.f.core.internal.command.DbValidate - Successfully validated 1 migration (execution time 00:00.015s)
+2026-07-19T11:51:03.930Z INFO  [main] o.f.core.internal.command.DbMigrate - Current version of schema "public": 1
+2026-07-19T11:51:03.932Z INFO  [main] o.f.core.internal.command.DbMigrate - Schema "public" is up to date. No migration necessary.
+2026-07-19T11:51:04.009Z INFO  [main] c.a.copilot.config.ConfigAssertions - Config assertion passed: run.lease=PT12M > orchestrator.timeout=PT10M
+2026-07-19T11:51:04.013Z WARN  [main] c.a.c.o.FakeOrchestratorClient - FakeOrchestratorClient active — replaying fixtures from fixtures/orchestrator/. This profile must never be enabled against a real environment.
+2026-07-19T11:51:04.320Z INFO  [main] o.s.b.t.m.w.SpringBootMockServletContext - Initializing Spring TestDispatcherServlet ''
+2026-07-19T11:51:04.321Z INFO  [main] o.s.t.w.s.TestDispatcherServlet - Initializing Servlet ''
+2026-07-19T11:51:04.322Z INFO  [main] o.s.t.w.s.TestDispatcherServlet - Completed initialization in 1 ms
+2026-07-19T11:51:04.340Z INFO  [main] c.a.copilot.config.SchedulingConfig - Reaper scheduled every PT1H
+2026-07-19T11:51:04.340Z INFO  [main] c.a.copilot.config.SchedulingConfig - Skill catalog sync scheduled every PT1H
+2026-07-19T11:51:04.342Z INFO  [main] c.autwit.copilot.SessionTimelineTest - Started SessionTimelineTest in 1.185 seconds (process running for 49.307)
+2026-07-19T11:51:05.088Z INFO  [main] o.s.t.c.s.AnnotationConfigContextLoaderUtils - Could not detect default configuration classes for test class [com.autwit.copilot.SpecConformanceTest]: SpecConformanceTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-07-19T11:51:05.095Z INFO  [main] o.s.b.t.c.SpringBootTestContextBootstrapper - Found @SpringBootConfiguration com.autwit.copilot.AutwitCopilotApplication for test class com.autwit.copilot.SpecConformanceTest
+2026-07-19T11:51:05.143Z INFO  [main] o.s.t.c.s.AnnotationConfigContextLoaderUtils - Could not detect default configuration classes for test class [com.autwit.copilot.stream.SseStreamTest]: SseStreamTest does not declare any static, non-private, non-final, nested classes annotated with @Configuration.
+2026-07-19T11:51:05.166Z INFO  [main] o.s.b.t.c.SpringBootTestContextBootstrapper - Found @SpringBootConfiguration com.autwit.copilot.AutwitCopilotApplication for test class com.autwit.copilot.stream.SseStreamTest
+2026-07-19T11:51:05.651Z INFO  [main] c.a.copilot.stream.SseStreamTest - Starting SseStreamTest using Java 21.0.7 with PID 15244 (started by ShivPrasadGurjar in D:\autwit-ai\qa-copilot\autwit-copilot\autwit-copilot-api)
+2026-07-19T11:51:05.651Z INFO  [main] c.a.copilot.stream.SseStreamTest - The following 2 profiles are active: "fake", "all"
+2026-07-19T11:51:06.531Z INFO  [main] o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 0 (http)
+2026-07-19T11:51:06.551Z INFO  [main] o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-auto-1"]
+2026-07-19T11:51:06.558Z INFO  [main] o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-07-19T11:51:06.559Z INFO  [main] o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+2026-07-19T11:51:06.700Z INFO  [main] o.a.c.c.C.[.[localhost].[/api/v1] - Initializing Spring embedded WebApplicationContext
+2026-07-19T11:51:06.701Z INFO  [main] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 1046 ms
+2026-07-19T11:51:06.800Z INFO  [main] com.zaxxer.hikari.HikariDataSource - HikariPool-6 - Starting...
+2026-07-19T11:51:06.823Z INFO  [main] com.zaxxer.hikari.pool.HikariPool - HikariPool-6 - Added connection org.postgresql.jdbc.PgConnection@6a938034
+2026-07-19T11:51:06.823Z INFO  [main] com.zaxxer.hikari.HikariDataSource - HikariPool-6 - Start completed.
+2026-07-19T11:51:06.826Z INFO  [main] org.flywaydb.core.FlywayExecutor - Database: jdbc:postgresql://localhost:32787/autwit (PostgreSQL 16.13)
+2026-07-19T11:51:06.848Z INFO  [main] o.f.core.internal.command.DbValidate - Successfully validated 1 migration (execution time 00:00.010s)
+2026-07-19T11:51:06.881Z INFO  [main] o.f.core.internal.command.DbMigrate - Current version of schema "public": 1
+2026-07-19T11:51:06.882Z INFO  [main] o.f.core.internal.command.DbMigrate - Schema "public" is up to date. No migration necessary.
+2026-07-19T11:51:06.985Z INFO  [main] c.a.copilot.config.ConfigAssertions - Config assertion passed: run.lease=PT12M > orchestrator.timeout=PT10M
+2026-07-19T11:51:06.986Z WARN  [main] c.a.c.o.FakeOrchestratorClient - FakeOrchestratorClient active — replaying fixtures from fixtures/orchestrator/. This profile must never be enabled against a real environment.
+2026-07-19T11:51:07.292Z INFO  [main] o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-auto-1"]
+2026-07-19T11:51:07.311Z INFO  [main] o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 64854 (http) with context path '/api/v1'
+2026-07-19T11:51:07.317Z INFO  [main] c.a.copilot.config.SchedulingConfig - Reaper scheduled every PT1H
+2026-07-19T11:51:07.317Z INFO  [main] c.a.copilot.config.SchedulingConfig - Skill catalog sync scheduled every PT1H
+2026-07-19T11:51:07.321Z INFO  [main] c.a.copilot.stream.SseStreamTest - Started SseStreamTest in 1.735 seconds (process running for 52.286)
+2026-07-19T11:51:07.323Z INFO  [main] com.autwit.copilot.run.RunWorker - RunWorker worker-9c907c80 started with concurrency 4
+2026-07-19T11:51:07.381Z INFO  [pg-listener] c.a.c.stream.PgNotificationListener - Listening on autwit_run
+2026-07-19T11:51:07.681Z INFO  [tomcat-handler-0] o.a.c.c.C.[.[localhost].[/api/v1] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-07-19T11:51:07.681Z INFO  [tomcat-handler-0] o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-07-19T11:51:07.682Z INFO  [tomcat-handler-0] o.s.web.servlet.DispatcherServlet - Completed initialization in 1 ms
+2026-07-19T11:51:08.179Z INFO  [virtual-100] com.autwit.copilot.run.RunWorker - Run 263c429a-d210-4ee5-a10f-4f33c6e5740e succeeded: 9 artifacts, 0 new events, snapshot 74e32830-f9a9-4ecf-96c4-3cbf0ece5315
+2026-07-19T11:51:08.543Z INFO  [virtual-139] com.autwit.copilot.run.RunWorker - Run 254cd38a-7572-463d-9c12-0302d9e5d84f succeeded: 9 artifacts, 0 new events, snapshot 96b83df2-4403-4d1c-96bf-a7aff3828aa1
+2026-07-19T11:51:08.893Z INFO  [virtual-101] com.autwit.copilot.run.RunWorker - Run 598a080a-8276-4801-a343-58e5fc22d13e succeeded: 9 artifacts, 0 new events, snapshot 330e8ffe-e3d4-4e67-abf8-48c6e0e3c3cc
+2026-07-19T11:51:09.236Z INFO  [virtual-99] com.autwit.copilot.run.RunWorker - Run cba9a3c2-faf7-45f0-8e57-6ef7bd2c1885 succeeded: 9 artifacts, 0 new events, snapshot 9fe30b2d-ef6d-4589-8a7b-4117aa39ea52
+2026-07-19T11:51:09.686Z INFO  [virtual-139] com.autwit.copilot.run.RunWorker - Run 3435fa7d-f676-40d1-9d0d-786af24fca3f succeeded: 9 artifacts, 0 new events, snapshot cc5683a5-08ad-4838-a498-fc8e174b8d24
+2026-07-19T11:51:09.810Z INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-07-19T11:51:09.831Z INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-07-19T11:51:09.835Z INFO  [SpringApplicationShutdownHook] c.a.c.stream.PgNotificationListener - PgNotificationListener stopped
+2026-07-19T11:51:09.836Z INFO  [SpringApplicationShutdownHook] com.autwit.copilot.run.RunWorker - RunWorker worker-91fd641c draining in-flight runs…
+2026-07-19T11:51:09.836Z INFO  [SpringApplicationShutdownHook] com.autwit.copilot.run.RunWorker - RunWorker worker-91fd641c stopped
+2026-07-19T11:51:09.838Z INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-2 - Shutdown initiated...
+2026-07-19T11:51:09.862Z INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-2 - Shutdown completed.
+2026-07-19T11:51:09.866Z INFO  [SpringApplicationShutdownHook] c.a.c.stream.PgNotificationListener - PgNotificationListener stopped
+2026-07-19T11:51:09.866Z INFO  [SpringApplicationShutdownHook] com.autwit.copilot.run.RunWorker - RunWorker worker-80b36607 draining in-flight runs…
+2026-07-19T11:51:09.968Z WARN  [pg-listener] c.a.c.stream.PgNotificationListener - LISTEN connection failed; reconnecting in 2000ms
+org.postgresql.util.PSQLException: An I/O error occurred while sending to the backend.
+	at org.postgresql.core.v3.QueryExecutorImpl.processNotifies(QueryExecutorImpl.java:853)
+	at org.postgresql.jdbc.PgConnection.getNotifications(PgConnection.java:1219)
+	at com.autwit.copilot.stream.PgNotificationListener.listen(PgNotificationListener.java:106)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: java.io.EOFException: null
+	at org.postgresql.core.PGStream.receiveChar(PGStream.java:478)
+	at org.postgresql.core.v3.QueryExecutorImpl.processNotifies(QueryExecutorImpl.java:821)
+	... 3 common frames omitted
+2026-07-19T11:51:09.971Z WARN  [pg-listener] c.a.c.stream.PgNotificationListener - LISTEN connection failed; reconnecting in 2000ms
+org.postgresql.util.PSQLException: An I/O error occurred while sending to the backend.
+	at org.postgresql.core.v3.QueryExecutorImpl.processNotifies(QueryExecutorImpl.java:853)
+	at org.postgresql.jdbc.PgConnection.getNotifications(PgConnection.java:1219)
+	at com.autwit.copilot.stream.PgNotificationListener.listen(PgNotificationListener.java:106)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: java.io.EOFException: null
+	at org.postgresql.core.PGStream.receiveChar(PGStream.java:478)
+	at org.postgresql.core.v3.QueryExecutorImpl.processNotifies(QueryExecutorImpl.java:821)
+	... 3 common frames omitted
+2026-07-19T11:51:09.974Z WARN  [virtual-142] c.zaxxer.hikari.pool.ProxyConnection - HikariPool-6 - Connection org.postgresql.jdbc.PgConnection@4ed4873 marked as broken because of SQLSTATE(08006), ErrorCode(0)
+org.postgresql.util.PSQLException: An I/O error occurred while sending to the backend.
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:399)
+	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:517)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:434)
+	at org.postgresql.jdbc.PgPreparedStatement.executeWithFlags(PgPreparedStatement.java:194)
+	at org.postgresql.jdbc.PgPreparedStatement.executeQuery(PgPreparedStatement.java:137)
+	at com.zaxxer.hikari.pool.ProxyPreparedStatement.executeQuery(ProxyPreparedStatement.java:52)
+	at com.zaxxer.hikari.pool.HikariProxyPreparedStatement.executeQuery(HikariProxyPreparedStatement.java)
+	at org.springframework.jdbc.core.JdbcTemplate$1.doInPreparedStatement(JdbcTemplate.java:732)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:658)
+	at org.springframework.jdbc.core.JdbcTemplate.query(JdbcTemplate.java:723)
+	at org.springframework.jdbc.core.JdbcTemplate.query(JdbcTemplate.java:754)
+	at org.springframework.jdbc.core.JdbcTemplate.query(JdbcTemplate.java:767)
+	at org.springframework.jdbc.core.JdbcTemplate.query(JdbcTemplate.java:825)
+	at com.autwit.copilot.run.RunRepository.dequeue(RunRepository.java:102)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:355)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:196)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163)
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:768)
+	at org.springframework.dao.support.PersistenceExceptionTranslationInterceptor.invoke(PersistenceExceptionTranslationInterceptor.java:138)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:768)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:720)
+	at com.autwit.copilot.run.RunRepository$$SpringCGLIB$$0.dequeue(<generated>)
+	at com.autwit.copilot.run.RunWorker.pollOnce(RunWorker.java:141)
+	at com.autwit.copilot.run.RunWorker.loop(RunWorker.java:118)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.lang.VirtualThread.run(VirtualThread.java:329)
+Caused by: java.io.EOFException: null
+	at org.postgresql.core.PGStream.receiveChar(PGStream.java:478)
+	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2174)
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:372)
+	... 29 common frames omitted
+2026-07-19T11:51:09.974Z WARN  [virtual-141] c.zaxxer.hikari.pool.ProxyConnection - HikariPool-6 - Connection org.postgresql.jdbc.PgConnection@13487e96 marked as broken because of SQLSTATE(08006), ErrorCode(0)
+org.postgresql.util.PSQLException: An I/O error occurred while sending to the backend.
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:399)
+	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:517)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:434)
+	at org.postgresql.jdbc.PgPreparedStatement.executeWithFlags(PgPreparedStatement.java:194)
+	at org.postgresql.jdbc.PgPreparedStatement.executeQuery(PgPreparedStatement.java:137)
+	at com.zaxxer.hikari.pool.ProxyPreparedStatement.executeQuery(ProxyPreparedStatement.java:52)
+	at com.zaxxer.hikari.pool.HikariProxyPreparedStatement.executeQuery(HikariProxyPreparedStatement.java)
+	at org.springframework.jdbc.core.JdbcTemplate$1.doInPreparedStatement(JdbcTemplate.java:732)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:658)
+	at org.springframework.jdbc.core.JdbcTemplate.query(JdbcTemplate.java:723)
+	at org.springframework.jdbc.core.JdbcTemplate.query(JdbcTemplate.java:754)
+	at org.springframework.jdbc.core.JdbcTemplate.query(JdbcTemplate.java:767)
+	at org.springframework.jdbc.core.JdbcTemplate.query(JdbcTemplate.java:825)
+	at com.autwit.copilot.run.RunRepository.dequeue(RunRepository.java:102)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:355)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:196)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163)
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:768)
+	at org.springframework.dao.support.PersistenceExceptionTranslationInterceptor.invoke(PersistenceExceptionTranslationInterceptor.java:138)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:768)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:720)
+	at com.autwit.copilot.run.RunRepository$$SpringCGLIB$$0.dequeue(<generated>)
+	at com.autwit.copilot.run.RunWorker.pollOnce(RunWorker.java:141)
+	at com.autwit.copilot.run.RunWorker.loop(RunWorker.java:118)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.lang.VirtualThread.run(VirtualThread.java:329)
+Caused by: java.io.EOFException: null
+	at org.postgresql.core.PGStream.receiveChar(PGStream.java:478)
+	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2174)
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:372)
+	... 29 common frames omitted
+2026-07-19T11:51:09.977Z ERROR [virtual-141] com.autwit.copilot.run.RunWorker - Worker worker-9c907c80 loop error; continuing
+org.springframework.dao.DataAccessResourceFailureException: PreparedStatementCallback; SQL [update autwit.run set
+  status      = 'running',
+  worker_id   = ?,
+  attempts    = attempts + 1,
+  started_at  = coalesce(started_at, now()),
+  lease_until = now() + make_interval(secs => ?)
+where run_id = (
+  select run_id from autwit.run
+  where status = 'queued'
+     or (status = 'running' and lease_until < now() and attempts < max_attempts)
+  order by queued_at
+  for update skip locked
+  limit 1
+)
+returning *
+]; An I/O error occurred while sending to the backend.
+	at org.springframework.jdbc.support.SQLStateSQLExceptionTranslator.doTranslate(SQLStateSQLExceptionTranslator.java:121)
+	at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:107)
+	at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:116)
+	at org.springframework.jdbc.core.JdbcTemplate.translateException(JdbcTemplate.java:1548)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:677)
+	at org.springframework.jdbc.core.JdbcTemplate.query(JdbcTemplate.java:723)
+	at org.springframework.jdbc.core.JdbcTemplate.query(JdbcTemplate.java:754)
+	at org.springframework.jdbc.core.JdbcTemplate.query(JdbcTemplate.java:767)
+	at org.springframework.jdbc.core.JdbcTemplate.query(JdbcTemplate.java:825)
+	at com.autwit.copilot.run.RunRepository.dequeue(RunRepository.java:102)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:355)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:196)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163)
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:768)
+	at org.springframework.dao.support.PersistenceExceptionTranslationInterceptor.invoke(PersistenceExceptionTranslationInterceptor.java:138)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:768)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:720)
+	at com.autwit.copilot.run.RunRepository$$SpringCGLIB$$0.dequeue(<generated>)
+	at com.autwit.copilot.run.RunWorker.pollOnce(RunWorker.java:141)
+	at com.autwit.copilot.run.RunWorker.loop(RunWorker.java:118)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.lang.VirtualThread.run(VirtualThread.java:329)
+Caused by: org.postgresql.util.PSQLException: An I/O error occurred while sending to the backend.
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:399)
+	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:517)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:434)
+	at org.postgresql.jdbc.PgPreparedStatement.executeWithFlags(PgPreparedStatement.java:194)
+	at org.postgresql.jdbc.PgPreparedStatement.executeQuery(PgPreparedStatement.java:137)
+	at com.zaxxer.hikari.pool.ProxyPreparedStatement.executeQuery(ProxyPreparedStatement.java:52)
+	at com.zaxxer.hikari.pool.HikariProxyPreparedStatement.executeQuery(HikariProxyPreparedStatement.java)
+	at org.springframework.jdbc.core.JdbcTemplate$1.doInPreparedStatement(JdbcTemplate.java:732)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:658)
+	... 21 common frames omitted
+Caused by: java.io.EOFException: null
+	at org.postgresql.core.PGStream.receiveChar(PGStream.java:478)
+	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2174)
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:372)
+	... 29 common frames omitted
+2026-07-19T11:51:09.977Z ERROR [virtual-142] com.autwit.copilot.run.RunWorker - Worker worker-9c907c80 loop error; continuing
+org.springframework.dao.DataAccessResourceFailureException: PreparedStatementCallback; SQL [update autwit.run set
+  status      = 'running',
+  worker_id   = ?,
+  attempts    = attempts + 1,
+  started_at  = coalesce(started_at, now()),
+  lease_until = now() + make_interval(secs => ?)
+where run_id = (
+  select run_id from autwit.run
+  where status = 'queued'
+     or (status = 'running' and lease_until < now() and attempts < max_attempts)
+  order by queued_at
+  for update skip locked
+  limit 1
+)
+returning *
+]; An I/O error occurred while sending to the backend.
+	at org.springframework.jdbc.support.SQLStateSQLExceptionTranslator.doTranslate(SQLStateSQLExceptionTranslator.java:121)
+	at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:107)
+	at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:116)
+	at org.springframework.jdbc.core.JdbcTemplate.translateException(JdbcTemplate.java:1548)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:677)
+	at org.springframework.jdbc.core.JdbcTemplate.query(JdbcTemplate.java:723)
+	at org.springframework.jdbc.core.JdbcTemplate.query(JdbcTemplate.java:754)
+	at org.springframework.jdbc.core.JdbcTemplate.query(JdbcTemplate.java:767)
+	at org.springframework.jdbc.core.JdbcTemplate.query(JdbcTemplate.java:825)
+	at com.autwit.copilot.run.RunRepository.dequeue(RunRepository.java:102)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:355)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:196)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163)
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:768)
+	at org.springframework.dao.support.PersistenceExceptionTranslationInterceptor.invoke(PersistenceExceptionTranslationInterceptor.java:138)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:768)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:720)
+	at com.autwit.copilot.run.RunRepository$$SpringCGLIB$$0.dequeue(<generated>)
+	at com.autwit.copilot.run.RunWorker.pollOnce(RunWorker.java:141)
+	at com.autwit.copilot.run.RunWorker.loop(RunWorker.java:118)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.lang.VirtualThread.run(VirtualThread.java:329)
+Caused by: org.postgresql.util.PSQLException: An I/O error occurred while sending to the backend.
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:399)
+	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:517)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:434)
+	at org.postgresql.jdbc.PgPreparedStatement.executeWithFlags(PgPreparedStatement.java:194)
+	at org.postgresql.jdbc.PgPreparedStatement.executeQuery(PgPreparedStatement.java:137)
+	at com.zaxxer.hikari.pool.ProxyPreparedStatement.executeQuery(ProxyPreparedStatement.java:52)
+	at com.zaxxer.hikari.pool.HikariProxyPreparedStatement.executeQuery(HikariProxyPreparedStatement.java)
+	at org.springframework.jdbc.core.JdbcTemplate$1.doInPreparedStatement(JdbcTemplate.java:732)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:658)
+	... 21 common frames omitted
+Caused by: java.io.EOFException: null
+	at org.postgresql.core.PGStream.receiveChar(PGStream.java:478)
+	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2174)
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:372)
+	... 29 common frames omitted
+2026-07-19T11:51:10.005Z WARN  [virtual-140] c.zaxxer.hikari.pool.ProxyConnection - HikariPool-6 - Connection org.postgresql.jdbc.PgConnection@7ce8ffd0 marked as broken because of SQLSTATE(08006), ErrorCode(0)
+org.postgresql.util.PSQLException: An I/O error occurred while sending to the backend.
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:399)
+	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:517)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:434)
+	at org.postgresql.jdbc.PgPreparedStatement.executeWithFlags(PgPreparedStatement.java:194)
+	at org.postgresql.jdbc.PgPreparedStatement.executeQuery(PgPreparedStatement.java:137)
+	at com.zaxxer.hikari.pool.ProxyPreparedStatement.executeQuery(ProxyPreparedStatement.java:52)
+	at com.zaxxer.hikari.pool.HikariProxyPreparedStatement.executeQuery(HikariProxyPreparedStatement.java)
+	at org.springframework.jdbc.core.JdbcTemplate$1.doInPreparedStatement(JdbcTemplate.java:732)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:658)
+	at org.springframework.jdbc.core.JdbcTemplate.query(JdbcTemplate.java:723)
+	at org.springframework.jdbc.core.JdbcTemplate.query(JdbcTemplate.java:754)
+	at org.springframework.jdbc.core.JdbcTemplate.query(JdbcTemplate.java:767)
+	at org.springframework.jdbc.core.JdbcTemplate.query(JdbcTemplate.java:825)
+	at com.autwit.copilot.run.RunRepository.dequeue(RunRepository.java:102)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:355)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:196)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163)
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:768)
+	at org.springframework.dao.support.PersistenceExceptionTranslationInterceptor.invoke(PersistenceExceptionTranslationInterceptor.java:138)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:768)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:720)
+	at com.autwit.copilot.run.RunRepository$$SpringCGLIB$$0.dequeue(<generated>)
+	at com.autwit.copilot.run.RunWorker.pollOnce(RunWorker.java:141)
+	at com.autwit.copilot.run.RunWorker.loop(RunWorker.java:118)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.lang.VirtualThread.run(VirtualThread.java:329)
+Caused by: java.io.EOFException: null
+	at org.postgresql.core.PGStream.receiveChar(PGStream.java:478)
+	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2174)
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:372)
+	... 29 common frames omitted
+2026-07-19T11:51:10.006Z ERROR [virtual-140] com.autwit.copilot.run.RunWorker - Worker worker-9c907c80 loop error; continuing
+org.springframework.dao.DataAccessResourceFailureException: PreparedStatementCallback; SQL [update autwit.run set
+  status      = 'running',
+  worker_id   = ?,
+  attempts    = attempts + 1,
+  started_at  = coalesce(started_at, now()),
+  lease_until = now() + make_interval(secs => ?)
+where run_id = (
+  select run_id from autwit.run
+  where status = 'queued'
+     or (status = 'running' and lease_until < now() and attempts < max_attempts)
+  order by queued_at
+  for update skip locked
+  limit 1
+)
+returning *
+]; An I/O error occurred while sending to the backend.
+	at org.springframework.jdbc.support.SQLStateSQLExceptionTranslator.doTranslate(SQLStateSQLExceptionTranslator.java:121)
+	at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:107)
+	at org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:116)
+	at org.springframework.jdbc.core.JdbcTemplate.translateException(JdbcTemplate.java:1548)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:677)
+	at org.springframework.jdbc.core.JdbcTemplate.query(JdbcTemplate.java:723)
+	at org.springframework.jdbc.core.JdbcTemplate.query(JdbcTemplate.java:754)
+	at org.springframework.jdbc.core.JdbcTemplate.query(JdbcTemplate.java:767)
+	at org.springframework.jdbc.core.JdbcTemplate.query(JdbcTemplate.java:825)
+	at com.autwit.copilot.run.RunRepository.dequeue(RunRepository.java:102)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(DirectMethodHandleAccessor.java:103)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:580)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:355)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.invokeJoinpoint(ReflectiveMethodInvocation.java:196)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:163)
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:768)
+	at org.springframework.dao.support.PersistenceExceptionTranslationInterceptor.invoke(PersistenceExceptionTranslationInterceptor.java:138)
+	at org.springframework.aop.framework.ReflectiveMethodInvocation.proceed(ReflectiveMethodInvocation.java:184)
+	at org.springframework.aop.framework.CglibAopProxy$CglibMethodInvocation.proceed(CglibAopProxy.java:768)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:720)
+	at com.autwit.copilot.run.RunRepository$$SpringCGLIB$$0.dequeue(<generated>)
+	at com.autwit.copilot.run.RunWorker.pollOnce(RunWorker.java:141)
+	at com.autwit.copilot.run.RunWorker.loop(RunWorker.java:118)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:572)
+	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:317)
+	at java.base/java.lang.VirtualThread.run(VirtualThread.java:329)
+Caused by: org.postgresql.util.PSQLException: An I/O error occurred while sending to the backend.
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:399)
+	at org.postgresql.jdbc.PgStatement.executeInternal(PgStatement.java:517)
+	at org.postgresql.jdbc.PgStatement.execute(PgStatement.java:434)
+	at org.postgresql.jdbc.PgPreparedStatement.executeWithFlags(PgPreparedStatement.java:194)
+	at org.postgresql.jdbc.PgPreparedStatement.executeQuery(PgPreparedStatement.java:137)
+	at com.zaxxer.hikari.pool.ProxyPreparedStatement.executeQuery(ProxyPreparedStatement.java:52)
+	at com.zaxxer.hikari.pool.HikariProxyPreparedStatement.executeQuery(HikariProxyPreparedStatement.java)
+	at org.springframework.jdbc.core.JdbcTemplate$1.doInPreparedStatement(JdbcTemplate.java:732)
+	at org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:658)
+	... 21 common frames omitted
+Caused by: java.io.EOFException: null
+	at org.postgresql.core.PGStream.receiveChar(PGStream.java:478)
+	at org.postgresql.core.v3.QueryExecutorImpl.processResults(QueryExecutorImpl.java:2174)
+	at org.postgresql.core.v3.QueryExecutorImpl.execute(QueryExecutorImpl.java:372)
+	... 29 common frames omitted
+2026-07-19T11:51:10.035Z INFO  [SpringApplicationShutdownHook] com.autwit.copilot.run.RunWorker - RunWorker worker-80b36607 stopped
+2026-07-19T11:51:10.036Z INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-3 - Shutdown initiated...
+2026-07-19T11:51:10.048Z INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-3 - Shutdown completed.
+2026-07-19T11:51:10.050Z INFO  [SpringApplicationShutdownHook] c.a.c.stream.PgNotificationListener - PgNotificationListener stopped
+2026-07-19T11:51:10.050Z INFO  [SpringApplicationShutdownHook] com.autwit.copilot.run.RunWorker - RunWorker worker-9a2ef711 draining in-flight runs…
+2026-07-19T11:51:10.050Z INFO  [SpringApplicationShutdownHook] com.autwit.copilot.run.RunWorker - RunWorker worker-9a2ef711 stopped
+2026-07-19T11:51:10.051Z INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-4 - Shutdown initiated...
+2026-07-19T11:51:10.060Z INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-4 - Shutdown completed.
+2026-07-19T11:51:10.062Z INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-5 - Shutdown initiated...
+2026-07-19T11:51:10.068Z INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-5 - Shutdown completed.
+2026-07-19T11:51:10.072Z INFO  [SpringApplicationShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-07-19T11:51:10.211Z WARN  [virtual-139] com.zaxxer.hikari.pool.PoolBase - HikariPool-6 - Failed to validate connection org.postgresql.jdbc.PgConnection@6a938034 (This connection has been closed.). Possibly consider using a shorter maxLifetime value.
+2026-07-19T11:51:10.212Z WARN  [virtual-139] com.zaxxer.hikari.pool.PoolBase - HikariPool-6 - Failed to validate connection org.postgresql.jdbc.PgConnection@4fd080bd (This connection has been closed.). Possibly consider using a shorter maxLifetime value.
+2026-07-19T11:51:10.213Z WARN  [virtual-139] com.zaxxer.hikari.pool.PoolBase - HikariPool-6 - Failed to validate connection org.postgresql.jdbc.PgConnection@5188ee79 (This connection has been closed.). Possibly consider using a shorter maxLifetime value.
+2026-07-19T11:51:10.215Z WARN  [virtual-139] com.zaxxer.hikari.pool.PoolBase - HikariPool-6 - Failed to validate connection org.postgresql.jdbc.PgConnection@6aa58de7 (This connection has been closed.). Possibly consider using a shorter maxLifetime value.
+2026-07-19T11:51:10.215Z WARN  [virtual-139] com.zaxxer.hikari.pool.PoolBase - HikariPool-6 - Failed to validate connection org.postgresql.jdbc.PgConnection@4b20b5c8 (This connection has been closed.). Possibly consider using a shorter maxLifetime value.
+2026-07-19T11:51:10.217Z WARN  [virtual-139] com.zaxxer.hikari.pool.PoolBase - HikariPool-6 - Failed to validate connection org.postgresql.jdbc.PgConnection@be0179 (This connection has been closed.). Possibly consider using a shorter maxLifetime value.
+2026-07-19T11:51:10.218Z WARN  [virtual-139] com.zaxxer.hikari.pool.PoolBase - HikariPool-6 - Failed to validate connection org.postgresql.jdbc.PgConnection@1653dc31 (This connection has been closed.). Possibly consider using a shorter maxLifetime value.
+2026-07-19T11:51:10.221Z WARN  [virtual-139] com.zaxxer.hikari.pool.PoolBase - HikariPool-6 - Failed to validate connection org.postgresql.jdbc.PgConnection@50dfa1a9 (This connection has been closed.). Possibly consider using a shorter maxLifetime value.
+2026-07-19T11:51:10.222Z WARN  [virtual-139] com.zaxxer.hikari.pool.PoolBase - HikariPool-6 - Failed to validate connection org.postgresql.jdbc.PgConnection@1e1fd08f (This connection has been closed.). Possibly consider using a shorter maxLifetime value.
+2026-07-19T11:51:11.985Z WARN  [pg-listener] c.a.c.stream.PgNotificationListener - LISTEN connection failed; reconnecting in 2000ms
+org.postgresql.util.PSQLException: Connection to localhost:32787 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections.
+	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:352)
+	at org.postgresql.core.ConnectionFactory.openConnection(ConnectionFactory.java:54)
+	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:273)
+	at org.postgresql.Driver.makeConnection(Driver.java:446)
+	at org.postgresql.Driver.connect(Driver.java:298)
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:683)
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:230)
+	at com.autwit.copilot.stream.PgNotificationListener.open(PgNotificationListener.java:129)
+	at com.autwit.copilot.stream.PgNotificationListener.listen(PgNotificationListener.java:97)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: java.net.ConnectException: Connection refused: getsockopt
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:682)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:542)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:592)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at org.postgresql.core.PGStream.createSocket(PGStream.java:260)
+	at org.postgresql.core.PGStream.<init>(PGStream.java:121)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.tryConnect(ConnectionFactoryImpl.java:140)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:268)
+	... 9 common frames omitted
+2026-07-19T11:51:13.998Z WARN  [pg-listener] c.a.c.stream.PgNotificationListener - LISTEN connection failed; reconnecting in 2000ms
+org.postgresql.util.PSQLException: Connection to localhost:32787 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections.
+	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:352)
+	at org.postgresql.core.ConnectionFactory.openConnection(ConnectionFactory.java:54)
+	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:273)
+	at org.postgresql.Driver.makeConnection(Driver.java:446)
+	at org.postgresql.Driver.connect(Driver.java:298)
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:683)
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:230)
+	at com.autwit.copilot.stream.PgNotificationListener.open(PgNotificationListener.java:129)
+	at com.autwit.copilot.stream.PgNotificationListener.listen(PgNotificationListener.java:97)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: java.net.ConnectException: Connection refused: getsockopt
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:682)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:542)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:592)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at org.postgresql.core.PGStream.createSocket(PGStream.java:260)
+	at org.postgresql.core.PGStream.<init>(PGStream.java:121)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.tryConnect(ConnectionFactoryImpl.java:140)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:268)
+	... 9 common frames omitted
+2026-07-19T11:51:16.011Z WARN  [pg-listener] c.a.c.stream.PgNotificationListener - LISTEN connection failed; reconnecting in 2000ms
+org.postgresql.util.PSQLException: Connection to localhost:32787 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections.
+	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:352)
+	at org.postgresql.core.ConnectionFactory.openConnection(ConnectionFactory.java:54)
+	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:273)
+	at org.postgresql.Driver.makeConnection(Driver.java:446)
+	at org.postgresql.Driver.connect(Driver.java:298)
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:683)
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:230)
+	at com.autwit.copilot.stream.PgNotificationListener.open(PgNotificationListener.java:129)
+	at com.autwit.copilot.stream.PgNotificationListener.listen(PgNotificationListener.java:97)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: java.net.ConnectException: Connection refused: getsockopt
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:682)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:542)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:592)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at org.postgresql.core.PGStream.createSocket(PGStream.java:260)
+	at org.postgresql.core.PGStream.<init>(PGStream.java:121)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.tryConnect(ConnectionFactoryImpl.java:140)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:268)
+	... 9 common frames omitted
+2026-07-19T11:51:18.040Z WARN  [pg-listener] c.a.c.stream.PgNotificationListener - LISTEN connection failed; reconnecting in 2000ms
+org.postgresql.util.PSQLException: Connection to localhost:32787 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections.
+	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:352)
+	at org.postgresql.core.ConnectionFactory.openConnection(ConnectionFactory.java:54)
+	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:273)
+	at org.postgresql.Driver.makeConnection(Driver.java:446)
+	at org.postgresql.Driver.connect(Driver.java:298)
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:683)
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:230)
+	at com.autwit.copilot.stream.PgNotificationListener.open(PgNotificationListener.java:129)
+	at com.autwit.copilot.stream.PgNotificationListener.listen(PgNotificationListener.java:97)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: java.net.ConnectException: Connection refused: getsockopt
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:682)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:542)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:592)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at org.postgresql.core.PGStream.createSocket(PGStream.java:260)
+	at org.postgresql.core.PGStream.<init>(PGStream.java:121)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.tryConnect(ConnectionFactoryImpl.java:140)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:268)
+	... 9 common frames omitted
+2026-07-19T11:51:20.057Z WARN  [pg-listener] c.a.c.stream.PgNotificationListener - LISTEN connection failed; reconnecting in 2000ms
+org.postgresql.util.PSQLException: Connection to localhost:32787 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections.
+	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:352)
+	at org.postgresql.core.ConnectionFactory.openConnection(ConnectionFactory.java:54)
+	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:273)
+	at org.postgresql.Driver.makeConnection(Driver.java:446)
+	at org.postgresql.Driver.connect(Driver.java:298)
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:683)
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:230)
+	at com.autwit.copilot.stream.PgNotificationListener.open(PgNotificationListener.java:129)
+	at com.autwit.copilot.stream.PgNotificationListener.listen(PgNotificationListener.java:97)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: java.net.ConnectException: Connection refused: getsockopt
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:682)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:542)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:592)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at org.postgresql.core.PGStream.createSocket(PGStream.java:260)
+	at org.postgresql.core.PGStream.<init>(PGStream.java:121)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.tryConnect(ConnectionFactoryImpl.java:140)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:268)
+	... 9 common frames omitted
+2026-07-19T11:51:22.070Z WARN  [pg-listener] c.a.c.stream.PgNotificationListener - LISTEN connection failed; reconnecting in 2000ms
+org.postgresql.util.PSQLException: Connection to localhost:32787 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections.
+	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:352)
+	at org.postgresql.core.ConnectionFactory.openConnection(ConnectionFactory.java:54)
+	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:273)
+	at org.postgresql.Driver.makeConnection(Driver.java:446)
+	at org.postgresql.Driver.connect(Driver.java:298)
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:683)
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:230)
+	at com.autwit.copilot.stream.PgNotificationListener.open(PgNotificationListener.java:129)
+	at com.autwit.copilot.stream.PgNotificationListener.listen(PgNotificationListener.java:97)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: java.net.ConnectException: Connection refused: getsockopt
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:682)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:542)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:592)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at org.postgresql.core.PGStream.createSocket(PGStream.java:260)
+	at org.postgresql.core.PGStream.<init>(PGStream.java:121)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.tryConnect(ConnectionFactoryImpl.java:140)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:268)
+	... 9 common frames omitted
+2026-07-19T11:51:24.086Z WARN  [pg-listener] c.a.c.stream.PgNotificationListener - LISTEN connection failed; reconnecting in 2000ms
+org.postgresql.util.PSQLException: Connection to localhost:32787 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections.
+	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:352)
+	at org.postgresql.core.ConnectionFactory.openConnection(ConnectionFactory.java:54)
+	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:273)
+	at org.postgresql.Driver.makeConnection(Driver.java:446)
+	at org.postgresql.Driver.connect(Driver.java:298)
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:683)
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:230)
+	at com.autwit.copilot.stream.PgNotificationListener.open(PgNotificationListener.java:129)
+	at com.autwit.copilot.stream.PgNotificationListener.listen(PgNotificationListener.java:97)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: java.net.ConnectException: Connection refused: getsockopt
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:682)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:542)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:592)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at org.postgresql.core.PGStream.createSocket(PGStream.java:260)
+	at org.postgresql.core.PGStream.<init>(PGStream.java:121)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.tryConnect(ConnectionFactoryImpl.java:140)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:268)
+	... 9 common frames omitted
+2026-07-19T11:51:26.100Z WARN  [pg-listener] c.a.c.stream.PgNotificationListener - LISTEN connection failed; reconnecting in 2000ms
+org.postgresql.util.PSQLException: Connection to localhost:32787 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections.
+	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:352)
+	at org.postgresql.core.ConnectionFactory.openConnection(ConnectionFactory.java:54)
+	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:273)
+	at org.postgresql.Driver.makeConnection(Driver.java:446)
+	at org.postgresql.Driver.connect(Driver.java:298)
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:683)
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:230)
+	at com.autwit.copilot.stream.PgNotificationListener.open(PgNotificationListener.java:129)
+	at com.autwit.copilot.stream.PgNotificationListener.listen(PgNotificationListener.java:97)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: java.net.ConnectException: Connection refused: getsockopt
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:682)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:542)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:592)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at org.postgresql.core.PGStream.createSocket(PGStream.java:260)
+	at org.postgresql.core.PGStream.<init>(PGStream.java:121)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.tryConnect(ConnectionFactoryImpl.java:140)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:268)
+	... 9 common frames omitted
+2026-07-19T11:51:28.107Z WARN  [pg-listener] c.a.c.stream.PgNotificationListener - LISTEN connection failed; reconnecting in 2000ms
+org.postgresql.util.PSQLException: Connection to localhost:32787 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections.
+	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:352)
+	at org.postgresql.core.ConnectionFactory.openConnection(ConnectionFactory.java:54)
+	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:273)
+	at org.postgresql.Driver.makeConnection(Driver.java:446)
+	at org.postgresql.Driver.connect(Driver.java:298)
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:683)
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:230)
+	at com.autwit.copilot.stream.PgNotificationListener.open(PgNotificationListener.java:129)
+	at com.autwit.copilot.stream.PgNotificationListener.listen(PgNotificationListener.java:97)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: java.net.ConnectException: Connection refused: getsockopt
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:682)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:542)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:592)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at org.postgresql.core.PGStream.createSocket(PGStream.java:260)
+	at org.postgresql.core.PGStream.<init>(PGStream.java:121)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.tryConnect(ConnectionFactoryImpl.java:140)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:268)
+	... 9 common frames omitted
+2026-07-19T11:51:30.119Z WARN  [pg-listener] c.a.c.stream.PgNotificationListener - LISTEN connection failed; reconnecting in 2000ms
+org.postgresql.util.PSQLException: Connection to localhost:32787 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections.
+	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:352)
+	at org.postgresql.core.ConnectionFactory.openConnection(ConnectionFactory.java:54)
+	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:273)
+	at org.postgresql.Driver.makeConnection(Driver.java:446)
+	at org.postgresql.Driver.connect(Driver.java:298)
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:683)
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:230)
+	at com.autwit.copilot.stream.PgNotificationListener.open(PgNotificationListener.java:129)
+	at com.autwit.copilot.stream.PgNotificationListener.listen(PgNotificationListener.java:97)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: java.net.ConnectException: Connection refused: getsockopt
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:682)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:542)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:592)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at org.postgresql.core.PGStream.createSocket(PGStream.java:260)
+	at org.postgresql.core.PGStream.<init>(PGStream.java:121)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.tryConnect(ConnectionFactoryImpl.java:140)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:268)
+	... 9 common frames omitted
+2026-07-19T11:51:32.123Z WARN  [pg-listener] c.a.c.stream.PgNotificationListener - LISTEN connection failed; reconnecting in 2000ms
+org.postgresql.util.PSQLException: Connection to localhost:32787 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections.
+	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:352)
+	at org.postgresql.core.ConnectionFactory.openConnection(ConnectionFactory.java:54)
+	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:273)
+	at org.postgresql.Driver.makeConnection(Driver.java:446)
+	at org.postgresql.Driver.connect(Driver.java:298)
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:683)
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:230)
+	at com.autwit.copilot.stream.PgNotificationListener.open(PgNotificationListener.java:129)
+	at com.autwit.copilot.stream.PgNotificationListener.listen(PgNotificationListener.java:97)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: java.net.ConnectException: Connection refused: getsockopt
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:682)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:542)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:592)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at org.postgresql.core.PGStream.createSocket(PGStream.java:260)
+	at org.postgresql.core.PGStream.<init>(PGStream.java:121)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.tryConnect(ConnectionFactoryImpl.java:140)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:268)
+	... 9 common frames omitted
+2026-07-19T11:51:34.133Z WARN  [pg-listener] c.a.c.stream.PgNotificationListener - LISTEN connection failed; reconnecting in 2000ms
+org.postgresql.util.PSQLException: Connection to localhost:32787 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections.
+	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:352)
+	at org.postgresql.core.ConnectionFactory.openConnection(ConnectionFactory.java:54)
+	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:273)
+	at org.postgresql.Driver.makeConnection(Driver.java:446)
+	at org.postgresql.Driver.connect(Driver.java:298)
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:683)
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:230)
+	at com.autwit.copilot.stream.PgNotificationListener.open(PgNotificationListener.java:129)
+	at com.autwit.copilot.stream.PgNotificationListener.listen(PgNotificationListener.java:97)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: java.net.ConnectException: Connection refused: getsockopt
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:682)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:542)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:592)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at org.postgresql.core.PGStream.createSocket(PGStream.java:260)
+	at org.postgresql.core.PGStream.<init>(PGStream.java:121)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.tryConnect(ConnectionFactoryImpl.java:140)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:268)
+	... 9 common frames omitted
+2026-07-19T11:51:36.142Z WARN  [pg-listener] c.a.c.stream.PgNotificationListener - LISTEN connection failed; reconnecting in 2000ms
+org.postgresql.util.PSQLException: Connection to localhost:32787 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections.
+	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:352)
+	at org.postgresql.core.ConnectionFactory.openConnection(ConnectionFactory.java:54)
+	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:273)
+	at org.postgresql.Driver.makeConnection(Driver.java:446)
+	at org.postgresql.Driver.connect(Driver.java:298)
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:683)
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:230)
+	at com.autwit.copilot.stream.PgNotificationListener.open(PgNotificationListener.java:129)
+	at com.autwit.copilot.stream.PgNotificationListener.listen(PgNotificationListener.java:97)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: java.net.ConnectException: Connection refused: getsockopt
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:682)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:542)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:592)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at org.postgresql.core.PGStream.createSocket(PGStream.java:260)
+	at org.postgresql.core.PGStream.<init>(PGStream.java:121)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.tryConnect(ConnectionFactoryImpl.java:140)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:268)
+	... 9 common frames omitted
+2026-07-19T11:51:38.154Z WARN  [pg-listener] c.a.c.stream.PgNotificationListener - LISTEN connection failed; reconnecting in 2000ms
+org.postgresql.util.PSQLException: Connection to localhost:32787 refused. Check that the hostname and port are correct and that the postmaster is accepting TCP/IP connections.
+	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:352)
+	at org.postgresql.core.ConnectionFactory.openConnection(ConnectionFactory.java:54)
+	at org.postgresql.jdbc.PgConnection.<init>(PgConnection.java:273)
+	at org.postgresql.Driver.makeConnection(Driver.java:446)
+	at org.postgresql.Driver.connect(Driver.java:298)
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:683)
+	at java.sql/java.sql.DriverManager.getConnection(DriverManager.java:230)
+	at com.autwit.copilot.stream.PgNotificationListener.open(PgNotificationListener.java:129)
+	at com.autwit.copilot.stream.PgNotificationListener.listen(PgNotificationListener.java:97)
+	at java.base/java.lang.Thread.run(Thread.java:1583)
+Caused by: java.net.ConnectException: Connection refused: getsockopt
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Net.java:682)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(NioSocketImpl.java:542)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(NioSocketImpl.java:592)
+	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:327)
+	at java.base/java.net.Socket.connect(Socket.java:751)
+	at org.postgresql.core.PGStream.createSocket(PGStream.java:260)
+	at org.postgresql.core.PGStream.<init>(PGStream.java:121)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.tryConnect(ConnectionFactoryImpl.java:140)
+	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:268)
+	... 9 common frames omitted

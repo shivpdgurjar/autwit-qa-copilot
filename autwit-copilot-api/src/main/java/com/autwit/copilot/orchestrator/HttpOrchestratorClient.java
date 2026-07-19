@@ -3,6 +3,7 @@ package com.autwit.copilot.orchestrator;
 import java.io.IOException;
 import java.net.SocketTimeoutException;
 import java.net.http.HttpTimeoutException;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.concurrent.TimeoutException;
 
@@ -119,6 +120,27 @@ public class HttpOrchestratorClient implements OrchestratorClient {
         return call("/skills/%s/execute".formatted(skillName), request, request.runId());
     }
 
+    /**
+     * Serialises the outgoing request for the wire log.
+     *
+     * <p>Wrapped so a logging failure can never fail a run: a body that will not
+     * serialise here would fail in the client a moment later with a better message, and
+     * losing the run to the diagnostic rather than the defect would be its own bug.
+     */
+    private void logRequest(String path, String correlationId, String runId, Object body) {
+        if (!WireLog.enabled()) {
+            return;
+        }
+        String json;
+        try {
+            json = mapper.writeValueAsString(body);
+        } catch (Exception e) {
+            json = "<could not serialise request for logging: " + e.getMessage() + ">";
+        }
+        WireLog.request("POST", props.orchestrator().baseUrl(), path, correlationId, runId,
+                !props.orchestrator().token().isBlank(), json);
+    }
+
     @Override
     public Catalog skills() {
         try {
@@ -133,17 +155,23 @@ public class HttpOrchestratorClient implements OrchestratorClient {
     }
 
     private Envelope call(String path, Object body, String runId) {
+        var correlationId = correlationOf(body);
+        logRequest(path, correlationId, runId, body);
         try {
             return invokeClient.post()
                     .uri(path)
                     // §3: MUST be propagated to every downstream service the skills touch.
-                    .header("X-Autwit-Correlation-Id", correlationOf(body))
+                    .header("X-Autwit-Correlation-Id", correlationId)
                     .body(body)
                     .exchange((request, response) -> {
                         if (response.getStatusCode().isError()) {
                             throw toException(response, path, runId);
                         }
-                        return mapper.readValue(response.getBody(), Envelope.class);
+                        // Read once into a string: the stream cannot be consumed twice,
+                        // and the raw bytes are what a cross-machine diagnosis needs.
+                        var raw = new String(response.getBody().readAllBytes(), StandardCharsets.UTF_8);
+                        WireLog.response(path, response.getStatusCode().value(), runId, raw);
+                        return mapper.readValue(raw, Envelope.class);
                     });
 
         } catch (OrchestratorException e) {

@@ -19,6 +19,15 @@ build/
 node_modules/
 dist/
 
+# Integration logs. autwit-copilot-api/logs/copilot-api.log is deliberately
+# COMMITTABLE — an integration run happens on a machine with access to the upstream
+# APIs and is diagnosed on one without, so the log is the artifact that crosses.
+# See autwit-copilot-api/logs/README.md.
+#
+# Only the rotated files are ignored. The pattern requires a middle segment, so
+# copilot-api.1.log matches and copilot-api.log does not.
+**/logs/copilot-api.*.log
+
 # local overrides
 application-local.yml
 .env

@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Console plus a committable file log.
+
+  The file exists so an integration run on one machine can be diagnosed on another:
+  the orchestrator needs upstream APIs that are not reachable everywhere, so the
+  run happens where those APIs are and the log is committed and read elsewhere.
+  That is the whole design constraint here, and it drives three choices:
+
+    * UTC timestamps, so two machines' logs interleave without guesswork.
+    * A stable, repo-relative path (logs/copilot-api.log), so committing it is
+      one `git add` and nobody has to hunt through a temp directory.
+    * Size-capped rolling. A log nobody can commit is a log nobody can read, and
+      an artifact body is allowed to be 8MB (SKILL_CONTRACT §6.1) — see the
+      truncation in HttpOrchestratorClient and ArtifactService.
+
+  Levels come from application.yml; the `integration` profile raises the wire
+  logger to DEBUG. Nothing here logs the bearer token: see AutwitProperties and
+  the wire logger's redaction.
+-->
+<configuration>
+
+    <property name="LOG_DIR" value="${LOG_DIR:-logs}"/>
+    <property name="PATTERN"
+              value="%d{yyyy-MM-dd'T'HH:mm:ss.SSS'Z', UTC} %-5level [%thread] %logger{36} - %msg%n"/>
+
+    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>${PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_DIR}/copilot-api.log</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+            <fileNamePattern>${LOG_DIR}/copilot-api.%i.log</fileNamePattern>
+            <minIndex>1</minIndex>
+            <maxIndex>3</maxIndex>
+        </rollingPolicy>
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <maxFileSize>20MB</maxFileSize>
+        </triggeringPolicy>
+        <encoder>
+            <pattern>${PATTERN}</pattern>
+        </encoder>
+    </appender>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE"/>
+        <appender-ref ref="FILE"/>
+    </root>
+
+</configuration>

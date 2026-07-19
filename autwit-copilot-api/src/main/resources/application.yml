@@ -116,3 +116,30 @@ server:
 logging:
   level:
     com.autwit.copilot: INFO
+    # Off by default. The wire log records full request and response bodies, which is
+    # the right trade only when someone is deliberately diagnosing an integration —
+    # see the `integration` profile below.
+    com.autwit.copilot.orchestrator.wire: INFO
+
+---
+# Integration diagnosis: run against a real orchestrator, read the log somewhere else.
+#
+#   ./mvnw spring-boot:run -Dspring-boot.run.profiles=all,integration
+#
+# The orchestrator needs upstream APIs that are not reachable from every machine, so a
+# run happens where they are and `logs/copilot-api.log` is committed and read elsewhere.
+# Whatever is not written during the run cannot be recovered afterwards, so this profile
+# errs toward recording the exchange: full request/response bodies (truncated at 16KB),
+# every artifact's declared-vs-computed content_hash, and the run lifecycle.
+#
+# The bearer token is never logged in any profile — WireLog reports only whether one was
+# present, which is the diagnostic that matters now that the orchestrator fails closed.
+spring:
+  config:
+    activate:
+      on-profile: integration
+
+logging:
+  level:
+    com.autwit.copilot: DEBUG
+    com.autwit.copilot.orchestrator.wire: DEBUG

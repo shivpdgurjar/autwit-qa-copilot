@@ -4,9 +4,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import java.nio.charset.StandardCharsets;
+
 import com.autwit.copilot.common.ApiException;
 import com.autwit.copilot.config.AutwitProperties;
 import com.autwit.copilot.session.SessionRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,6 +21,11 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 public class ArtifactService {
+
+    private static final Logger log = LoggerFactory.getLogger(ArtifactService.class);
+
+    /** Enough canonical JSON to see key order, whitespace and null handling. */
+    private static final int HEAD_CHARS = 1_200;
 
     private final ArtifactRepository artifacts;
     private final SessionRepository sessions;
@@ -96,11 +105,25 @@ public class ArtifactService {
 
         var actualHash = hasher.hashBytes(canonical);
         if (expectedHash != null && !hasher.matches(expectedHash, actualHash)) {
+            // Logged as well as thrown. A cross-implementation canonical-form
+            // disagreement is diagnosed from the canonical bytes we produced, and by the
+            // time this reaches an operator the body is gone. The prefix is the most
+            // useful slice: two canonicalisations of the same body diverge at the first
+            // structural difference, so the head shows key order, whitespace and — the
+            // defect that actually happened — whether null-valued keys survived.
+            log.error("content_hash MISMATCH for {}/{} ({}): declared={} computed={} canonical_bytes={}\n"
+                            + "canonical head: {}",
+                    sourceSystem, logicalName, format.wire(), expectedHash, actualHash, canonical.length,
+                    head(canonical));
             throw new ApiException.BadRequest("content_hash_mismatch",
                     "content_hash does not match the body: declared %s, computed %s. The body was truncated "
                             .formatted(expectedHash, actualHash)
                             + "or altered in transit, or the sender canonicalises differently (SKILL_CONTRACT §6.1).");
         }
+
+        log.debug("artifact ok {}/{} ({}) hash={} bytes={} declared={}",
+                sourceSystem, logicalName, format.wire(), actualHash, canonical.length,
+                expectedHash == null ? "<none, computed>" : "matched");
 
         return artifacts.insert(sessionId, stepId, milestoneId, runId, artifactType, sourceSystem,
                 logicalName, format, canonical, actualHash, rowCount, meta);
@@ -138,5 +161,15 @@ public class ArtifactService {
         return meta != null
                 && meta.get("pk_columns") instanceof List<?> pk
                 && !pk.isEmpty();
+    }
+
+    /**
+     * The leading canonical bytes, for a hash-mismatch report read on another machine.
+     * Decoded as UTF-8 and cut by characters, so a multi-byte character at the boundary
+     * cannot produce mojibake in the log.
+     */
+    private static String head(byte[] canonical) {
+        var s = new String(canonical, StandardCharsets.UTF_8);
+        return s.length() <= HEAD_CHARS ? s : s.substring(0, HEAD_CHARS) + "… [+" + (s.length() - HEAD_CHARS) + " chars]";
     }
 }
