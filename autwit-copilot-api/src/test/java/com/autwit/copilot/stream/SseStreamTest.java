@@ -20,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -31,10 +32,16 @@ import static org.assertj.core.api.Assertions.assertThat;
  * connection → the hub → two open sockets — because every interesting way this breaks
  * lives between the components rather than inside one.
  *
- * <p>Runs with the worker on, so the run really executes and really NOTIFYs.
+ * <p>Runs with the worker on, so the run really executes and really NOTIFYs. That is
+ * declared below rather than inherited: {@code AbstractPostgresIT} parks the worker for
+ * everyone else, because a background thread claiming runs out from under a test reads
+ * as a queue bug and is not one. This is the one suite that wants the opposite, so it
+ * asks — nothing here drives {@code pollOnce()}, and with the worker parked these tests
+ * wait 30 seconds for a lifecycle that never starts.
  */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @ActiveProfiles("all")
+@TestPropertySource(properties = "autwit.run.worker-concurrency=4")
 class SseStreamTest extends AbstractPostgresIT {
 
     private static final Duration PATIENCE = Duration.ofSeconds(30);

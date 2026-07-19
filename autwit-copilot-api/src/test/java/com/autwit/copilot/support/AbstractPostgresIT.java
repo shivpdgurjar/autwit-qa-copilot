@@ -4,6 +4,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.test.context.TestPropertySource;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.utility.DockerImageName;
 
@@ -23,8 +24,27 @@ import org.testcontainers.utility.DockerImageName;
  * <p>Postgres 16 matches the version V1__init.sql was verified against
  * (SCHEMA_VERIFICATION.md — PostgreSQL 16.14).
  */
+/*
+ * Worker parked by default. RunWorker's background threads poll this very database, so
+ * any test that queues a run races the application claiming it first. Tests drive the
+ * queue with pollOnce(), which works at concurrency 0 by design (see its javadoc).
+ *
+ * The symptom, before this: RunQueueTest.sixRunsAcrossFourWorkersAreEachClaimedOnce
+ * claimed 4 of 6 while every row had left `queued` — the two missing runs taken by the
+ * application's own worker. That reads as a SKIP LOCKED bug and is not one. It passed in
+ * isolation and failed in the full suite, because classes that set worker-concurrency
+ * get their own Spring context while the rest share the default one, whose worker has
+ * been polling since the first test that touched it.
+ *
+ * This is @TestPropertySource rather than a registry.add in the @DynamicPropertySource
+ * below, and that placement is load-bearing: @DynamicPropertySource wins over
+ * @TestPropertySource, so a subclass could not opt back in. SseStreamTest needs a live
+ * worker and overrides this — a subclass's own @TestPropertySource takes precedence over
+ * the one it inherits.
+ */
 @SpringBootTest
 @ActiveProfiles("fake")
+@TestPropertySource(properties = "autwit.run.worker-concurrency=0")
 public abstract class AbstractPostgresIT {
 
     protected static final PostgreSQLContainer<?> POSTGRES =
