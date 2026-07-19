@@ -1,0 +1,101 @@
+# Postgres + copilot-api + the UI.
+#
+#   docker compose up --build                                  # calls a real orchestrator
+#   SPRING_PROFILES_ACTIVE=all,fake docker compose up --build  # replays §10 fixtures
+#
+# `fake` is opt-in and must stay that way. A default that silently served fixture data
+# would be the worst failure this product could have: every capture would look real, and
+# the entire point of the tool is that a tester can trust what it shows them.
+#
+# The orchestrator is NOT here, and that is deliberate: it lives in a different
+# repository (autwit-ai-orchestration) whose path differs per machine, and it needs
+# upstream APIs — the Event Store, the OMS — that are not reachable from everywhere.
+# Pinning a build context to a sibling directory would work on exactly one checkout.
+# Run it yourself and point ORCHESTRATOR_URL at it; the default assumes the host.
+#
+# See autwit-copilot-api/logs/README.md for the cross-machine diagnosis workflow that
+# the logs mount below exists to serve.
+
+name: autwit-copilot
+
+services:
+  postgres:
+    image: postgres:16-alpine # matches Testcontainers and SCHEMA_VERIFICATION.md
+    environment:
+      POSTGRES_USER: autwit
+      POSTGRES_PASSWORD: autwit
+      POSTGRES_DB: autwit
+    ports:
+      # 55432, not 5432. The README has used it since the first container and a local
+      # Postgres on the default port is common; colliding would fail in a way that
+      # looks like a broken app rather than a taken port.
+      - "55432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      # api waits on this. Flyway does not retry a refused connection — it fails
+      # startup, so "up" without a healthcheck is a race the API loses about half
+      # the time on a cold volume.
+      test: ["CMD-SHELL", "pg_isready -U autwit -d autwit"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+  api:
+    build:
+      context: ./autwit-copilot-api
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/autwit
+      DB_USER: autwit
+      DB_PASSWORD: autwit
+
+      # host.docker.internal is the host from inside a container. The orchestrator
+      # normally runs there (see the note at the top). Point this anywhere reachable —
+      # another container, a remote host — and nothing else changes.
+      ORCHESTRATOR_URL: ${ORCHESTRATOR_URL:-http://host.docker.internal:9090}
+
+      # Empty by default, which the orchestrator has refused since contract v0.1.6:
+      # absence never grants access. Set it, or run the orchestrator with its explicit
+      # AGENTIC_SKILLS_ALLOW_UNAUTHENTICATED=true dev opt-in. An unset token produces
+      # "Bearer " and a 401 that reads like a network fault — the wire log names which
+      # of the two actually happened.
+      ORCHESTRATOR_TOKEN: ${ORCHESTRATOR_TOKEN:-}
+
+      # `all` = every scheduler and the worker. `integration` = full request/response
+      # bodies and per-artifact content_hash in the log. Override to drop the wire
+      # detail: SPRING_PROFILES_ACTIVE=all
+      SPRING_PROFILES_ACTIVE: ${SPRING_PROFILES_ACTIVE:-all,integration}
+    # No extra_hosts override. Docker Desktop (Mac/Windows) provides a working
+    # host.docker.internal that tunnels to the real host; adding
+    # `host.docker.internal:host-gateway` here SHADOWS it with the Linux bridge gateway
+    # (172.17.0.1), which is not the host on Desktop — the API then gets Connection
+    # refused reaching the orchestrator. Native Linux has no host.docker.internal at all,
+    # so there, either run with `--add-host=host.docker.internal:host-gateway` or point
+    # ORCHESTRATOR_URL straight at the orchestrator's address.
+    volumes:
+      # Bind-mounted, not a named volume, so the log lands in the working tree and can
+      # be committed straight from there. That is the whole point of the file: an
+      # integration run happens on a machine with upstream access and is diagnosed on
+      # one without.
+      - ./autwit-copilot-api/logs:/app/logs
+
+  ui:
+    build:
+      # Repo root: the client is generated from docs/openapi.yaml at build time.
+      context: .
+      dockerfile: autwit-copilot-ui/Dockerfile
+    ports:
+      - "5173:5173"
+    environment:
+      # `localhost` inside this container is this container. The Vite proxy has to name
+      # the API service instead, or every /api call 502s with nothing in the API log to
+      # explain it.
+      VITE_API_TARGET: http://api:8080
+
+volumes:
+  pgdata:

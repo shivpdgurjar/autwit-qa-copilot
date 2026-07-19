@@ -33,7 +33,48 @@ separate repo, consumed via `docs/SKILL_CONTRACT.md`) and `autwit-core`.
 - **Node 20+** — for the UI. Vite 6 will not run on older.
 - Maven is **not** needed; `./mvnw` bootstraps it.
 
-## Run it
+## Run it with Docker Compose
+
+The whole stack — Postgres, the API, the UI — in one command:
+
+```bash
+docker compose up --build
+```
+
+- UI → <http://localhost:5173>
+- API → <http://localhost:8080/api/v1>
+- Postgres → `localhost:55432`
+
+**The orchestrator is not in the compose file.** It lives in a different repository
+whose path differs per machine, and it needs upstream APIs — the Event Store, the OMS —
+that are not reachable from everywhere. Run it yourself and point the API at it:
+
+```bash
+ORCHESTRATOR_URL=http://host.docker.internal:9090 ORCHESTRATOR_TOKEN=… docker compose up
+```
+
+`host.docker.internal` is the default and means "the host from inside the container", so
+an orchestrator running on your machine needs no override. Note the token: since contract
+v0.1.6 the orchestrator **fails closed**, so leaving it unset yields `Bearer ` and a 401
+that reads like a network fault. Either set it, or run the orchestrator with its explicit
+`AGENTIC_SKILLS_ALLOW_UNAUTHENTICATED=true` dev opt-in.
+
+With no orchestrator at all, replay the §10 fixtures instead:
+
+```bash
+SPRING_PROFILES_ACTIVE=all,fake docker compose up --build
+```
+
+The API container runs the `integration` profile by default, so
+`autwit-copilot-api/logs/copilot-api.log` is bind-mounted into the working tree and can be
+committed straight from there — see [`autwit-copilot-api/logs/README.md`](autwit-copilot-api/logs/README.md).
+Drop to `SPRING_PROFILES_ACTIVE=all` for a quieter log without request and response bodies.
+
+**Tests do not run in the image.** They start their own Testcontainers Postgres, which
+would need a Docker socket mounted into the builder. Run them on the host with
+`./mvnw test`.
+
+## Run it directly
 
 ### 1. Postgres
 

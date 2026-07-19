@@ -1,0 +1,10 @@
+# Build output — the image builds its own. Copying a host target/ in would also risk
+# shipping a jar built by a different JDK than the one in the builder stage.
+target/
+
+# Integration logs are mounted at runtime, never baked into the image.
+logs/
+
+.git/
+.idea/
+*.iml

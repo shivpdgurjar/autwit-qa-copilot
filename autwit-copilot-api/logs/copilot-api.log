@@ -1137,3 +1137,474 @@ Caused by: java.net.ConnectException: Connection refused: getsockopt
 {"run_id":"b85133ae-67f8-4934-963f-90a2236fc49b","status":"succeeded","started_at":"2026-07-19T17:05:57.060Z","ended_at":"2026-07-19T17:05:57.061Z","duration_ms":1,"invocations":[{"skill_name":"events.capture_since","skill_version":"1.2.0","input":{"order_id":"XXXX"},"status":"succeeded","exit_code":0,"duration_ms":0,"output_inline":{"events":0,"total_headers":0,"filtered":0}}],"artifacts":[{"client_ref":"eb1","artifact_type":"event_batch","source_system":"eventstore","logical_name":"order_events","format":"json","body":[],"row_count":0,"content_hash":"sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"}],"events":[],"cursors_advanced":{},"milestone":null,"error":null}
 2026-07-19T17:05:57.115Z DEBUG [virtual-51] c.a.copilot.artifact.ArtifactService - artifact ok eventstore/order_events (json) hash=sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945 bytes=2 declared=matched
 2026-07-19T17:05:57.173Z INFO  [virtual-51] com.autwit.copilot.run.RunWorker - Run b85133ae-67f8-4934-963f-90a2236fc49b succeeded: 1 artifacts, 0 new events
+2026-07-19T19:40:44.819Z INFO  [background-preinit] o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-07-19T19:40:44.924Z INFO  [main] c.a.copilot.AutwitCopilotApplication - Starting AutwitCopilotApplication v0.1.0-SNAPSHOT using Java 21.0.11 with PID 1 (/app/app.jar started by autwit in /app)
+2026-07-19T19:40:44.929Z DEBUG [main] c.a.copilot.AutwitCopilotApplication - Running with Spring Boot v3.3.5, Spring v6.1.14
+2026-07-19T19:40:44.934Z INFO  [main] c.a.copilot.AutwitCopilotApplication - The following 2 profiles are active: "all", "integration"
+2026-07-19T19:40:48.267Z INFO  [main] o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-07-19T19:40:48.301Z INFO  [main] o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-07-19T19:40:48.314Z INFO  [main] o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-07-19T19:40:48.319Z INFO  [main] o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+2026-07-19T19:40:48.407Z INFO  [main] o.a.c.c.C.[.[localhost].[/api/v1] - Initializing Spring embedded WebApplicationContext
+2026-07-19T19:40:48.415Z INFO  [main] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 3353 ms
+2026-07-19T19:40:48.850Z INFO  [main] c.a.c.o.HttpOrchestratorClient - HttpOrchestratorClient targeting http://host.docker.internal:9090 with a PT10M deadline
+2026-07-19T19:40:49.358Z INFO  [main] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-07-19T19:40:49.899Z INFO  [main] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@6aea99e7
+2026-07-19T19:40:49.910Z INFO  [main] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-07-19T19:40:50.009Z INFO  [main] org.flywaydb.core.FlywayExecutor - Database: jdbc:postgresql://postgres:5432/autwit (PostgreSQL 16.13)
+2026-07-19T19:40:50.148Z INFO  [main] o.f.c.i.s.JdbcTableSchemaHistory - Schema history table "public"."flyway_schema_history" does not exist yet
+2026-07-19T19:40:50.164Z INFO  [main] o.f.core.internal.command.DbValidate - Successfully validated 1 migration (execution time 00:00.060s)
+2026-07-19T19:40:50.216Z INFO  [main] o.f.c.i.s.JdbcTableSchemaHistory - Creating Schema History table "public"."flyway_schema_history" ...
+2026-07-19T19:40:50.380Z INFO  [main] o.f.core.internal.command.DbMigrate - Current version of schema "public": << Empty Schema >>
+2026-07-19T19:40:50.499Z INFO  [main] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "1 - init"
+2026-07-19T19:40:51.143Z INFO  [main] o.f.core.internal.command.DbMigrate - Successfully applied 1 migration to schema "public", now at version v1 (execution time 00:00.606s)
+2026-07-19T19:40:51.305Z INFO  [main] c.a.copilot.config.ConfigAssertions - Config assertion passed: run.lease=PT12M > orchestrator.timeout=PT10M
+2026-07-19T19:40:52.729Z INFO  [main] o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-07-19T19:40:52.759Z INFO  [main] o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/api/v1'
+2026-07-19T19:40:52.785Z INFO  [main] c.a.copilot.config.SchedulingConfig - Reaper scheduled every PT1M
+2026-07-19T19:40:52.791Z INFO  [main] c.a.copilot.config.SchedulingConfig - Skill catalog sync scheduled every PT1M
+2026-07-19T19:40:52.822Z INFO  [main] c.a.copilot.AutwitCopilotApplication - Started AutwitCopilotApplication in 9.33 seconds (process running for 10.619)
+2026-07-19T19:40:52.844Z INFO  [main] com.autwit.copilot.run.RunWorker - RunWorker worker-fd0974c7 started with concurrency 4
+2026-07-19T19:40:52.859Z INFO  [pg-listener] c.a.c.stream.PgNotificationListener - Listening on autwit_run
+2026-07-19T19:40:52.952Z WARN  [scheduling-1] c.a.c.registry.SkillCatalogSync - Skill catalog sync failed; keeping the previous projection
+com.autwit.copilot.orchestrator.OrchestratorException$Failed: Could not reach the orchestrator catalog: I/O error on GET request for "http://host.docker.internal:9090/skills": Connection refused
+	at com.autwit.copilot.orchestrator.HttpOrchestratorClient.skills(HttpOrchestratorClient.java:153)
+	at com.autwit.copilot.registry.SkillCatalogSync.syncNow(SkillCatalogSync.java:39)
+	at com.autwit.copilot.registry.SkillCatalogSync.sync(SkillCatalogSync.java:29)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:355)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:716)
+	at com.autwit.copilot.registry.SkillCatalogSync$$SpringCGLIB$$0.sync(<generated>)
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Unknown Source)
+	at java.base/java.util.concurrent.FutureTask.runAndReset(Unknown Source)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)
+	at java.base/java.lang.VirtualThread.run(Unknown Source)
+Caused by: org.springframework.web.client.ResourceAccessException: I/O error on GET request for "http://host.docker.internal:9090/skills": Connection refused
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.createResourceAccessException(DefaultRestClient.java:584)
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchangeInternal(DefaultRestClient.java:498)
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.retrieve(DefaultRestClient.java:458)
+	at com.autwit.copilot.orchestrator.HttpOrchestratorClient.skills(HttpOrchestratorClient.java:147)
+	... 14 common frames omitted
+Caused by: java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Unknown Source)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(Unknown Source)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(Unknown Source)
+	at java.base/java.net.Socket.connect(Unknown Source)
+	at java.base/sun.net.NetworkClient.doConnect(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.openServer(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.openServer(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.<init>(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.New(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.New(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.getNewHttpClient(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect0(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.connect(Unknown Source)
+	at org.springframework.http.client.SimpleClientHttpRequest.executeInternal(SimpleClientHttpRequest.java:79)
+	at org.springframework.http.client.AbstractStreamingClientHttpRequest.executeInternal(AbstractStreamingClientHttpRequest.java:70)
+	at org.springframework.http.client.AbstractClientHttpRequest.execute(AbstractClientHttpRequest.java:66)
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchangeInternal(DefaultRestClient.java:492)
+	... 16 common frames omitted
+2026-07-19T19:41:52.962Z WARN  [scheduling-1] c.a.c.registry.SkillCatalogSync - Skill catalog sync failed; keeping the previous projection
+com.autwit.copilot.orchestrator.OrchestratorException$Failed: Could not reach the orchestrator catalog: I/O error on GET request for "http://host.docker.internal:9090/skills": Connection refused
+	at com.autwit.copilot.orchestrator.HttpOrchestratorClient.skills(HttpOrchestratorClient.java:153)
+	at com.autwit.copilot.registry.SkillCatalogSync.syncNow(SkillCatalogSync.java:39)
+	at com.autwit.copilot.registry.SkillCatalogSync.sync(SkillCatalogSync.java:29)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:355)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:716)
+	at com.autwit.copilot.registry.SkillCatalogSync$$SpringCGLIB$$0.sync(<generated>)
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Unknown Source)
+	at java.base/java.util.concurrent.FutureTask.runAndReset(Unknown Source)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)
+	at java.base/java.lang.VirtualThread.run(Unknown Source)
+Caused by: org.springframework.web.client.ResourceAccessException: I/O error on GET request for "http://host.docker.internal:9090/skills": Connection refused
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.createResourceAccessException(DefaultRestClient.java:584)
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchangeInternal(DefaultRestClient.java:498)
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.retrieve(DefaultRestClient.java:458)
+	at com.autwit.copilot.orchestrator.HttpOrchestratorClient.skills(HttpOrchestratorClient.java:147)
+	... 14 common frames omitted
+Caused by: java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Unknown Source)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(Unknown Source)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(Unknown Source)
+	at java.base/java.net.Socket.connect(Unknown Source)
+	at java.base/sun.net.NetworkClient.doConnect(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.openServer(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.openServer(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.<init>(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.New(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.New(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.getNewHttpClient(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect0(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.connect(Unknown Source)
+	at org.springframework.http.client.SimpleClientHttpRequest.executeInternal(SimpleClientHttpRequest.java:79)
+	at org.springframework.http.client.AbstractStreamingClientHttpRequest.executeInternal(AbstractStreamingClientHttpRequest.java:70)
+	at org.springframework.http.client.AbstractClientHttpRequest.execute(AbstractClientHttpRequest.java:66)
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchangeInternal(DefaultRestClient.java:492)
+	... 16 common frames omitted
+2026-07-19T19:42:53.049Z WARN  [scheduling-1] c.a.c.registry.SkillCatalogSync - Skill catalog sync failed; keeping the previous projection
+com.autwit.copilot.orchestrator.OrchestratorException$Failed: Could not reach the orchestrator catalog: I/O error on GET request for "http://host.docker.internal:9090/skills": Connection refused
+	at com.autwit.copilot.orchestrator.HttpOrchestratorClient.skills(HttpOrchestratorClient.java:153)
+	at com.autwit.copilot.registry.SkillCatalogSync.syncNow(SkillCatalogSync.java:39)
+	at com.autwit.copilot.registry.SkillCatalogSync.sync(SkillCatalogSync.java:29)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:355)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:716)
+	at com.autwit.copilot.registry.SkillCatalogSync$$SpringCGLIB$$0.sync(<generated>)
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Unknown Source)
+	at java.base/java.util.concurrent.FutureTask.runAndReset(Unknown Source)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)
+	at java.base/java.lang.VirtualThread.run(Unknown Source)
+Caused by: org.springframework.web.client.ResourceAccessException: I/O error on GET request for "http://host.docker.internal:9090/skills": Connection refused
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.createResourceAccessException(DefaultRestClient.java:584)
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchangeInternal(DefaultRestClient.java:498)
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.retrieve(DefaultRestClient.java:458)
+	at com.autwit.copilot.orchestrator.HttpOrchestratorClient.skills(HttpOrchestratorClient.java:147)
+	... 14 common frames omitted
+Caused by: java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Unknown Source)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(Unknown Source)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(Unknown Source)
+	at java.base/java.net.Socket.connect(Unknown Source)
+	at java.base/sun.net.NetworkClient.doConnect(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.openServer(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.openServer(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.<init>(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.New(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.New(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.getNewHttpClient(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect0(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.connect(Unknown Source)
+	at org.springframework.http.client.SimpleClientHttpRequest.executeInternal(SimpleClientHttpRequest.java:79)
+	at org.springframework.http.client.AbstractStreamingClientHttpRequest.executeInternal(AbstractStreamingClientHttpRequest.java:70)
+	at org.springframework.http.client.AbstractClientHttpRequest.execute(AbstractClientHttpRequest.java:66)
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchangeInternal(DefaultRestClient.java:492)
+	... 16 common frames omitted
+2026-07-19T19:43:28.963Z INFO  [tomcat-handler-0] o.a.c.c.C.[.[localhost].[/api/v1] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-07-19T19:43:28.993Z INFO  [tomcat-handler-0] o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-07-19T19:43:29.014Z INFO  [tomcat-handler-0] o.s.web.servlet.DispatcherServlet - Completed initialization in 4 ms
+2026-07-19T19:43:53.240Z WARN  [scheduling-1] c.a.c.registry.SkillCatalogSync - Skill catalog sync failed; keeping the previous projection
+com.autwit.copilot.orchestrator.OrchestratorException$Failed: Could not reach the orchestrator catalog: I/O error on GET request for "http://host.docker.internal:9090/skills": Connection refused
+	at com.autwit.copilot.orchestrator.HttpOrchestratorClient.skills(HttpOrchestratorClient.java:153)
+	at com.autwit.copilot.registry.SkillCatalogSync.syncNow(SkillCatalogSync.java:39)
+	at com.autwit.copilot.registry.SkillCatalogSync.sync(SkillCatalogSync.java:29)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:355)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:716)
+	at com.autwit.copilot.registry.SkillCatalogSync$$SpringCGLIB$$0.sync(<generated>)
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Unknown Source)
+	at java.base/java.util.concurrent.FutureTask.runAndReset(Unknown Source)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)
+	at java.base/java.lang.VirtualThread.run(Unknown Source)
+Caused by: org.springframework.web.client.ResourceAccessException: I/O error on GET request for "http://host.docker.internal:9090/skills": Connection refused
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.createResourceAccessException(DefaultRestClient.java:584)
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchangeInternal(DefaultRestClient.java:498)
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.retrieve(DefaultRestClient.java:458)
+	at com.autwit.copilot.orchestrator.HttpOrchestratorClient.skills(HttpOrchestratorClient.java:147)
+	... 14 common frames omitted
+Caused by: java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Unknown Source)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(Unknown Source)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(Unknown Source)
+	at java.base/java.net.Socket.connect(Unknown Source)
+	at java.base/sun.net.NetworkClient.doConnect(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.openServer(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.openServer(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.<init>(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.New(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.New(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.getNewHttpClient(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect0(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.connect(Unknown Source)
+	at org.springframework.http.client.SimpleClientHttpRequest.executeInternal(SimpleClientHttpRequest.java:79)
+	at org.springframework.http.client.AbstractStreamingClientHttpRequest.executeInternal(AbstractStreamingClientHttpRequest.java:70)
+	at org.springframework.http.client.AbstractClientHttpRequest.execute(AbstractClientHttpRequest.java:66)
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchangeInternal(DefaultRestClient.java:492)
+	... 16 common frames omitted
+2026-07-19T19:44:53.362Z WARN  [scheduling-1] c.a.c.registry.SkillCatalogSync - Skill catalog sync failed; keeping the previous projection
+com.autwit.copilot.orchestrator.OrchestratorException$Failed: Could not reach the orchestrator catalog: I/O error on GET request for "http://host.docker.internal:9090/skills": Connection refused
+	at com.autwit.copilot.orchestrator.HttpOrchestratorClient.skills(HttpOrchestratorClient.java:153)
+	at com.autwit.copilot.registry.SkillCatalogSync.syncNow(SkillCatalogSync.java:39)
+	at com.autwit.copilot.registry.SkillCatalogSync.sync(SkillCatalogSync.java:29)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:355)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:716)
+	at com.autwit.copilot.registry.SkillCatalogSync$$SpringCGLIB$$0.sync(<generated>)
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Unknown Source)
+	at java.base/java.util.concurrent.FutureTask.runAndReset(Unknown Source)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)
+	at java.base/java.lang.VirtualThread.run(Unknown Source)
+Caused by: org.springframework.web.client.ResourceAccessException: I/O error on GET request for "http://host.docker.internal:9090/skills": Connection refused
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.createResourceAccessException(DefaultRestClient.java:584)
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchangeInternal(DefaultRestClient.java:498)
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.retrieve(DefaultRestClient.java:458)
+	at com.autwit.copilot.orchestrator.HttpOrchestratorClient.skills(HttpOrchestratorClient.java:147)
+	... 14 common frames omitted
+Caused by: java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Unknown Source)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(Unknown Source)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(Unknown Source)
+	at java.base/java.net.Socket.connect(Unknown Source)
+	at java.base/sun.net.NetworkClient.doConnect(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.openServer(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.openServer(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.<init>(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.New(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.New(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.getNewHttpClient(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect0(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.connect(Unknown Source)
+	at org.springframework.http.client.SimpleClientHttpRequest.executeInternal(SimpleClientHttpRequest.java:79)
+	at org.springframework.http.client.AbstractStreamingClientHttpRequest.executeInternal(AbstractStreamingClientHttpRequest.java:70)
+	at org.springframework.http.client.AbstractClientHttpRequest.execute(AbstractClientHttpRequest.java:66)
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchangeInternal(DefaultRestClient.java:492)
+	... 16 common frames omitted
+2026-07-19T19:45:53.484Z WARN  [scheduling-1] c.a.c.registry.SkillCatalogSync - Skill catalog sync failed; keeping the previous projection
+com.autwit.copilot.orchestrator.OrchestratorException$Failed: Could not reach the orchestrator catalog: I/O error on GET request for "http://host.docker.internal:9090/skills": Connection refused
+	at com.autwit.copilot.orchestrator.HttpOrchestratorClient.skills(HttpOrchestratorClient.java:153)
+	at com.autwit.copilot.registry.SkillCatalogSync.syncNow(SkillCatalogSync.java:39)
+	at com.autwit.copilot.registry.SkillCatalogSync.sync(SkillCatalogSync.java:29)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:355)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:716)
+	at com.autwit.copilot.registry.SkillCatalogSync$$SpringCGLIB$$0.sync(<generated>)
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Unknown Source)
+	at java.base/java.util.concurrent.FutureTask.runAndReset(Unknown Source)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)
+	at java.base/java.lang.VirtualThread.run(Unknown Source)
+Caused by: org.springframework.web.client.ResourceAccessException: I/O error on GET request for "http://host.docker.internal:9090/skills": Connection refused
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.createResourceAccessException(DefaultRestClient.java:584)
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchangeInternal(DefaultRestClient.java:498)
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.retrieve(DefaultRestClient.java:458)
+	at com.autwit.copilot.orchestrator.HttpOrchestratorClient.skills(HttpOrchestratorClient.java:147)
+	... 14 common frames omitted
+Caused by: java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Unknown Source)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(Unknown Source)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(Unknown Source)
+	at java.base/java.net.Socket.connect(Unknown Source)
+	at java.base/sun.net.NetworkClient.doConnect(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.openServer(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.openServer(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.<init>(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.New(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.New(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.getNewHttpClient(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect0(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.connect(Unknown Source)
+	at org.springframework.http.client.SimpleClientHttpRequest.executeInternal(SimpleClientHttpRequest.java:79)
+	at org.springframework.http.client.AbstractStreamingClientHttpRequest.executeInternal(AbstractStreamingClientHttpRequest.java:70)
+	at org.springframework.http.client.AbstractClientHttpRequest.execute(AbstractClientHttpRequest.java:66)
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchangeInternal(DefaultRestClient.java:492)
+	... 16 common frames omitted
+2026-07-19T19:46:53.553Z WARN  [scheduling-1] c.a.c.registry.SkillCatalogSync - Skill catalog sync failed; keeping the previous projection
+com.autwit.copilot.orchestrator.OrchestratorException$Failed: Could not reach the orchestrator catalog: I/O error on GET request for "http://host.docker.internal:9090/skills": Connection refused
+	at com.autwit.copilot.orchestrator.HttpOrchestratorClient.skills(HttpOrchestratorClient.java:153)
+	at com.autwit.copilot.registry.SkillCatalogSync.syncNow(SkillCatalogSync.java:39)
+	at com.autwit.copilot.registry.SkillCatalogSync.sync(SkillCatalogSync.java:29)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:355)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:716)
+	at com.autwit.copilot.registry.SkillCatalogSync$$SpringCGLIB$$0.sync(<generated>)
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Unknown Source)
+	at java.base/java.util.concurrent.FutureTask.runAndReset(Unknown Source)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)
+	at java.base/java.lang.VirtualThread.run(Unknown Source)
+Caused by: org.springframework.web.client.ResourceAccessException: I/O error on GET request for "http://host.docker.internal:9090/skills": Connection refused
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.createResourceAccessException(DefaultRestClient.java:584)
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchangeInternal(DefaultRestClient.java:498)
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.retrieve(DefaultRestClient.java:458)
+	at com.autwit.copilot.orchestrator.HttpOrchestratorClient.skills(HttpOrchestratorClient.java:147)
+	... 14 common frames omitted
+Caused by: java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Unknown Source)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(Unknown Source)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(Unknown Source)
+	at java.base/java.net.Socket.connect(Unknown Source)
+	at java.base/sun.net.NetworkClient.doConnect(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.openServer(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.openServer(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.<init>(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.New(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.New(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.getNewHttpClient(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect0(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.connect(Unknown Source)
+	at org.springframework.http.client.SimpleClientHttpRequest.executeInternal(SimpleClientHttpRequest.java:79)
+	at org.springframework.http.client.AbstractStreamingClientHttpRequest.executeInternal(AbstractStreamingClientHttpRequest.java:70)
+	at org.springframework.http.client.AbstractClientHttpRequest.execute(AbstractClientHttpRequest.java:66)
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchangeInternal(DefaultRestClient.java:492)
+	... 16 common frames omitted
+2026-07-19T19:47:53.754Z WARN  [scheduling-1] c.a.c.registry.SkillCatalogSync - Skill catalog sync failed; keeping the previous projection
+com.autwit.copilot.orchestrator.OrchestratorException$Failed: Could not reach the orchestrator catalog: I/O error on GET request for "http://host.docker.internal:9090/skills": Connection refused
+	at com.autwit.copilot.orchestrator.HttpOrchestratorClient.skills(HttpOrchestratorClient.java:153)
+	at com.autwit.copilot.registry.SkillCatalogSync.syncNow(SkillCatalogSync.java:39)
+	at com.autwit.copilot.registry.SkillCatalogSync.sync(SkillCatalogSync.java:29)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:355)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:716)
+	at com.autwit.copilot.registry.SkillCatalogSync$$SpringCGLIB$$0.sync(<generated>)
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Unknown Source)
+	at java.base/java.util.concurrent.FutureTask.runAndReset(Unknown Source)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)
+	at java.base/java.lang.VirtualThread.run(Unknown Source)
+Caused by: org.springframework.web.client.ResourceAccessException: I/O error on GET request for "http://host.docker.internal:9090/skills": Connection refused
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.createResourceAccessException(DefaultRestClient.java:584)
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchangeInternal(DefaultRestClient.java:498)
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.retrieve(DefaultRestClient.java:458)
+	at com.autwit.copilot.orchestrator.HttpOrchestratorClient.skills(HttpOrchestratorClient.java:147)
+	... 14 common frames omitted
+Caused by: java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Unknown Source)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(Unknown Source)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(Unknown Source)
+	at java.base/java.net.Socket.connect(Unknown Source)
+	at java.base/sun.net.NetworkClient.doConnect(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.openServer(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.openServer(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.<init>(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.New(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.New(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.getNewHttpClient(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect0(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.connect(Unknown Source)
+	at org.springframework.http.client.SimpleClientHttpRequest.executeInternal(SimpleClientHttpRequest.java:79)
+	at org.springframework.http.client.AbstractStreamingClientHttpRequest.executeInternal(AbstractStreamingClientHttpRequest.java:70)
+	at org.springframework.http.client.AbstractClientHttpRequest.execute(AbstractClientHttpRequest.java:66)
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchangeInternal(DefaultRestClient.java:492)
+	... 16 common frames omitted
+2026-07-19T19:48:53.885Z WARN  [scheduling-1] c.a.c.registry.SkillCatalogSync - Skill catalog sync failed; keeping the previous projection
+com.autwit.copilot.orchestrator.OrchestratorException$Failed: Could not reach the orchestrator catalog: I/O error on GET request for "http://host.docker.internal:9090/skills": Connection refused
+	at com.autwit.copilot.orchestrator.HttpOrchestratorClient.skills(HttpOrchestratorClient.java:153)
+	at com.autwit.copilot.registry.SkillCatalogSync.syncNow(SkillCatalogSync.java:39)
+	at com.autwit.copilot.registry.SkillCatalogSync.sync(SkillCatalogSync.java:29)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:355)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:716)
+	at com.autwit.copilot.registry.SkillCatalogSync$$SpringCGLIB$$0.sync(<generated>)
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Unknown Source)
+	at java.base/java.util.concurrent.FutureTask.runAndReset(Unknown Source)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)
+	at java.base/java.lang.VirtualThread.run(Unknown Source)
+Caused by: org.springframework.web.client.ResourceAccessException: I/O error on GET request for "http://host.docker.internal:9090/skills": Connection refused
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.createResourceAccessException(DefaultRestClient.java:584)
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchangeInternal(DefaultRestClient.java:498)
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.retrieve(DefaultRestClient.java:458)
+	at com.autwit.copilot.orchestrator.HttpOrchestratorClient.skills(HttpOrchestratorClient.java:147)
+	... 14 common frames omitted
+Caused by: java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Unknown Source)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(Unknown Source)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(Unknown Source)
+	at java.base/java.net.Socket.connect(Unknown Source)
+	at java.base/sun.net.NetworkClient.doConnect(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.openServer(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.openServer(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.<init>(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.New(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.New(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.getNewHttpClient(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect0(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.connect(Unknown Source)
+	at org.springframework.http.client.SimpleClientHttpRequest.executeInternal(SimpleClientHttpRequest.java:79)
+	at org.springframework.http.client.AbstractStreamingClientHttpRequest.executeInternal(AbstractStreamingClientHttpRequest.java:70)
+	at org.springframework.http.client.AbstractClientHttpRequest.execute(AbstractClientHttpRequest.java:66)
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchangeInternal(DefaultRestClient.java:492)
+	... 16 common frames omitted
+2026-07-19T19:49:46.004Z INFO  [SpringApplicationShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-07-19T19:49:46.120Z INFO  [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-07-19T19:49:46.134Z INFO  [SpringApplicationShutdownHook] com.autwit.copilot.run.RunWorker - RunWorker worker-fd0974c7 draining in-flight runs…
+2026-07-19T19:49:46.314Z INFO  [SpringApplicationShutdownHook] com.autwit.copilot.run.RunWorker - RunWorker worker-fd0974c7 stopped
+2026-07-19T19:49:46.412Z INFO  [SpringApplicationShutdownHook] c.a.c.stream.PgNotificationListener - PgNotificationListener stopped
+2026-07-19T19:49:46.427Z INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-07-19T19:49:46.498Z INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-07-19T19:49:51.457Z INFO  [background-preinit] o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-07-19T19:49:51.568Z INFO  [main] c.a.copilot.AutwitCopilotApplication - Starting AutwitCopilotApplication v0.1.0-SNAPSHOT using Java 21.0.11 with PID 1 (/app/app.jar started by autwit in /app)
+2026-07-19T19:49:51.577Z DEBUG [main] c.a.copilot.AutwitCopilotApplication - Running with Spring Boot v3.3.5, Spring v6.1.14
+2026-07-19T19:49:51.583Z INFO  [main] c.a.copilot.AutwitCopilotApplication - The following 2 profiles are active: "all", "integration"
+2026-07-19T19:49:54.666Z INFO  [main] o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-07-19T19:49:54.693Z INFO  [main] o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-07-19T19:49:54.709Z INFO  [main] o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-07-19T19:49:54.712Z INFO  [main] o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+2026-07-19T19:49:54.849Z INFO  [main] o.a.c.c.C.[.[localhost].[/api/v1] - Initializing Spring embedded WebApplicationContext
+2026-07-19T19:49:54.868Z INFO  [main] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 3143 ms
+2026-07-19T19:49:55.272Z INFO  [main] c.a.c.o.HttpOrchestratorClient - HttpOrchestratorClient targeting http://host.docker.internal:9090 with a PT10M deadline
+2026-07-19T19:49:55.717Z INFO  [main] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-07-19T19:49:56.132Z INFO  [main] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@6aea99e7
+2026-07-19T19:49:56.142Z INFO  [main] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-07-19T19:49:56.231Z INFO  [main] org.flywaydb.core.FlywayExecutor - Database: jdbc:postgresql://postgres:5432/autwit (PostgreSQL 16.13)
+2026-07-19T19:49:56.397Z INFO  [main] o.f.core.internal.command.DbValidate - Successfully validated 1 migration (execution time 00:00.098s)
+2026-07-19T19:49:56.436Z INFO  [main] o.f.core.internal.command.DbMigrate - Current version of schema "public": 1
+2026-07-19T19:49:56.450Z INFO  [main] o.f.core.internal.command.DbMigrate - Schema "public" is up to date. No migration necessary.
+2026-07-19T19:49:56.658Z INFO  [main] c.a.copilot.config.ConfigAssertions - Config assertion passed: run.lease=PT12M > orchestrator.timeout=PT10M
+2026-07-19T19:49:57.829Z INFO  [main] o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-07-19T19:49:57.852Z INFO  [main] o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/api/v1'
+2026-07-19T19:49:57.871Z INFO  [main] c.a.copilot.config.SchedulingConfig - Reaper scheduled every PT1M
+2026-07-19T19:49:57.876Z INFO  [main] c.a.copilot.config.SchedulingConfig - Skill catalog sync scheduled every PT1M
+2026-07-19T19:49:57.895Z INFO  [main] c.a.copilot.AutwitCopilotApplication - Started AutwitCopilotApplication in 7.567 seconds (process running for 8.472)
+2026-07-19T19:49:57.910Z INFO  [main] com.autwit.copilot.run.RunWorker - RunWorker worker-a5189270 started with concurrency 4
+2026-07-19T19:49:57.931Z INFO  [pg-listener] c.a.c.stream.PgNotificationListener - Listening on autwit_run
+2026-07-19T19:49:58.190Z INFO  [scheduling-1] c.a.c.registry.SkillCatalogSync - Synced 5 skills at catalog_version v1/279960341625
+2026-07-19T19:50:41.002Z INFO  [tomcat-handler-0] o.a.c.c.C.[.[localhost].[/api/v1] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-07-19T19:50:41.013Z INFO  [tomcat-handler-0] o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-07-19T19:50:41.026Z INFO  [tomcat-handler-0] o.s.web.servlet.DispatcherServlet - Completed initialization in 4 ms
+2026-07-19T19:50:41.894Z DEBUG [tomcat-handler-2] com.autwit.copilot.run.RunEnqueuer - Enqueued skill_execute run 3dd97f52-fac2-4b63-bab9-936a58846a96 for session af638beb-3be6-42f5-8462-3a8b2a170551 (max_attempts=2)
+2026-07-19T19:50:42.127Z DEBUG [virtual-52] c.autwit.copilot.orchestrator.wire - --> POST http://host.docker.internal:9090/skills/events.capture_since/execute correlation_id=autwit-qa2-20260719-c65241d0 run_id=3dd97f52-fac2-4b63-bab9-936a58846a96 authorization=Bearer <EMPTY - no token configured>
+{"session_id":"af638beb-3be6-42f5-8462-3a8b2a170551","correlation_id":"autwit-qa2-20260719-c65241d0","run_id":"3dd97f52-fac2-4b63-bab9-936a58846a96","input":{"order_id":"XXXX"},"session_context":{"env":"qa2","tester_id":"priya","subjects":{"order_id":"XXXX"},"milestones":[],"event_cursors":{},"recent_steps":[{"seq":1,"kind":"skill_invocation","label":"compose smoke"}]}}
+2026-07-19T19:50:42.175Z DEBUG [virtual-52] c.autwit.copilot.orchestrator.wire - <-- /skills/events.capture_since/execute HTTP 200 run_id=3dd97f52-fac2-4b63-bab9-936a58846a96
+{"run_id":"3dd97f52-fac2-4b63-bab9-936a58846a96","status":"succeeded","started_at":"2026-07-19T19:50:42.163Z","ended_at":"2026-07-19T19:50:42.171Z","duration_ms":8,"invocations":[{"skill_name":"events.capture_since","skill_version":"1.2.0","input":{"order_id":"XXXX"},"status":"succeeded","exit_code":0,"duration_ms":0,"output_inline":{"events":0,"total_headers":0,"filtered":0}}],"artifacts":[{"client_ref":"eb1","artifact_type":"event_batch","source_system":"eventstore","logical_name":"order_events","format":"json","body":[],"row_count":0,"content_hash":"sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"}],"events":[],"cursors_advanced":{},"milestone":null,"error":null}
+2026-07-19T19:50:42.237Z DEBUG [virtual-52] c.a.copilot.artifact.ArtifactService - artifact ok eventstore/order_events (json) hash=sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945 bytes=2 declared=matched
