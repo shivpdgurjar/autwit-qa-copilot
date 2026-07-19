@@ -1100,3 +1100,40 @@ Caused by: java.net.ConnectException: Connection refused: getsockopt
 	at org.postgresql.core.v3.ConnectionFactoryImpl.tryConnect(ConnectionFactoryImpl.java:140)
 	at org.postgresql.core.v3.ConnectionFactoryImpl.openConnectionImpl(ConnectionFactoryImpl.java:268)
 	... 9 common frames omitted
+2026-07-19T13:43:14.691Z INFO  [background-preinit] o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-07-19T13:43:14.818Z INFO  [main] c.a.copilot.AutwitCopilotApplication - Starting AutwitCopilotApplication using Java 21.0.7 with PID 28364 (D:\autwit-ai\qa-copilot\autwit-copilot\autwit-copilot-api\target\classes started by ShivPrasadGurjar in D:\autwit-ai\qa-copilot\autwit-copilot\autwit-copilot-api)
+2026-07-19T13:43:14.820Z DEBUG [main] c.a.copilot.AutwitCopilotApplication - Running with Spring Boot v3.3.5, Spring v6.1.14
+2026-07-19T13:43:14.822Z INFO  [main] c.a.copilot.AutwitCopilotApplication - The following 2 profiles are active: "all", "integration"
+2026-07-19T13:43:17.879Z INFO  [main] o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-07-19T13:43:17.905Z INFO  [main] o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-07-19T13:43:17.914Z INFO  [main] o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-07-19T13:43:17.915Z INFO  [main] o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+2026-07-19T13:43:18.072Z INFO  [main] o.a.c.c.C.[.[localhost].[/api/v1] - Initializing Spring embedded WebApplicationContext
+2026-07-19T13:43:18.075Z INFO  [main] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 3132 ms
+2026-07-19T13:43:18.556Z INFO  [main] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-07-19T13:43:18.967Z INFO  [main] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@5bc63e20
+2026-07-19T13:43:18.969Z INFO  [main] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-07-19T13:43:19.042Z INFO  [main] org.flywaydb.core.FlywayExecutor - Database: jdbc:postgresql://localhost:55432/autwit (PostgreSQL 16.13)
+2026-07-19T13:43:19.205Z INFO  [main] o.f.core.internal.command.DbValidate - Successfully validated 1 migration (execution time 00:00.113s)
+2026-07-19T13:43:19.245Z INFO  [main] o.f.core.internal.command.DbMigrate - Current version of schema "public": 1
+2026-07-19T13:43:19.254Z INFO  [main] o.f.core.internal.command.DbMigrate - Schema "public" is up to date. No migration necessary.
+2026-07-19T13:43:19.604Z INFO  [main] c.a.copilot.config.ConfigAssertions - Config assertion passed: run.lease=PT12M > orchestrator.timeout=PT10M
+2026-07-19T13:43:19.700Z INFO  [main] c.a.c.o.HttpOrchestratorClient - HttpOrchestratorClient targeting http://localhost:9090 with a PT10M deadline
+2026-07-19T13:43:20.563Z INFO  [main] o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-07-19T13:43:20.589Z INFO  [main] o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/api/v1'
+2026-07-19T13:43:20.598Z INFO  [main] c.a.copilot.config.SchedulingConfig - Reaper scheduled every PT1M
+2026-07-19T13:43:20.598Z INFO  [main] c.a.copilot.config.SchedulingConfig - Skill catalog sync scheduled every PT1M
+2026-07-19T13:43:20.609Z INFO  [main] c.a.copilot.AutwitCopilotApplication - Started AutwitCopilotApplication in 6.973 seconds (process running for 7.485)
+2026-07-19T13:43:20.626Z INFO  [main] com.autwit.copilot.run.RunWorker - RunWorker worker-d234f761 started with concurrency 4
+2026-07-19T13:43:20.694Z INFO  [pg-listener] c.a.c.stream.PgNotificationListener - Listening on autwit_run
+2026-07-19T14:29:42.230Z INFO  [tomcat-handler-0] o.a.c.c.C.[.[localhost].[/api/v1] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-07-19T14:29:42.232Z INFO  [tomcat-handler-0] o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-07-19T14:29:42.241Z INFO  [tomcat-handler-0] o.s.web.servlet.DispatcherServlet - Completed initialization in 9 ms
+2026-07-19T17:04:56.699Z WARN  [HikariPool-1 housekeeper] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Thread starvation or clock leap detected (housekeeper delta=1h30m31s494ms802µs300ns).
+2026-07-19T17:05:56.864Z DEBUG [tomcat-handler-5] com.autwit.copilot.run.RunEnqueuer - Enqueued skill_execute run b85133ae-67f8-4934-963f-90a2236fc49b for session 970179a0-326b-4edf-88a4-bdae7445a68d (max_attempts=2)
+2026-07-19T17:05:57.049Z DEBUG [virtual-51] c.autwit.copilot.orchestrator.wire - --> POST http://localhost:9090/skills/events.capture_since/execute correlation_id=autwit-qa2-20260719-bfbeea27 run_id=b85133ae-67f8-4934-963f-90a2236fc49b authorization=Bearer <EMPTY - no token configured>
+{"session_id":"970179a0-326b-4edf-88a4-bdae7445a68d","correlation_id":"autwit-qa2-20260719-bfbeea27","run_id":"b85133ae-67f8-4934-963f-90a2236fc49b","input":{"order_id":"XXXX"},"session_context":{"env":"qa2","tester_id":"priya","subjects":{"order_id":"XXXX"},"milestones":[],"event_cursors":{},"recent_steps":[{"seq":1,"kind":"skill_invocation","label":"post-kill"}]}}
+2026-07-19T17:05:57.063Z DEBUG [virtual-51] c.autwit.copilot.orchestrator.wire - <-- /skills/events.capture_since/execute HTTP 200 run_id=b85133ae-67f8-4934-963f-90a2236fc49b
+{"run_id":"b85133ae-67f8-4934-963f-90a2236fc49b","status":"succeeded","started_at":"2026-07-19T17:05:57.060Z","ended_at":"2026-07-19T17:05:57.061Z","duration_ms":1,"invocations":[{"skill_name":"events.capture_since","skill_version":"1.2.0","input":{"order_id":"XXXX"},"status":"succeeded","exit_code":0,"duration_ms":0,"output_inline":{"events":0,"total_headers":0,"filtered":0}}],"artifacts":[{"client_ref":"eb1","artifact_type":"event_batch","source_system":"eventstore","logical_name":"order_events","format":"json","body":[],"row_count":0,"content_hash":"sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"}],"events":[],"cursors_advanced":{},"milestone":null,"error":null}
+2026-07-19T17:05:57.115Z DEBUG [virtual-51] c.a.copilot.artifact.ArtifactService - artifact ok eventstore/order_events (json) hash=sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945 bytes=2 declared=matched
+2026-07-19T17:05:57.173Z INFO  [virtual-51] com.autwit.copilot.run.RunWorker - Run b85133ae-67f8-4934-963f-90a2236fc49b succeeded: 1 artifacts, 0 new events
