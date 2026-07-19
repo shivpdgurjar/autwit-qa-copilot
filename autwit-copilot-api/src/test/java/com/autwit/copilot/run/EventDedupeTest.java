@@ -143,8 +143,8 @@ class EventDedupeTest extends AbstractPostgresIT {
         assertThat(jdbc.queryForObject(
                 "select event_cursor::text from autwit.milestone where milestone_id = ?",
                 String.class, milestone.milestoneId()))
-                .contains("orders.events")
-                .contains("10445");
+                .contains("order.events")
+                .contains("1703000013000");
     }
 
     private int events() {

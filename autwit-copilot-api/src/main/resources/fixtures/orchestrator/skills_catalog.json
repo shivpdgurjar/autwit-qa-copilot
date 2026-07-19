@@ -1,5 +1,5 @@
 {
-  "catalog_version": "2026-07-16T09:12:00Z/a3f9c1",
+  "catalog_version": "v1/279960341625",
   "skills": [
     {
       "skill_name": "snapshot.capture",
@@ -17,8 +17,7 @@
           "scope": {
             "type": "string",
             "enum": [
-              "order_flow",
-              "shipment_only"
+              "order_flow"
             ]
           },
           "label": {
@@ -56,22 +55,22 @@
     },
     {
       "skill_name": "events.capture_since",
-      "version": "1.1.0",
-      "title": "Capture events since cursor",
-      "description": "Re-reads a topic from a cursor and returns everything it sees.",
-      "impl_type": "shell",
+      "version": "1.2.0",
+      "title": "Capture an order's events since a producer time",
+      "description": "Searches the Event Store for an order's event headers, filters by producer time, and returns each event's contents.",
+      "impl_type": "http",
       "side_effects": "none",
       "input_schema": {
         "type": "object",
         "required": [
-          "topic"
+          "order_id"
         ],
         "properties": {
-          "topic": {
+          "order_id": {
             "type": "string"
           },
-          "from_offset": {
-            "type": "string"
+          "since_producer_time": {
+            "type": "integer"
           }
         }
       },

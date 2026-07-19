@@ -13,7 +13,10 @@ import org.springframework.stereotype.Repository;
 
 /**
  * A read-only projection of the orchestrator's catalog (SKILL_CONTRACT §2). Skills
- * are defined in the orchestrator's repo as versioned YAML; nobody edits them here.
+ * are defined in the orchestrator's repo as versioned TypeScript
+ * ({@code src/skills/catalog.ts}); nobody edits them here. (§2 said "YAML" until
+ * v0.1.5 — there is no YAML, and the error was identical in both copies of the
+ * contract, so only reading it against their code found it.)
  *
  * <p>There is deliberately no FK from skill_invocation to this table: the catalog is
  * a cache and may lag behind a skill that was renamed or disabled mid-session, and

@@ -155,9 +155,11 @@ class TimelineReadsTest extends AbstractPostgresIT {
                 .singleElement()
                 .satisfies(e -> {
                     // Offsets, not timestamps: analysis reads offset windows because time
-                    // windows are lossy under load.
-                    assertThat(e.sourceOffset()).isEqualTo("10445");
-                    assertThat(e.topic()).isEqualTo("orders.events");
+                    // windows are lossy under load. §6.3: source_offset is an opaque
+                    // per-source ordering token — for events.capture_since it is a
+                    // stringified producerTime, so never parse it as an integer offset.
+                    assertThat(e.sourceOffset()).isEqualTo("1703000013000");
+                    assertThat(e.topic()).isEqualTo("order.events");
                     assertThat(e.payload()).containsEntry("orderId", "XXXX");
                     // Linked back to the raw batch it came from, for audit.
                     assertThat(e.artifactId()).isNotNull();

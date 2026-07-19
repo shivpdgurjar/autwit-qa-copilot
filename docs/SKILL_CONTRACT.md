@@ -1,9 +1,33 @@
 # SKILL_CONTRACT.md
 
 **Between:** `autwit-copilot-api` (client) and `autwit-ai-orchestrator` (server)
-**Version:** 0.1.3
-**Status:** Ratified by both sides. v0.1.2 accepted by copilot-api in
-`message-from-qa-copilot/v1.0.5`; v0.1.3 amendments requested in the same document.
+**Version:** 0.1.7
+**Status:** Ratified by both sides. v0.1.6 closed the `message-from-qa-copilot/v1.0.11`
+closeout specification (B1–B7); v0.1.7 enforces §7's mutual-exclusion rule, the one
+asked-for behaviour in the parked section that had never been implemented.
+
+> **Verification status — how each section is known to be true.** This document's body
+> descends from the pre-ratification **v0.1.0** text, so age is not evidence. What
+> matters is whether a section has been read **against the implementation**:
+>
+> | Sections | Status |
+> |---|---|
+> | §1, §2, §4, §5, §6.2, §8, §9 | **Audited against orchestrator code** (v0.1.5–v0.1.6) |
+> | §0 | **Audited** — invariants 1–4 by the orchestrator, 5 by copilot-api (v0.1.6). One scoping caveat, stated in §0. |
+> | §10 | **Audited against copilot-api code** (v0.1.4, confirmed by them in v1.0.9 §4) |
+> | §3, §6.1, §6.3, §11 | Amended and ratified by both sides |
+> | **§7** | **Parked, with one live rule.** The `body`/`external_uri` mutual exclusion is enforced and tested (v0.1.7). The rest is v0.2 design describing no behaviour on either side, so there is nothing to read it against. See the banner in §7. |
+>
+> **Every normative claim in this document that describes behaviour existing today has
+> been read against the code that implements it.** What remains unverified in §7 is
+> unverifiable rather than unchecked — it describes a v0.2 feature neither side has built.
+>
+> A document-to-document diff cannot establish any of this. copilot-api diffed all seven
+> previously-unverified sections in `v1.0.9` and found them **byte-identical** — while
+> §10 had been wrong in *both* copies simultaneously for four versions. Two descendants
+> of the same v0.1.0 cannot detect what both inherited; identical-and-stale is
+> indistinguishable from identical-and-correct. Only reading a section against the code
+> that implements it finds shared staleness, and only the side owning that code can do it.
 
 This is the only shared surface between the two services. Neither side may add a
 dependency on the other outside this document.
@@ -48,6 +72,94 @@ dependency on the other outside this document.
      `invalid_input`, `retryable: false`.
   No change to any `input_schema` or `output_schema`, so `catalog_version` is
   unchanged at `v1/3efcaf08f394` — (3) changes error behaviour, not the wire shape.
+- **v0.1.4** — §10 corrected from `message-from-qa-copilot/v1.0.7` §2a. §10 describes
+  copilot-api's implementation, so copilot-api is the authority on it:
+  1. Fixture path is **`autwit-copilot-api/src/main/resources/fixtures/orchestrator/`**
+     — `main`, not `test`. Load-bearing: the fake profile must be *runnable*, not just
+     testable, because the UI is developed against it, and `test/resources` is not on
+     the runtime classpath. A reader following the old path would build a fake that
+     cannot start. All 8 fixtures are in `main/resources`; the `test` path does not exist.
+  2. `invoke_partial.json` row restored to note the **`medium`** finding — its omission
+     quietly undid part of the Q4 ratification at the place a reader is most likely to
+     check what that fixture is for.
+  3. `skills_catalog.json` row restored to note it includes a `mutating` skill and a
+     disabled one.
+
+  **This was not a v0.1.3 regression.** All three were wrong in the **v0.1.0** body and
+  survived every version since, because §10 was never one of the amended sections. That
+  is why the verification-status table above exists (a provenance warning in v0.1.4–v0.1.5,
+  superseded once sections began to be audited): the defect class is "unamended sections
+  may still carry v0.1.0 content", and §10 was the first confirmed instance of it — six
+  more turned up in the v0.1.5 audit. `catalog_version` unchanged — no schema touched.
+- **v0.1.5** — first **code audit** of the orchestrator-owned sections, per
+  `message-from-qa-copilot/v1.0.9` §3: every claim in §1, §2, §4, §5, §6.2, §8 and §9
+  read against the implementation rather than against copilot-api's copy. Six defects,
+  none of which a document diff could have found, because all were identical in both
+  copies:
+  1. **§2 `catalog_version` example** was `2026-07-16T09:12:00Z/a3f9c1` — a format the
+     generator has never emitted. Real format is `v1/<12-hex>`, a content hash. This is
+     the same literal whose staleness caused the skipped re-sync in v1.0.3 §2.
+  2. **§2 "versioned YAML"** — there is no YAML. Skills are versioned TypeScript
+     (`src/skills/catalog.ts`).
+  3. **§5 envelope example** omitted `cursors_advanced`, normative in §6.3 and emitted
+     by `events.capture_since` since v0.1.2.
+  4. **`deadline_ms` removed** (§3, §4) — the orchestrator never read it. It advertised
+     a capability that does not exist. copilot-api's client timeout is unaffected and
+     remains the only enforcement; extra JSON properties are ignored, so senders do not
+     break.
+  5. **`deadline_exceeded` removed** (§8) — never emitted, because nothing enforces a
+     deadline here. §8 was telling copilot-api how to handle a code it can never
+     receive. §9 now states the limitation outright.
+  6. **§6.2 `part_key` stability is now pinned by a test**, verified to fail when the
+     key is made to vary. Previously the guarantee held only because the demo scope is
+     a hardcoded constant — true by accident, not by construction.
+
+  7. **`snapshot.capture` no longer accepts a scope it does not implement.**
+     `shipment_only` passed schema validation and returned an `order_flow` snapshot
+     labelled `order_flow`; it now returns `400` `invalid_input`. See §6.2.
+
+  Still open and **not** fixed here: an empty auth token disables authentication
+  entirely while §1 states bearer auth unconditionally — it fails **open**, and the
+  decision is deployment policy as much as contract. See `message-to-qa-copilot/v1.0.10`
+  §4b. No schema changed, so `catalog_version` remains `v1/3efcaf08f394`.
+- **v0.1.6** — closes the `message-from-qa-copilot/v1.0.11` closeout spec, items B1–B7:
+  1. **B1** — `deadline_exceeded` documented as **retired here, retained by copilot-api**
+     for its own client-side timeout (§8). They synthesise it into `run.error()` to
+     distinguish a worker's deadline from the reaper's `lease_expired`; keeping their name
+     was the right call, so the union simply notes which side emits it.
+  2. **B2** — `shipment_only` dropped from `scope`'s enum. **`catalog_version` moves to
+     `v1/279960341625`** — the correct outcome, not a cost: a schema changed, so the
+     version should. *One deviation from the stated acceptance, see below.*
+  3. **B3** — auth **fails closed** (§1), with an explicit `AGENTIC_SKILLS_ALLOW_UNAUTHENTICATED`
+     dev opt-in. `/healthz` documented as deliberately unauthenticated.
+  4. **B4** — §0 invariants 1–4 audited against orchestrator code; 5 confirmed by
+     copilot-api. One scoping caveat recorded in §0.
+  5. **B5** — the three demo fixtures regenerated. The two event fixtures are now
+     *generated from the real executor* (§10), not hand-written.
+  6. **B6** — §8 gains an `emitted by` column; `confirmation_required` and
+     `deadline_exceeded` are copilot-emitted in whole or part.
+  7. **B7** — §7 explicitly parked.
+
+  **Deviation on B2's acceptance criterion.** It asked that `shipment_only` still return
+  `400 invalid_input` if sent directly. With the value removed from the enum, **schema
+  validation now rejects it first, so the code is `input_schema_violation`, not
+  `invalid_input`.** Both are `400` and both are terminal-never-retry, but the code
+  differs from the spec. This is the more accurate code — the input genuinely violates
+  the schema — so it was not worked around. The executor's `invalid_input` guard is kept
+  and tested directly as defence in depth, since it is what prevents a silent
+  `order_flow` capture if the enum is ever widened ahead of the implementation again.
+  **Flagged for copilot-api to accept or object.**
+- **v0.1.7** — §7's `body` / `external_uri` mutual exclusion is **enforced** rather than
+  merely stated. It was the only asked-for behaviour in §7 that had never been
+  implemented: `ArtifactDescriptor` declared both fields as independently optional and
+  nothing checked exactly-one-of, so the rule held only because `makeArtifact` is the
+  single construction path and always sets `body`. `assertOneBody` now enforces it at
+  construction — before hashing, so an absent body names the rule it broke instead of
+  failing inside the hasher with an opaque `TypeError` — and is exported for v0.2's
+  externalisation path to reuse. `null` counts as a present body. Pinned by five tests,
+  verified to fail when the guard is neutered. Done now, while one construction path
+  exists and the rule cannot be broken, rather than during v0.2 when it can.
+  No schema changed; `catalog_version` remains `v1/279960341625`.
 
 ### Still open
 
@@ -68,6 +180,27 @@ dependency on the other outside this document.
 | 4 | The orchestrator never writes to the `autwit` schema. | One writer. |
 | 5 | copilot-api enforces a **10-minute deadline** on every call. | Matches `run.lease_until = 12m` and the worker's context deadline. |
 
+**v0.1.6 — all five invariants are now audited against code**, 1–4 by the orchestrator
+and 5 by copilot-api (`message-from-qa-copilot/v1.0.11` §A2).
+
+| # | Verified by | Evidence |
+|---|---|---|
+| 1 | orchestrator | No copilot-api client, base URL or callback exists. `copilot` appears in the orchestrator source only in comments. There is no inbound-to-copilot surface to misuse. |
+| 2 | orchestrator | The skills path holds no mutable state across calls: `SkillRegistry` is read-only, `SkillsService` keeps nothing per run, and there is no module-level mutable state under `src/skills/`. **Caveat below.** |
+| 3 | orchestrator | `external_uri` is declared on the artifact descriptor and **never assigned** anywhere; every body is inline. §7 stays theory. |
+| 4 | orchestrator | Every SQL statement in the service is a `SELECT` — no `INSERT`/`UPDATE`/`DELETE`/`DROP`/`TRUNCATE`, and no DynamoDB write call. The orchestrator cannot write the `autwit` schema because it cannot write anything. |
+| 5 | copilot-api | 10m client timeout, 12m lease, ordering asserted at boot, 660s shutdown drain. See their §A2. |
+
+**Caveat on invariant 2.** The claim holds for the skills path, which is what this
+contract governs. The *service* is not globally stateless: it holds a `JobStore` for the
+unrelated `/v1/orders:create` async-job API, which predates the skills orchestrator and
+is outside this contract. If that endpoint is ever folded into a skill, invariant 2 needs
+re-checking — it is true today by separation, not by construction.
+
+**Invariant 5 became load-bearing in v0.1.5.** Since the orchestrator enforces no
+deadline (§9), copilot-api's 10-minute timeout is the *only* deadline in the system —
+the sole thing between a hung skill and an indefinitely open run.
+
 ---
 
 ## 1. Endpoints
@@ -80,7 +213,29 @@ GET  /healthz                     liveness
 ```
 
 Base URL is config on the copilot-api side (`autwit.orchestrator.base-url`).
-Auth: bearer service token, `Authorization: Bearer <token>`.
+Auth: bearer service token, `Authorization: Bearer <token>`, on `/skills`, `/invoke`
+and `/skills/{name}/execute`.
+
+**`GET /healthz` is deliberately unauthenticated.** It returns `{"status":"ok"}` and
+nothing else — no catalog, no config, no version. Liveness probes must reach it before
+credentials are wired. Stated explicitly because an undocumented unauthenticated
+endpoint reads as an oversight to every future reviewer.
+
+**v0.1.6 — auth fails closed.** Through v0.1.5 an empty configured token disabled
+authentication entirely, so the most common misconfiguration there is — an environment
+variable that never got set — silently served `/invoke`, which routes to `order.place`,
+which is `mutating`. The failure was invisible because its signature is *requests
+succeeding*. Now:
+
+- **No token configured → every skills request is refused (`401`).** Absence of a value
+  never grants access.
+- **Disabling auth requires an explicit opt-in**, `AGENTIC_SKILLS_ALLOW_UNAUTHENTICATED=true`,
+  which is greppable in a deployment config in a way an empty string is not. It is a
+  local-development affordance and must never be set in a deployed environment.
+
+Same reasoning as §3's `env` rule: the dangerous default is the one that looks like
+success. Note this is a **breaking change for local setups** that relied on running with
+no token — they must now set the opt-in flag.
 
 ---
 
@@ -88,13 +243,15 @@ Auth: bearer service token, `Authorization: Bearer <token>`.
 
 Returns the catalog. copilot-api polls this (default 60s) and caches it into
 `autwit.skill` as a **read-only projection**. Skills are defined in the
-orchestrator's repo as versioned YAML; nobody edits them in the DB.
+orchestrator's repo as **versioned TypeScript config** (`src/skills/catalog.ts`);
+nobody edits them in the DB. *(v0.1.5: this said "versioned YAML" through v0.1.4.
+There is no YAML — the source of truth is and has always been TypeScript.)*
 
 **Response 200**
 
 ```json
 {
-  "catalog_version": "2026-07-16T09:12:00Z/a3f9c1",
+  "catalog_version": "v1/3efcaf08f394",
   "skills": [
     {
       "skill_name": "snapshot.capture",
@@ -120,6 +277,14 @@ orchestrator's repo as versioned YAML; nobody edits them in the DB.
 
 `catalog_version` changes whenever any skill changes. copilot-api compares it
 before re-syncing.
+
+**Format is `v1/<12-hex>`** — a content hash over the skill list, computed by
+`SkillRegistry` at construction. It is not a timestamp and carries no date.
+*(v0.1.5: the example above read `2026-07-16T09:12:00Z/a3f9c1` through v0.1.4 — a
+hand-written value in a format the generator has never emitted. That literal is the
+same one whose staleness caused the silently-skipped re-sync reported in
+`message-from-qa-copilot/v1.0.3` §2; it survived in this example because §2 was never
+audited. Do not parse a date out of this field.)*
 
 `input_schema` is JSON Schema and drives the ⌘K palette's form generation —
 keep it accurate and keep `enum`s populated.
@@ -152,8 +317,7 @@ The copilot's main path. One user utterance in, a result envelope out.
     "recent_steps": [
       { "seq": 4, "kind": "user_utterance", "label": "I created order XXXX" }
     ]
-  },
-  "deadline_ms": 600000
+  }
 }
 ```
 
@@ -189,7 +353,12 @@ The copilot's main path. One user utterance in, a result envelope out.
   carries everything needed for "capture events since the last milestone."
 - `correlation_id` MUST be propagated to every downstream service the skills
   touch, as `X-Autwit-Correlation-Id` (or W3C baggage if OTel is in play).
-- `deadline_ms` is advisory; copilot-api enforces its own hard timeout.
+- **v0.1.5: there is no `deadline_ms` field.** It was removed because the orchestrator
+  never read it — it advertised a capability that did not exist. The orchestrator
+  enforces **no** deadline of its own; copilot-api's 10-minute client timeout (§0
+  invariant 5, §9) is the only one, and it is unchanged. Senders are not broken:
+  an extra JSON property is ignored. See §9 before assuming a long-running skill
+  will be stopped server-side — it will not.
 
 **Response 200** — see §5 for the envelope.
 
@@ -208,8 +377,7 @@ for ⌘K palette invocations.
   "correlation_id": "autwit-qa2-20260716-8f3a",
   "run_id": "9c2e...",
   "input": { "scope": "order_flow", "label": "after_fulfilment" },
-  "session_context": { "...": "same shape as §3" },
-  "deadline_ms": 600000
+  "session_context": { "...": "same shape as §3" }
 }
 ```
 
@@ -251,6 +419,7 @@ Both `/invoke` and `/execute` return this shape.
                    "text": "Captured 9 tables. orders.total_amount changed from 1200.00 to 1450.00 since order_created." } ],
 
   "subjects_discovered": { "shipment_id": "SHP-99" },
+  "cursors_advanced": { "order.events": { "0": 1703000009000 } },
   "milestone": null,
   "error": null
 }
@@ -272,6 +441,10 @@ Both `/invoke` and `/execute` return this shape.
 - `findings[]` — the orchestrator may raise findings directly (e.g. a skill
   detects a missing event). Comparison findings are generated by copilot-api's
   own diff engine, not here.
+- `cursors_advanced` — **v0.1.5: added to the example above**, where it had been
+  missing since v0.1.0 despite being normative in §6.3 and emitted by
+  `events.capture_since`. A reader typing the envelope from §5 alone would have
+  dropped the field that makes "events since the last milestone" work.
 
 ---
 
@@ -366,6 +539,26 @@ single most important field in the contract: comparison is a key-wise join on
 `part_key`. If `order_flow` yields `oms.orders` at step 2, it must yield
 `oms.orders` at step 5 — same string, always, even if the table is empty.
 
+**v0.1.5 — `order_flow` is the only implemented scope.** The catalog's `input_schema`
+still advertises `enum: ["order_flow", "shipment_only"]`, but `shipment_only` has no
+implementation. Requesting it now returns **`400` `invalid_input`, `retryable: false`**.
+Previously it passed schema validation and returned an `order_flow` snapshot *labelled*
+`order_flow` — key-joinable against real order_flow snapshots, with nothing anywhere
+recording that the caller had asked for something else. Same reasoning as §3's `env`
+rule: a rejected request is recoverable, silently wrong evidence is not. The enum is
+deliberately left intact so `catalog_version` and the ⌘K palette's form generation are
+unaffected; it narrows when the scope is implemented or formally dropped.
+
+**v0.1.5 — this guarantee is now pinned by a test**, not merely asserted here.
+`snapshotCapture.test.ts` captures the same scope twice and requires an identical
+`part_key` sequence, uniqueness, agreement with `scope_def.tables`, and that an empty
+table still contributes its key. The test was verified to fail when `part_key` is made
+to vary. Two honest caveats: it pins the **demo** scope, whose keys are a hardcoded
+constant, so today it guards against regression rather than proving the property; and
+when the real DB-backed scope lands, that implementation must be brought under the same
+test before it is trusted — a scope that derives keys from live table introspection can
+drift in ways a constant cannot.
+
 ### 6.3 Event descriptor
 
 ```json
@@ -428,6 +621,22 @@ orchestrator returns every event with `producerTime > since_producer_time`; the
 
 ## 7. Deferred: pre-signed URIs (v0.2, NOT NOW)
 
+> **Status: parked, and deliberately unverified.** This section describes **no current
+> behaviour on either side**. `external_uri` is declared on the artifact descriptor and
+> never assigned by the orchestrator (§0 invariant 3); copilot-api implements no reader
+> for it. It is a design sketch for v0.2, retained so the field's meaning is settled
+> before anyone needs it.
+>
+> It is therefore the one section the audit did **not** cover, and that is correct rather
+> than an omission — there is no implementation to read it against. It moves to "audited"
+> only when it describes something that exists. Do not treat anything below as a
+> commitment about today's wire.
+>
+> **One exception (v0.1.7):** the `body` / `external_uri` mutual-exclusion rule below is
+> **live and enforced today**, because it constrains descriptors that already exist. It
+> was the only asked-for behaviour in §7 that had never been implemented. Everything else
+> here remains v0.2 design.
+
 When inline bodies stop scaling, an artifact descriptor may instead carry:
 
 ```json
@@ -445,6 +654,27 @@ When inline bodies stop scaling, an artifact descriptor may instead carry:
 `body` and `external_uri` are mutually exclusive (mirrors the DB's `one_body`
 check constraint). copilot-api either copies to permanent storage or stores the
 reference.
+
+**v0.1.7 — the mutual-exclusion rule is now enforced, and it is the one part of §7
+that is not parked.** Through v0.1.6 it was stated here and checked nowhere on the
+orchestrator side: `ArtifactDescriptor` declared `body` and `external_uri` as
+independently optional, and nothing asserted exactly-one-of. The rule held only because
+`makeArtifact` is the single construction path and always sets `body` — true by accident,
+in the same way §6.2's `part_key` stability was.
+
+`assertOneBody` (`src/skills/artifactBuilder.ts`) now enforces it at construction, before
+hashing, and is exported so v0.2's externalisation path reuses it rather than reinventing
+it. Both failure modes are rejected:
+
+- **Both set** — copilot-api's `one_body` constraint would reject the row, failing the run
+  late and far from the cause.
+- **Neither set** — the worse case: a descriptor with a `content_hash` over content nobody
+  can retrieve. It would validate structurally and is evidence pointing at nothing.
+
+A `null` body counts as **present** — `null` is content; absence is not.
+
+This is deliberately done *now*, while there is exactly one construction path and the rule
+cannot be broken, rather than during v0.2 when a second path appears and it can be.
 
 **Build the `ArtifactDescriptor` type with `external_uri` present but unused
 today.** It costs nothing now and avoids a contract renegotiation later.
@@ -469,17 +699,23 @@ RFC 7807. Any non-2xx:
 }
 ```
 
-**Codes copilot-api handles specially**
+**Codes, who emits them, and how copilot-api handles them**
 
-| code | copilot-api behaviour |
-|---|---|
-| `input_schema_violation` | run → `failed`. Never retry. Bug in the palette or the LLM. |
-| `invalid_input` | run → `failed`, `retryable: false`. Includes **missing `session_context.env`** (§3, v0.1.3). A config/enqueue bug — no retry will fix it. |
-| `skill_not_found` | run → `failed`. Trigger a catalog re-sync. |
-| `skill_disabled` | run → `failed`. Re-sync catalog. |
-| `confirmation_required` | run → `failed`, `code` surfaced to UI as a confirm prompt. |
-| `upstream_unavailable` | run → `failed`, `retryable: true`. UI offers retry. |
-| `deadline_exceeded` | run → `timed_out`. **Never auto-retry.** |
+**v0.1.6 — the `emitted by` column is new and matters.** Through v0.1.5 this table read
+as "codes the orchestrator sends", which was never true: at least two are raised by
+copilot-api itself and one of those never crosses the wire at all. A reader without this
+column goes looking for orchestrator emission of `confirmation_required` and does not
+find it.
+
+| code | emitted by | copilot-api behaviour |
+|---|---|---|
+| `input_schema_violation` | orchestrator | run → `failed`. Never retry. Bug in the palette or the LLM. |
+| `invalid_input` | orchestrator | run → `failed`, `retryable: false`. Includes **missing `session_context.env`** (§3, v0.1.3). A config/enqueue bug — no retry will fix it. |
+| `skill_not_found` | orchestrator | run → `failed`. Trigger a catalog re-sync. |
+| `skill_disabled` | orchestrator | run → `failed`. Re-sync catalog. |
+| `upstream_unavailable` | orchestrator | run → `failed`, `retryable: true`. UI offers retry. |
+| `confirmation_required` | **both** | copilot-api raises it **pre-emptively at enqueue** for `mutating` skills, before any call is made; the orchestrator also returns it where a skill refuses to run unconfirmed. run → `failed`, `code` surfaced to UI as a confirm prompt. |
+| `deadline_exceeded` | **copilot-api only** | **Retired as an orchestrator code in v0.1.5** — nothing here enforces a deadline, so it can never arrive over the wire. copilot-api still *synthesises* it for its own client-side timeout and stores it in `run.error()`, where it distinguishes a worker's own deadline from the reaper's `lease_expired`. Returns to the orchestrator's union if v0.2 adds server-side enforcement. |
 
 `retryable` is advisory. copilot-api **never auto-retries a `mutating` skill**
 regardless of this flag — `max_attempts` stays 1. A human clicks retry.
@@ -513,14 +749,26 @@ Cancellation is cooperative and best-effort. There is no `DELETE /invoke`. If a
 run is cancelled client-side, the orchestrator may still be working; copilot-api
 discards the result if it arrives after the run went terminal.
 
+**v0.1.5 — the orchestrator enforces no deadline at all.** Every timeout in this
+section is copilot-api's. The orchestrator has no server-side time budget, does not
+stop a long-running skill, and never returns a `deadline_exceeded` error — that code
+was removed from §8 because nothing could emit it. A skill that hangs runs until
+copilot-api's 10-minute client timeout fires and the run is marked `timed_out`
+(**outcome unknown**, per above), while the orchestrator keeps working and its result
+is discarded on arrival. This is a real limitation, not a simplification: it is why
+`timed_out ≠ failed` matters, and why `max_attempts = 1` on `invoke` (§3) is load-
+bearing rather than merely cautious. Server-side enforcement returns together with a
+re-introduced `deadline_exceeded`, not before.
+
 ---
 
 ## 10. Fake implementation
 
-copilot-api ships `FakeOrchestratorClient` (`@Profile("fake")`) replaying
-fixtures from `autwit-copilot-api/src/main/resources/fixtures/orchestrator/`
-(main rather than test: the fake profile has to be runnable, not just testable —
-the UI is developed against it). It must cover:
+copilot-api ships `FakeOrchestratorClient` (`@Profile("fake")`) replaying fixtures from
+`autwit-copilot-api/src/main/resources/fixtures/orchestrator/`. **`main`, not `test`** —
+the fake profile has to be *runnable*, not merely testable, because the UI is developed
+against it, and fixtures under `test/resources` are not on the runtime classpath. A fake
+built from a `test/resources` path cannot start. It must cover:
 
 | Fixture | Exercises |
 |---|---|
@@ -528,10 +776,10 @@ the UI is developed against it). It must cover:
 | `invoke_ready_for_member.json` | api_response + event_batch + 14 events + cursors_advanced |
 | `invoke_fulfilled.json` | second snapshot with **identical part_keys** |
 | `invoke_events_dedupe.json` | overlapping dedupe_hashes with the previous fixture |
-| `invoke_partial.json` | `status: partial`, 7 of 9 parts, `medium` finding |
+| `invoke_partial.json` | `status: partial`, 7 of 9 parts, **`medium` finding** (§5) |
 | `invoke_failed.json` | RFC 7807, `upstream_unavailable` |
 | `invoke_slow.json` | sleeps past the deadline → `timed_out` path |
-| `skills_catalog.json` | `GET /skills`, incl. a `mutating` skill and a disabled one |
+| `skills_catalog.json` | `GET /skills`, **incl. a `mutating` skill and a disabled one** |
 
 **Everything in the build plan except the final swap is testable against these.**
 The fixtures are the contract's executable form — if the real orchestrator
@@ -547,6 +795,28 @@ independent of both implementations.
 `SkillRegistry`, never hand-edited, and is asserted equal to the live catalog in CI.
 A hand-edited `catalog_version` is how a skill change reaches copilot-api with a
 version that compares equal and gets silently skipped by `SkillCatalogSync`.
+
+**v0.1.6 — the event fixtures are generated too.** `invoke_ready_for_member.json` and
+`invoke_events_dedupe.json` are produced by `orchestration-service/tools/genfixtures.ts`,
+which drives the **real executor** against a scripted Event Store. Every `content_hash`
+and `dedupe_hash` in them is computed by the live `ContentHasher`, not written by hand —
+so they cannot claim a hash the code would not produce. Regenerate rather than edit.
+
+Two properties the generator establishes deliberately, since they are what these two
+fixtures exist to exercise:
+
+- **The store's contents differ by capture time.** `ready_for_member` is taken when 14
+  events exist; the dedupe re-read happens later, once four more have arrived. Both
+  reading the same store would make the overlap meaningless.
+- **The overlap is real, not simulated.** The dedupe capture re-reads from an *older*
+  milestone cursor, so its first four events are byte-identical to four already in
+  `ready_for_member` — same `dedupe_hash`, which is what makes copilot-api's
+  `ON CONFLICT DO NOTHING` produce the delta for free.
+
+This also fixed a latent inconsistency: in the pre-v0.1.6 fixtures the four overlapping
+events carried *different* `occurred_at` values in each file despite being the same
+events. `occurred_at` is now derived from `producerTime`, so identical events are
+identical everywhere.
 
 ---
 
@@ -585,6 +855,8 @@ history, not a worklist.
    copilot-api doesn't care, but it changes realistic `deadline_ms` values.
    **Resolved:** Trusted, schema-validated operations — not container-per-invocation.
    Realistic budgets: reads complete in **seconds**, `order.place` in **minutes**.
+   *(v0.1.5: the `deadline_ms` field this item was asked about no longer exists — the
+   orchestrator enforces no deadline. The budgets above still describe real durations.)*
 
 5. **`part_key` ownership and stability**
    **Asked:** Is `part_key` naming owned by the scope definition? It must be, and must

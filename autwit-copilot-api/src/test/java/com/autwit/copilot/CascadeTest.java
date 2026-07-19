@@ -173,7 +173,7 @@ class CascadeTest extends AbstractPostgresIT {
         jdbc.update("""
                 insert into autwit.event_record
                   (session_id, artifact_id, source, topic, event_type, after_milestone_id, payload, dedupe_hash)
-                values (?, ?, 'kafka', 'orders.events', 'OrderCreated', ?, '{}'::jsonb, 'sha256:e1')
+                values (?, ?, 'eventstore', 'order.events', 'OrderCreated', ?, '{}'::jsonb, 'sha256:e1')
                 """, sessionId, artifactId, milestoneId);
 
         var comparisonId = jdbc.queryForObject("""

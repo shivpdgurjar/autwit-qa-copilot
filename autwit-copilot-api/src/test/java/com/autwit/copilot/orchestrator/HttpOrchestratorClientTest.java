@@ -122,8 +122,7 @@ class HttpOrchestratorClientTest {
                 UUID.randomUUID().toString(), "autwit-qa2-20260717-abcd1234", runId,
                 "I created order XXXX", null,
                 new InvokeRequest.SessionContext("qa2", "priya", Map.of("order_id", "XXXX"),
-                        List.of(), null, Map.of(), List.of()),
-                600000);
+                        List.of(), null, Map.of(), List.of()));
     }
 
     // ---------------------------------------------------------------- the happy path
@@ -167,8 +166,7 @@ class HttpOrchestratorClientTest {
         var envelope = client().execute("snapshot.capture", new InvokeRequest.Execute(
                 UUID.randomUUID().toString(), "autwit-qa2-x", UUID.randomUUID().toString(),
                 Map.of("scope", "order_flow"),
-                new InvokeRequest.SessionContext("qa2", "priya", Map.of(), List.of(), null, Map.of(), List.of()),
-                600000));
+                new InvokeRequest.SessionContext("qa2", "priya", Map.of(), List.of(), null, Map.of(), List.of())));
 
         assertThat(envelope.artifactsOrEmpty()).hasSize(9);
     }
@@ -179,7 +177,12 @@ class HttpOrchestratorClientTest {
 
         var catalog = client().skills();
 
-        assertThat(catalog.catalogVersion()).isEqualTo("2026-07-16T09:12:00Z/a3f9c1");
+        // §2: the format is `v1/<12-hex>`, a content hash over the skill list — not a
+        // timestamp. This assertion held the literal `2026-07-16T09:12:00Z/a3f9c1` until
+        // v0.1.5, a shape the orchestrator's generator has never emitted; it was an
+        // example value that reached both the contract and our fixture by hand. Do not
+        // parse a date out of this.
+        assertThat(catalog.catalogVersion()).isEqualTo("v1/279960341625");
         assertThat(catalog.skills()).hasSize(5);
         // The field ADR-001 trusts to decide whether a dead worker's run may be re-run.
         assertThat(catalog.skills()).filteredOn(OrchestratorClient.Skill::isMutating)
@@ -215,9 +218,12 @@ class HttpOrchestratorClientTest {
         assertThat(LAST_BODY.get())
                 .contains("\"run_id\":\"" + runId + "\"")
                 .contains("\"session_context\"")
-                .contains("\"deadline_ms\":600000")
+                .contains("\"correlation_id\":\"autwit-qa2-20260717-abcd1234\"")
                 .contains("\"subjects\":{\"order_id\":\"XXXX\"}")
-                .doesNotContain("runId");
+                .doesNotContain("runId")
+                // v0.1.5 removed deadline_ms — the orchestrator accepted it and never
+                // read it. §9: it enforces no deadline, so ours is the only one.
+                .doesNotContain("deadline_ms");
     }
 
     // ---------------------------------------------------------------- §8 errors
@@ -264,8 +270,7 @@ class HttpOrchestratorClientTest {
 
         assertThatThrownBy(() -> client().execute("snapshot.capture", new InvokeRequest.Execute(
                 UUID.randomUUID().toString(), "c", UUID.randomUUID().toString(), Map.of("scope", "nope"),
-                new InvokeRequest.SessionContext("qa2", "p", Map.of(), List.of(), null, Map.of(), List.of()),
-                600000)))
+                new InvokeRequest.SessionContext("qa2", "p", Map.of(), List.of(), null, Map.of(), List.of()))))
                 .isInstanceOf(OrchestratorException.Failed.class)
                 .satisfies(e -> assertThat(((OrchestratorException) e).problem().code())
                         .isEqualTo("input_schema_violation"));

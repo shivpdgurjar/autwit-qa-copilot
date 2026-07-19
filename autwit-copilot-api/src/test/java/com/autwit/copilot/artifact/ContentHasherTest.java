@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.json.JsonMapper;
@@ -23,9 +24,19 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  */
 class ContentHasherTest {
 
-    /** Mirrors the application.yml Jackson config that reaches ContentHasher at runtime. */
+    /**
+     * Mirrors the application.yml Jackson config that reaches ContentHasher at runtime —
+     * <b>including {@code default-property-inclusion: non_null}</b>.
+     *
+     * <p>That inclusion setting was missing here for as long as this test existed, and
+     * its absence is why the null-dropping defect below survived a passing suite: the
+     * unit test built a cleaner mapper than production ever used, so it exercised a
+     * hasher that could not exhibit the bug. A harness that quietly diverges from the
+     * config under test proves less than it appears to.
+     */
     private static final ObjectMapper MAPPER = JsonMapper.builder()
             .enable(DeserializationFeature.USE_BIG_DECIMAL_FOR_FLOATS)
+            .serializationInclusion(JsonInclude.Include.NON_NULL)
             .build();
 
     private final ContentHasher hasher = new ContentHasher(MAPPER);
@@ -56,6 +67,72 @@ class ContentHasherTest {
     void arrayOrderIsPreserved() {
         // Sorting keys must not imply sorting arrays: row order is data.
         assertThat(hasher.canonicalJson(List.of(3, 1, 2))).isEqualTo("[3,1,2]");
+    }
+
+    /**
+     * A null-valued field must survive canonicalisation.
+     *
+     * <p>This is the defect that broke every event_batch artifact the orchestrator sent
+     * once they began generating fixtures with their own hasher. The application sets
+     * {@code default-property-inclusion: non_null} — correct for API responses, where a
+     * null field is noise — and ContentHasher copies that mapper. Inherited, it dropped
+     * null-valued keys from the canonical form, so a body containing
+     * {@code "correlationId": null} hashed as though the key were absent and every
+     * comparison against their hash failed.
+     *
+     * <p>§6.1 is "hash exactly what was sent". Absence and null are different claims
+     * about the source system, and an evidence store that cannot tell them apart is
+     * lying about its evidence.
+     */
+    @Test
+    void nullValuedFieldsAreKeptNotDropped() {
+        var body = new LinkedHashMap<String, Object>();
+        body.put("orderId", "XXXX");
+        body.put("correlationId", null);
+
+        assertThat(hasher.canonicalJson(body))
+                .as("null is content; the app's non_null inclusion must not reach the hasher")
+                .isEqualTo("{\"correlationId\":null,\"orderId\":\"XXXX\"}");
+    }
+
+    /**
+     * The distinction the bug erased: a present-but-null field and an absent field are
+     * different bodies and must not collide.
+     */
+    @Test
+    void anAbsentFieldAndANullFieldAreDifferentHashes() {
+        var withNull = new LinkedHashMap<String, Object>();
+        withNull.put("orderId", "XXXX");
+        withNull.put("correlationId", null);
+
+        assertThat(hasher.hash(ArtifactFormat.JSON, withNull))
+                .isNotEqualTo(hasher.hash(ArtifactFormat.JSON, Map.of("orderId", "XXXX")));
+    }
+
+    /**
+     * Ground truth from the other implementation. This hash was produced by the
+     * orchestrator's `ContentHasher` via their fixture generator, for the body in
+     * `invoke_ready_for_member.json`'s `order_events` artifact — a top-level array whose
+     * objects carry `correlationId: null` and `sourceSystem: null`.
+     *
+     * <p>Independently reproduced with Python's hashlib over
+     * {@code json.dumps(body, sort_keys=True, separators=(',',':'))}, so it asserts
+     * §6.1's definition rather than either side's code. This is the cross-implementation
+     * check the Q1 vectors were meant to be — they passed on both sides and still missed
+     * this, because none of the six contained a null.
+     */
+    @Test
+    void nullsInsideAnArrayOfObjectsMatchTheOrchestratorsHash() {
+        var first = new LinkedHashMap<String, Object>();
+        first.put("eventId", "evt-0000");
+        first.put("correlationId", null);
+        var second = new LinkedHashMap<String, Object>();
+        second.put("eventId", "evt-0001");
+        second.put("sourceSystem", null);
+
+        assertThat(hasher.canonicalJson(List.of(first, second)))
+                .isEqualTo("[{\"correlationId\":null,\"eventId\":\"evt-0000\"},"
+                        + "{\"eventId\":\"evt-0001\",\"sourceSystem\":null}]");
     }
 
     @Test

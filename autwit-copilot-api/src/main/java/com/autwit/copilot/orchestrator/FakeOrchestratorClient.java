@@ -12,6 +12,7 @@ import com.autwit.copilot.config.AutwitProperties;
 import com.autwit.copilot.orchestrator.dto.Envelope;
 import com.autwit.copilot.orchestrator.dto.InvokeRequest;
 import com.autwit.copilot.orchestrator.dto.Problem;
+import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,8 +63,25 @@ public class FakeOrchestratorClient implements OrchestratorClient {
     private final AutwitProperties props;
     private final Map<String, Map<String, Object>> cache = new ConcurrentHashMap<>();
 
+    /**
+     * Inclusion pinned to ALWAYS, for the same reason as {@code ContentHasher}.
+     *
+     * <p>{@link ObjectMapper#convertValue} round-trips through serialisation, so on the
+     * application's mapper — which sets
+     * {@code spring.jackson.default-property-inclusion: non_null} — every null-valued
+     * field in a fixture body is silently dropped on the way into the {@code Envelope}.
+     * The real client does not do this: {@code HttpOrchestratorClient} uses
+     * {@code readValue}, which never serialises, so nulls arrive intact.
+     *
+     * <p>That divergence is the whole problem. §10 calls the fixtures "the contract's
+     * executable form", which is only true while the fake delivers the same bytes the
+     * real client would. Here it did not, and it presented as a {@code content_hash}
+     * mismatch on every {@code event_batch} the orchestrator generated — a body carrying
+     * {@code "correlationId": null} hashed as though the key were absent. A fake that
+     * quietly sanitises its input tests a contract nobody implements.
+     */
     public FakeOrchestratorClient(ObjectMapper mapper, AutwitProperties props) {
-        this.mapper = mapper;
+        this.mapper = mapper.copy().setSerializationInclusion(JsonInclude.Include.ALWAYS);
         this.props = props;
         log.warn("FakeOrchestratorClient active — replaying fixtures from {}. "
                 + "This profile must never be enabled against a real environment.", DIR);

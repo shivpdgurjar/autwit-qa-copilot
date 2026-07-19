@@ -224,19 +224,22 @@ public class RunWorker {
     private Envelope call(Run run) {
         var context = contexts.build(run.sessionId());
         var session = sessions.find(run.sessionId()).orElseThrow();
-        long deadlineMs = props.orchestrator().timeout().toMillis();
 
         var skillName = (String) run.request().get("skill_name");
         if (skillName != null) {
+            // §6.3: the cursor is ours to carry. The orchestrator is stateless and the
+            // palette cannot know it, so without this every capture re-reads the order's
+            // whole history — correct, thanks to dedupe_hash, but unbounded.
+            var input = SkillInputs.withEventCursor(skillName, asMap(run.request().get("input")), context);
             return orchestrator.execute(skillName, new InvokeRequest.Execute(
                     run.sessionId().toString(), session.correlationId(), run.runId().toString(),
-                    asMap(run.request().get("input")), context, deadlineMs));
+                    input, context));
         }
 
         return orchestrator.invoke(new InvokeRequest.Invoke(
                 run.sessionId().toString(), session.correlationId(), run.runId().toString(),
                 (String) run.request().get("message"), (String) run.request().get("skill_hint"),
-                context, deadlineMs));
+                context));
     }
 
     /**

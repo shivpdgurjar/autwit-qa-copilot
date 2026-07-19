@@ -82,9 +82,9 @@ public class HttpOrchestratorClient implements OrchestratorClient {
      *               This is not defensive tidying. The contract is snake_case
      *               throughout; our ObjectMapper is configured for that, and a plain
      *               {@code RestClient.builder()} is not — so without this the client
-     *               serialises {@code runId}, {@code sessionContext} and
-     *               {@code deadlineMs}, the orchestrator sees none of the fields it
-     *               requires, and every single call fails. Spring Boot's
+     *               serialises {@code runId} and {@code sessionContext} rather than
+     *               {@code run_id} and {@code session_context}, the orchestrator sees
+     *               none of the fields it requires, and every single call fails. Spring Boot's
      *               auto-configured builder would supply the right converter today, so
      *               this would work by luck and break the moment someone constructed
      *               the client with a bare builder. The contract is too important to
