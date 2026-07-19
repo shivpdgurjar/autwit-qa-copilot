@@ -1139,10 +1139,13 @@ components:
           type: object
           additionalProperties: true
           description: |
-            Per-topic offsets, e.g. {"orders.events":{"0":10432}}. Analysis reads
-            offset windows, not time windows — time windows are lossy under load.
+            Per-topic cursors, e.g. {"order.events":{"0":1703000009000}}. Analysis
+            reads offset windows, not time windows — time windows are lossy under
+            load. The value is an opaque per-source ordering token; for
+            events.capture_since it is a producerTime in epoch millis, not a Kafka
+            offset (SKILL_CONTRACT §6.3).
           examples:
-            - orders.events: { "0": 10432 }
+            - order.events: { "0": 1703000009000 }
         note: { type: string }
 
     # ---- snapshots

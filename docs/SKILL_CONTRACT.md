@@ -1,25 +1,60 @@
 # SKILL_CONTRACT.md
 
 **Between:** `autwit-copilot-api` (client) and `autwit-ai-orchestrator` (server)
-**Version:** 0.1.1
-**Status:** **Ratified** by both sessions, 2026-07-17. Build against this.
+**Version:** 0.1.3
+**Status:** Ratified by both sides. v0.1.2 accepted by copilot-api in
+`message-from-qa-copilot/v1.0.5`; v0.1.3 amendments requested in the same document.
 
 This is the only shared surface between the two services. Neither side may add a
 dependency on the other outside this document.
 
 ## Changelog
 
-**0.1.1 — ratified.** See `CONTRACT_RATIFICATION_REQUEST.md` and
-`RATIFICATION_RESPONSE.md` for the reasoning behind each.
+- **v0.1.1** — orchestrator ratification (see `RATIFICATION_RESPONSE.md`):
+  §6.1 canonical-body/content_hash **defined** (key-sorted, scale-preserving; test
+  vectors reproduced in both Python and Node); §5 partial finding severity `warn` →
+  **`medium`**; §8 `retryable` **not actionable for `/invoke`** (no `run_id` replay in
+  v0.1); §3 replay stays SHOULD, "v0.1: does not; v0.2: MUST, ≥24h durable window".
+- **v0.1.2** — `events.capture_since` is now **order-scoped**: input changed from
+  `{topic, from_offset}` to `{order_id, since_producer_time?}`; it searches the Event
+  Store for an order's event headers, filters by `producerTime`, and returns each
+  event's contents. Environment comes from `session_context.env`. `cursors_advanced`
+  carries the max `producerTime` under `order.events`/`"0"` (see §6.3). `impl_type` is
+  now `http`, version `1.2.0`. `catalog_version` changes automatically.
+- **v0.1.2 (re-issue)** — corrects a packaging defect in the first v0.1.2 handoff:
+  the document was *labelled* 0.1.2 but its body was still the pre-ratification
+  v0.1.0 text, so the ratified §3, §5, §6.1 and §8 amendments were present only in
+  this changelog, never in the body. All four are now applied in place. No
+  semantic change to v0.1.2 — this is the same contract, correctly rendered.
+- **v0.1.3** — three fixes, all from `message-from-qa-copilot/v1.0.5`:
+  1. **Topic string is `order.events`, singular, everywhere.** v0.1.2's §3 and §6.3
+     gave contradictory cursor keys for the same field: §3's examples said
+     `orders.events`, §6.3 said `order.events`. The executor emits the **singular**
+     form, so the singular wins and §3's examples were the error. Fixed at former
+     lines 118, 121 and 334. This is not cosmetic — copilot-api's
+     `SessionContextBuilder.mergeCursors` keys on the raw topic string with no
+     normalisation, so the two forms are independent keys that never collide and a
+     stale plural cursor would be carried forever without erroring.
+  2. **§6.3's event descriptor example also corrected** beyond the topic string: it
+     showed `"source": "kafka"` and a Kafka-style `source_offset`, where the executor
+     emits `"source": "eventstore"` and a stringified `producerTime`. Not reported by
+     copilot-api — found while fixing (1). `source` is not constrained to one value;
+     the example now shows what the only current emitter actually produces.
+  3. **Missing `session_context.env` is now an error, not an empty success** (§3, §8).
+     Previously `events.capture_since` returned a valid empty capture when `env` was
+     absent, making "we could not look" indistinguishable from "we looked and found
+     nothing". Only the second supports a passing verdict, so a config error that
+     dropped `env` rendered as a clean green run that proved nothing. Now `400`
+     `invalid_input`, `retryable: false`.
+  No change to any `input_schema` or `output_schema`, so `catalog_version` is
+  unchanged at `v1/3efcaf08f394` — (3) changes error behaviour, not the wire shape.
 
-- **§6.1** — "canonical body" is now defined, not implied. Both sides reproduce the
-  same six test vectors independently (Java and Node); the vectors are the tiebreaker.
-- **§5** — a partial capture raises a `medium` finding, not a `warn` one. There is no
-  `warn` severity; it was a Verdict value leaking into the wrong scale.
-- **§8** — `retryable` is explicitly not actionable for `invoke`.
-- **§3** — annotated: v0.1 does not replay `run_id`; v0.2 will, with a ≥24h durable
-  window.
-- **§11** — every open item now has an answer.
+### Still open
+
+- **v0.2 `run_id` replay.** Offered, not scheduled. copilot-api gains nothing until it
+  ships, and loses nothing by waiting: `invoke` is conservative today and correct.
+- **`idempotent` as a third `side_effects` value.** Same — worth doing, deferred
+  deliberately rather than guessed at.
 
 ---
 
@@ -110,10 +145,10 @@ The copilot's main path. One user utterance in, a result envelope out.
     "subjects": { "order_id": "XXXX", "member_id": "M-1234" },
     "milestones": [
       { "name": "order_created", "milestone_id": "aa..", "marked_at": "2026-07-16T09:00:00Z",
-        "snapshot_id": "bb..", "event_cursor": { "orders.events": { "0": 10432 } } }
+        "snapshot_id": "bb..", "event_cursor": { "order.events": { "0": 10432 } } }
     ],
     "latest_snapshot_id": "bb..",
-    "event_cursors": { "orders.events": { "0": 10432 } },
+    "event_cursors": { "order.events": { "0": 10432 } },
     "recent_steps": [
       { "seq": 4, "kind": "user_utterance", "label": "I created order XXXX" }
     ]
@@ -128,15 +163,28 @@ The copilot's main path. One user utterance in, a result envelope out.
   `run_id` is re-sent, the orchestrator SHOULD return the prior result rather
   than re-executing. Critical for `side_effects: mutating` skills.
 
-  **v0.1: the orchestrator does NOT replay.** Durable replay needs a store, and
-  invariant 2 keeps the orchestrator stateless. So copilot-api never auto-retries an
-  `invoke` — `max_attempts` stays 1, a dead worker's run reaps to `timed_out`, and a
-  human decides (ADR-001).
+  **v0.1: the orchestrator does NOT replay.** Invariant 2 makes the orchestrator
+  stateless, and durable replay needs a `run_id` → prior-envelope store, which is
+  not in v0.1. Consequently `invoke` MUST stay at `max_attempts = 1`: a dead
+  worker's `invoke` reaps to `timed_out` and a human decides. This is the
+  conservative default and it is correct under uncertainty.
 
-  **v0.2: this becomes MUST**, with a durable `run_id` → envelope store and a replay
-  window of **≥24h** — comfortably beyond the 12m lease and surviving an orchestrator
-  restart. A window shorter than the lease would give the worst of both. At that point
-  copilot-api can raise `invoke` to `max_attempts = 2` and reclaim becomes safe.
+  **v0.2: this becomes MUST.** The orchestrator will add a durable idempotency
+  store keyed by `run_id` with replay-on-match over a window of **≥ 24 hours** —
+  comfortably beyond the 12-minute lease, and durable across an orchestrator
+  restart. (A window shorter than the lease would give the worst of both.) That
+  promotes this clause from SHOULD to MUST and lets copilot-api raise `invoke` to
+  `max_attempts = 2` and make reclaim safe.
+- **v0.1.3: `session_context.env` is REQUIRED** for any skill that reaches an
+  environment-specific system (today: `events.capture_since`, `snapshot.capture`).
+  Absent or empty → `400` `invalid_input`, `retryable: false`. The orchestrator
+  MUST NOT substitute a default environment and MUST NOT return an empty success.
+
+  The rule exists because this is an evidence tool. "We looked and found no new
+  events" and "we could not look" are different claims, and only the first supports
+  a passing verdict. Prior to v0.1.3 a dropped `env` produced a clean empty capture
+  — a green run that proved nothing, invisible precisely when it mattered. The same
+  reasoning as §5's "don't silently drop this" for partial captures.
 - `session_context` is the whole reason the orchestrator can be stateless. It
   carries everything needed for "capture events since the last milestone."
 - `correlation_id` MUST be propagated to every downstream service the skills
@@ -213,9 +261,9 @@ Both `/invoke` and `/execute` return this shape.
 - `status` ∈ `succeeded | failed | partial`. `partial` means some artifacts
   landed and some didn't — copilot-api marks the snapshot `partial` and the run
   `succeeded`, then raises a **`medium`** finding. Don't silently drop this.
-  (0.1.1: this said `warn`, which is not a Severity — it is a Verdict value. An
-  implementation that followed the old wording sent `severity: "warn"`, the DB's
-  `finding_severity_check` rejected it, and *every* partial run failed.)
+  (There is no `warn` severity. `warn` is a **Verdict** value; the severity scale
+  is `info | low | medium | high | critical` — see §6.4. The orchestrator emits
+  `medium`.)
 - `notes[]` is the "keeps telling about current analysis" channel. copilot-api
   persists each as a `step(kind=analysis)` and emits `analysis.note` over SSE.
   Renders in chat, not the timeline.
@@ -255,29 +303,36 @@ Both `/invoke` and `/execute` return this shape.
   the `artifact_id`.
 - `body` shape follows `format`: parsed JSON for `json`, a string for
   `xml`/`text`/`csv`/`html`/`md`, base64 for `binary`.
-- `content_hash` is `"sha256:"` followed by the lowercase hex sha256 of the canonical
-  body, where **canonical** is defined as:
-  - **`json` / `jsonb`** — the UTF-8 encoding of the JSON text with object keys sorted
-    lexicographically by Unicode code point at every nesting level, no insignificant
-    whitespace, array order preserved, and numbers serialised with **exactly the scale
-    they were received with**.
-  - **`xml`, `text`, `csv`, `html`, `md`** — the UTF-8 encoding of the string, with no
-    normalisation of any kind.
-  - **`binary`** — the raw bytes, after base64-decoding the transport encoding.
+- `content_hash` is `"sha256:"` followed by the lowercase hex sha256 of the
+  **canonical body**, where canonical is defined as:
 
-  Implementations MUST reproduce the vectors in `CONTRACT_RATIFICATION_REQUEST.md` Q1.
-  **The vectors, not the fixtures, are the tiebreaker** — a fixture is only ever as
-  right as the hasher that generated it.
+  | `format` | Canonical bytes |
+  |---|---|
+  | `json`, `jsonb` | The UTF-8 encoding of the JSON text with object keys sorted lexicographically **by Unicode code point at every nesting level**, no insignificant whitespace, **array order preserved**, and numbers serialised with **exactly the scale they were received with** (`1200.00` stays `1200.00`, not `1200.0`). |
+  | `xml`, `text`, `csv`, `html`, `md` | The UTF-8 encoding of the string, byte for byte, with **no normalisation of any kind** — no trimming, no newline normalisation, no XML canonicalisation. |
+  | `binary` | The raw bytes **after** base64-decoding the transport encoding. The hash never covers the base64 text. |
 
-  copilot-api recomputes and rejects on mismatch, which is what catches truncation: a
-  half-written 9-table dump still parses as valid JSON.
+  Two rules carry the weight:
 
-  **Scale preservation is load-bearing**, not a detail. Any stack whose JSON parser
-  lands numbers in a float destroys it silently, and it presents as a hash bug rather
-  than a number bug — both sides hit this independently. copilot-api sets Jackson's
-  `USE_BIG_DECIMAL_FOR_FLOATS`; the orchestrator emits scale-carrying numbers as JSON
-  strings and canonicalises any genuine JSON number from its original token rather than
-  a parsed float.
+  1. **Lexicographic key sorting.** This is the only rule that lets a Python or
+     Node implementation agree with a JVM one without sharing code. It is *not*
+     Postgres `jsonb`'s ordering (which sorts by length, then bytes) — do not
+     derive the hash from a `jsonb` round-trip.
+  2. **Scale is preserved, never normalised.** `1200.00` and `1200.0` are the
+     same number and different evidence. Any language whose JSON parser lands
+     numbers in a float will silently destroy this (the JVM fix is Jackson's
+     `USE_BIG_DECIMAL_FOR_FLOATS`; the Node fix is to canonicalise from the
+     original number token rather than a parsed float). This looks like a hash
+     bug but is a number bug.
+
+  The governing idea is **hash exactly what was sent** — an artifact is evidence,
+  and normalising evidence hides the diffs this product exists to find.
+
+  Implementations MUST reproduce the six test vectors in
+  `CONTRACT_RATIFICATION_REQUEST.md` Q1. **If either side's fixtures drift, the
+  test vectors — not the fixtures — are the tiebreaker.**
+
+  copilot-api recomputes and rejects on mismatch — this catches truncation.
 - `meta.pk_columns` is **required** for `rdbms_table`. The diff engine cannot
   do a key-wise join without it.
 - `meta.ignore_columns` is surfaced in the diff UI. It is never applied
@@ -315,20 +370,27 @@ single most important field in the contract: comparison is a key-wise join on
 
 ```json
 {
-  "source": "kafka",
-  "topic": "orders.events",
+  "source": "eventstore",
+  "topic": "order.events",
   "event_type": "OrderFulfilled",
   "event_key": "XXXX",
-  "source_offset": "10455",
+  "source_offset": "1703000009000",
   "occurred_at": "2026-07-16T09:15:03Z",
   "payload": { "orderId": "XXXX", "status": "FULFILLED" },
   "dedupe_hash": "sha256:c1d2..."
 }
 ```
 
+- **v0.1.3:** `source` and `source_offset` are per-emitter, not fixed. For
+  `events.capture_since` — the only emitter today — `source` is `"eventstore"` and
+  `source_offset` is the **stringified `producerTime` (epoch millis)**, not a Kafka
+  offset. Do not parse `source_offset` as an integer offset or assume it is
+  monotonic across sources; treat it as an opaque per-source ordering token.
 - `dedupe_hash` MUST be deterministic over `(source, topic, source_offset)` when
   offsets exist, else over the canonical payload. copilot-api inserts with
-  `ON CONFLICT (session_id, dedupe_hash) DO NOTHING`.
+  `ON CONFLICT (session_id, dedupe_hash) DO NOTHING`. (For `events.capture_since`
+  the orchestrator hashes `(source, event_id, producer_time)` — the eventId is the
+  stable unique offset.)
 - **This is how "events since step 2" works:** the orchestrator re-reads from
   the cursor in `session_context.event_cursors` and returns everything it sees.
   copilot-api's unique constraint makes the delta emerge for free. The
@@ -337,8 +399,15 @@ single most important field in the contract: comparison is a key-wise join on
 - New cursors go in `cursors_advanced`:
 
 ```json
-"cursors_advanced": { "orders.events": { "0": 10455 } }
+"cursors_advanced": { "order.events": { "0": 1703000009000 } }
 ```
+
+**v0.1.2 — `events.capture_since` cursor semantics (order-scoped).** The cursor value
+is the max `producerTime` (epoch millis) seen this run, under key `order.events`,
+partition `"0"`. copilot-api stores it in `session_context.event_cursors` and passes
+it back as `since_producer_time` on the next call — that is the "since". The
+orchestrator returns every event with `producerTime > since_producer_time`; the
+`dedupe_hash` still makes overlaps idempotent for free.
 
 ### 6.4 Finding descriptor
 
@@ -405,6 +474,7 @@ RFC 7807. Any non-2xx:
 | code | copilot-api behaviour |
 |---|---|
 | `input_schema_violation` | run → `failed`. Never retry. Bug in the palette or the LLM. |
+| `invalid_input` | run → `failed`, `retryable: false`. Includes **missing `session_context.env`** (§3, v0.1.3). A config/enqueue bug — no retry will fix it. |
 | `skill_not_found` | run → `failed`. Trigger a catalog re-sync. |
 | `skill_disabled` | run → `failed`. Re-sync catalog. |
 | `confirmation_required` | run → `failed`, `code` surfaced to UI as a confirm prompt. |
@@ -414,11 +484,11 @@ RFC 7807. Any non-2xx:
 `retryable` is advisory. copilot-api **never auto-retries a `mutating` skill**
 regardless of this flag — `max_attempts` stays 1. A human clicks retry.
 
-**`retryable` is not actionable for `invoke` at all.** The orchestrator does not
-replay `run_id` in v0.1 (§3), so an automatic retry of an `invoke` would re-execute
-whatever the LLM chose the first time — and copilot-api cannot know what that was,
-because the skill is selected after enqueue. The flag is surfaced to the UI so a human
-can decide; nothing acts on it automatically.
+**`retryable` is not actionable for `/invoke`.** The orchestrator does not
+replay `run_id` in v0.1 (§3), so it cannot dedupe a re-sent `invoke`. copilot-api
+MUST therefore never auto-retry an `invoke` — on any code, `retryable: true`
+included. The flag is a hint for humans and for `/execute` on `side_effects: none`
+skills only. This constraint lifts when §3's v0.2 idempotency store lands.
 
 ---
 
@@ -468,69 +538,88 @@ The fixtures are the contract's executable form — if the real orchestrator
 diverges from them, one of the two sides is wrong and the fixtures are the
 tiebreaker.
 
-**Except for `content_hash`, where §6.1's vectors are the tiebreaker, not the
-fixtures.** A fixture is only ever as correct as the hasher that generated it, so two
-sides comparing fixtures would just be comparing their own bugs. The vectors are
-computed independently of both implementations, which is the only way that check means
-anything.
+**One carve-out (v0.1.1, §6.1):** for `content_hash` the **Q1 test vectors** are the
+tiebreaker, not the fixtures. Each side generates its fixtures with its own hasher,
+so the fixtures agree with whatever that hasher got wrong; only the vectors are
+independent of both implementations.
 
-**A fixture must represent what the real orchestrator sends** — not what copilot-api
-can tolerate. `invoke_partial.json` emitted `severity: "warn"` for exactly one release
-and it was wrong: the real orchestrator emits `medium`, so the fixture was testing
-copilot-api's normalisation shim while quietly hiding the fact that no real sender
-behaves that way. Defensive shims get their own unit tests; fixtures stay honest.
+**Fixture currency:** `skills_catalog.json` is generated from the orchestrator's
+`SkillRegistry`, never hand-edited, and is asserted equal to the live catalog in CI.
+A hand-edited `catalog_version` is how a skill change reaches copilot-api with a
+version that compares equal and gets silently skipped by `SkillCatalogSync`.
 
 ---
 
 ## 11. Resolved items
 
-All answered as of 0.1.1. Questions in `CONTRACT_RATIFICATION_REQUEST.md`, answers in
-`RATIFICATION_RESPONSE.md`; this is the summary both sides build against.
+All eight questions copilot-api raised at ratification are answered. Each is kept in
+**Asked / Resolved** form rather than deleted: the questions are the record of *why*
+the contract says what it does, and that provenance has already earned its keep — it
+is what let both sides diagnose the v0.1.2 body/changelog split. Nothing in this
+section is open. The authoritative answers live in the body sections cited; this is
+history, not a worklist.
 
-1. **Does `/invoke` support `run_id` idempotency replay?** **No, in v0.1** — durable
-   replay needs a store and invariant 2 keeps the orchestrator stateless. copilot-api
-   therefore never auto-retries an `invoke`: `max_attempts` stays 1 and a dead worker's
-   run reaps to `timed_out` (ADR-001). v0.2 promotes §3 to MUST with a ≥24h durable
-   window, at which point `invoke` can go to 2. See §3, §8.
-2. **DB credentials?** **The orchestrator holds them** — Postgres for the Order and
-   Shipment DBs, AWS SSO for PickPack DynamoDB. It reads the sources directly rather
-   than via an autwit-core query service. Consequence: **the orchestrator owns snapshot
-   scope definitions.**
-3. **Where do snapshot scopes live?** The orchestrator's repo, as versioned config,
-   surfaced via the `scope` enum in `snapshot.capture`'s `input_schema`. As assumed.
-4. **Skill execution isolation?** Trusted, schema-validated typed operations — not a
-   container per invocation. Realistic `deadline_ms`: reads (`snapshot.capture`,
-   `api.fetch_order`, `events.capture_since`) complete in **seconds**; `order.place`
-   drives a browser and takes **minutes**. copilot-api's 10m timeout covers both.
-5. **Is `part_key` owned by the scope definition and stable?** **Confirmed.** Assigned
-   by the scope definition, never by the skill at runtime, and stable for the life of a
-   scope. The **full set is emitted even when a table is empty** — an empty part
-   (`body: []`, `row_count: 0`, a real `content_hash`) is distinct from a missing one,
-   and a configured part is never omitted. An unreachable source produces a `partial`
-   snapshot plus a finding, not a silent gap. A change to the `part_key` set is treated
-   as a **coordinated breaking change**, because the diff engine joins on it and drift
-   reads as false `high` findings.
-6. **What is the "canonical body"?** **Defined in §6.1 and ratified.** Both sides
-   reproduced the same six vectors independently — Java and Node — including the two
-   scale vectors, which must not collide. The vectors are the tiebreaker.
-7. **`severity: "warn"`.** **Resolved: a partial capture raises `medium`.** §5 amended.
-   copilot-api still normalises off-scale severities to `medium` rather than dropping
-   the finding, as defence against a sender that has not read this — but the fixtures
-   emit `medium`, because a fixture that disagreed with the real orchestrator would let
-   that shim mask a divergence instead of surfacing it.
-8. **Is `side_effects` accurate?** **Confirmed: a deliberate, reviewed declaration** in
-   each skill's versioned YAML, not a default that makes a schema validate.
-   `order.place` and `order.fulfil` are `mutating`; the read paths are `none`. A
-   `none → mutating` transition is a **coordinated breaking change** — the old version
-   stays enabled until copilot-api confirms its re-sync, so there is no window where a
-   now-mutating skill is still cached as reclaimable. **Closed at `none | mutating` for
-   v0.1**; an `idempotent` third value (which would let copilot-api safely reclaim an
-   idempotent-mutating skill) would be a coordinated v0.2 amendment, never a surprise
-   in the catalog.
+1. **Idempotency replay on `/invoke`**
+   **Asked:** Does `/invoke` support `run_id` idempotency replay? If not, copilot-api
+   must never retry, and §8's `retryable` becomes meaningless.
+   **Resolved (§3, §8):** v0.1 does **not** replay — invariant 2 makes the orchestrator
+   stateless and durable replay needs a `run_id` → prior-envelope store that v0.1 does
+   not have. So `invoke` stays at `max_attempts = 1` and `retryable` is explicitly not
+   actionable for `/invoke`. v0.2 adds a durable store with a **≥24h** replay window,
+   promoting the clause to MUST.
 
-### Still open
+2. **DB credential ownership**
+   **Asked:** Does the orchestrator hold DB credentials for OMS/shipment Postgres, or
+   go through an autwit-core query service? Changes who owns snapshot scope definitions.
+   **Resolved:** The orchestrator holds them directly. Scope definitions are therefore
+   orchestrator-owned — see item 3.
 
-- **v0.2 `run_id` replay.** Offered, not scheduled. copilot-api gains nothing until it
-  ships, and loses nothing by waiting: `invoke` is conservative today and correct.
-- **`idempotent` as a third `side_effects` value.** Same — worth doing, deferred
-  deliberately rather than guessed at.
+3. **Where snapshot scopes live**
+   **Asked:** Where do snapshot scopes (`order_flow` = which 9 tables) live? Assumed
+   orchestrator repo, exposed via the `scope` enum in `snapshot.capture`'s `input_schema`.
+   **Resolved:** Confirmed as assumed — orchestrator repo, surfaced through the `scope`
+   enum.
+
+4. **Skill execution isolation**
+   **Asked:** Container per invocation, or trusted scripts with schema-validated args?
+   copilot-api doesn't care, but it changes realistic `deadline_ms` values.
+   **Resolved:** Trusted, schema-validated operations — not container-per-invocation.
+   Realistic budgets: reads complete in **seconds**, `order.place` in **minutes**.
+
+5. **`part_key` ownership and stability**
+   **Asked:** Is `part_key` naming owned by the scope definition? It must be, and must
+   be stable — the diff engine breaks silently if it drifts.
+   **Resolved:** Confirmed explicitly. `part_key` is owned by the scope definition and
+   is stable; see §6.2's guarantee that a scope yields the same `part_key` strings on
+   every run, even for empty tables.
+
+6. **Definition of "canonical body" for `content_hash`**
+   **Asked:** What exactly does §6.1's `content_hash` cover? sha256 is unambiguous; what
+   you feed it is not. Undetectable before step 8, because each side generates fixtures
+   with its own hasher, so the fixtures agree with whatever each side got wrong — and a
+   divergence as small as key ordering or a trailing zero fails *every* artifact.
+   **Resolved (§6.1):** Ratified verbatim from `CONTRACT_RATIFICATION_REQUEST.md` Q1 and
+   written into the body — canonical form defined per `format`, with lexicographic
+   code-point key sorting and scale preservation as the two load-bearing rules. The **Q1
+   test vectors, not either side's fixtures, are the tiebreaker** (§10 carve-out).
+
+7. **`warn` is not a severity**
+   **Asked:** §5 said a partial capture raises a `warn` finding, but the severity scale
+   is info/low/medium/high/critical — `warn` is a *Verdict* value. An implementation
+   following §5's wording sends `severity: "warn"`, the DB's `finding_severity_check`
+   rejects it, and every partial run fails.
+   **Resolved (§5):** §5 now specifies **`medium`**, with the Verdict-vs-Severity
+   distinction stated inline so the confusion cannot recur. copilot-api additionally
+   normalises off-scale severities to `medium` rather than dropping the finding.
+
+8. **Accuracy and change semantics of `side_effects`**
+   **Asked:** Is §2's `side_effects` guaranteed accurate, and what happens when it
+   changes? copilot-api reads it at enqueue to decide whether a run may be re-executed
+   after its worker dies (ADR-001) — a mutating skill mislabelled `none` gets
+   auto-retried, the order-placed-twice bug invariant 8 exists to prevent, arriving
+   through the one door none of the guards watch. The catalog is also a 60s-stale cache,
+   so a `none → mutating` edit has a window.
+   **Resolved (§2):** `side_effects` is a **reviewed declaration**, not inferred. A
+   `none → mutating` transition is a coordinated breaking change — never shipped as a
+   silent catalog edit — which closes the stale-cache window. The enum stays at two
+   values for v0.1.
