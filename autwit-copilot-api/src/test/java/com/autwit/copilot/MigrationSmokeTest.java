@@ -20,8 +20,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 class MigrationSmokeTest extends AbstractPostgresIT {
 
     /**
-     * The exact table set V1__init.sql creates. An explicit set rather than a count:
-     * a count tells you something changed, this tells you what.
+     * The exact table set the migrations create. An explicit set rather than a count:
+     * a count tells you something changed, this tells you what. V1 creates the first
+     * fourteen; V2 adds the two analysis-session tables (financial-analysis ownership,
+     * SKILL_CONTRACT §0 / message-from-qa-copilot/v1.0.17).
      */
     private static final Set<String> EXPECTED_TABLES = Set.of(
             "agent_memory",
@@ -37,7 +39,10 @@ class MigrationSmokeTest extends AbstractPostgresIT {
             "skill_invocation",
             "snapshot",
             "snapshot_part",
-            "step");
+            "step",
+            // V2
+            "analysis_session",
+            "analysis_state");
 
     @Autowired
     private JdbcTemplate jdbc;
@@ -55,8 +60,9 @@ class MigrationSmokeTest extends AbstractPostgresIT {
         var applied = jdbc.queryForList(
                 "select version, description, success from flyway_schema_history order by installed_rank");
 
-        assertThat(applied).hasSize(1);
+        assertThat(applied).hasSize(2);
         assertThat(applied.get(0)).containsEntry("version", "1").containsEntry("success", true);
+        assertThat(applied.get(1)).containsEntry("version", "2").containsEntry("success", true);
     }
 
     @Test

@@ -1,10 +1,10 @@
 # SKILL_CONTRACT.md
 
 **Between:** `autwit-copilot-api` (client) and `autwit-ai-orchestrator` (server)
-**Version:** 0.1.7
-**Status:** Ratified by both sides. v0.1.6 closed the `message-from-qa-copilot/v1.0.11`
-closeout specification (B1–B7); v0.1.7 enforces §7's mutual-exclusion rule, the one
-asked-for behaviour in the parked section that had never been implemented.
+**Version:** 0.1.8
+**Status:** **Closed.** Both sides' closeout items are complete — B1–B7 (orchestrator) and
+C1–C5 (copilot-api), with C6/C7/C8 recorded as deliberate holds. v0.1.8 adds the
+null-bearing hash vectors V7/V8, the last outstanding request from either side.
 
 > **Verification status — how each section is known to be true.** This document's body
 > descends from the pre-ratification **v0.1.0** text, so age is not evidence. What
@@ -160,6 +160,30 @@ dependency on the other outside this document.
   verified to fail when the guard is neutered. Done now, while one construction path
   exists and the rule cannot be broken, rather than during v0.2 when it can.
   No schema changed; `catalog_version` remains `v1/279960341625`.
+- **v0.1.8** — §6.1 gains **rule 3 (a null is content, absence is a different claim)** and
+  **vectors V7/V8**, at copilot-api's request in `message-from-qa-copilot/v1.0.13` §3a.
+
+  The prompt was a live defect on their side: their `ContentHasher` inherited
+  `default-property-inclusion: non_null` from the application `ObjectMapper` it copies, so
+  a body carrying `"correlationId": null` hashed as though the key were absent. It would
+  have reached production — their real client uses `readValue`, which never serialises, so
+  nulls arrive intact and would have been dropped at hash time, rejecting every artifact
+  with a null field.
+
+  **The part worth recording is why nothing caught it.** Three things had to hold at once,
+  and did: each side only ever checked its own hasher against its own fixtures, so the
+  fixtures agreed with whatever the hasher got wrong (§10 names this trap); their own unit
+  test built a *cleaner* mapper than production, omitting the very setting that caused the
+  bug; and **the six Q1 vectors — the designated tiebreaker — contained no null at all.**
+  The tiebreaker exists so two implementations cannot agree with each other's bugs, and a
+  gap in it is a gap in that guarantee.
+
+  What broke the deadlock was generating fixtures from the real executor (v0.1.6, B5)
+  rather than writing them: their declared hashes stopped agreeing with anyone's
+  assumptions and started agreeing only with the definition. A generated fixture found a
+  defect neither side's tests could.
+
+  `catalog_version` unchanged.
 
 ### Still open
 
@@ -498,8 +522,43 @@ Both `/invoke` and `/execute` return this shape.
      original number token rather than a parsed float). This looks like a hash
      bug but is a number bug.
 
+  3. **A null is content; absence is a different claim.** *(v0.1.8)* A key whose value
+     is `null` MUST be retained in the canonical bytes. `{"a":null,"b":1}` and `{"b":1}`
+     are different bodies and MUST hash differently. Any serialiser configured to omit
+     null properties destroys this — the JVM trap is Jackson's
+     `default-property-inclusion: non_null`, which is correct for API responses and
+     catastrophic for canonical hashing. An evidence store that cannot distinguish "the
+     source system returned null" from "the source system did not return this field" is
+     misreporting its evidence, which is the failure this product exists to prevent.
+     Same distinction §7's `assertOneBody` draws when it counts a `null` body as present.
+
   The governing idea is **hash exactly what was sent** — an artifact is evidence,
   and normalising evidence hides the diffs this product exists to find.
+
+  **v0.1.8 — two null-bearing vectors, V7 and V8.** Added at copilot-api's request
+  (`message-from-qa-copilot/v1.0.13` §3a) after a live defect that the original six
+  vectors could not catch: their hasher dropped null-valued keys, and it passed all six
+  because **the word `null` appears nowhere in them.** The vectors exist so two
+  implementations cannot agree with each other's bugs; a gap in the vectors is a gap in
+  that guarantee.
+
+  | Vector | Body | Canonical bytes | `content_hash` |
+  |---|---|---|---|
+  | **V7** | `{"correlationId":null,"orderId":"XXXX","status":"CREATED"}` | `{"correlationId":null,"orderId":"XXXX","status":"CREATED"}` | `sha256:ff6ba507f4b8143f04b2a3696929e841a7aab69affd712633f460e68e90d40f4` |
+  | **V8** | array of two objects, one with `"sourceSystem":null`, one with `"sourceSystem":"oms"` | `[{"eventId":"e1","producerTime":1703000000000,"sourceSystem":null},{"eventId":"e2","producerTime":1703000001000,"sourceSystem":"oms"}]` | `sha256:399d2ce214f0b6dbc3a2a816c0eb4514c53106656725de6635e72c74134f68ff` |
+
+  V8 is the shape an `order_events` body actually takes — mixed presence across elements,
+  which is where a null-stripping serialiser does its damage in practice.
+
+  **V7 only bites in company with its negative case:** `{"correlationId":null,…}` and
+  `{…}` without the key MUST produce different hashes. An implementation that drops nulls
+  passes a naive V7 by hashing the stripped form consistently; it fails the inequality.
+  Both are pinned in `contentHasher.test.ts`.
+
+  Expected values above were computed by hashing the hand-written canonical strings
+  directly, **not** by running either side's canonicaliser — a vector that reuses the
+  implementation to derive its own expectation is not independent evidence, which is how
+  this class of defect survived in the first place.
 
   Implementations MUST reproduce the six test vectors in
   `CONTRACT_RATIFICATION_REQUEST.md` Q1. **If either side's fixtures drift, the
