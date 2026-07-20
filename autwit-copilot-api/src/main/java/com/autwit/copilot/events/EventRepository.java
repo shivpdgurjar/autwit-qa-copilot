@@ -36,6 +36,12 @@ public class EventRepository {
                 json.readObject(rs.getString("payload")));
     }
 
+    /** One event by id. Used when the tester selects an event to analyse (financial analysis). */
+    public java.util.Optional<EventRecord> findById(UUID eventId) {
+        return jdbc.query("select * from autwit.event_record where event_id = ?", mapper, eventId)
+                .stream().findFirst();
+    }
+
     /**
      * Keyset pagination on (captured_at, event_id).
      *
