@@ -246,6 +246,38 @@ paths:
       responses:
         '202': { $ref: '#/components/responses/RunAccepted' }
 
+  /sessions/{sessionId}/analyses:
+    parameters:
+      - $ref: '#/components/parameters/SessionId'
+    post:
+      tags: [analysis]
+      summary: Assemble a financial analysis from selected session evidence
+      description: |
+        The evidence-picker's submit target. The tester selects persisted
+        session evidence (captured events, api.fetch_order responses,
+        snapshots, uploads); copilot-api projects each into an analysis state,
+        orders them by capture time, hashes each under the SKILL_CONTRACT §6.1
+        canonical form, and persists them (analysis_session + analysis_state).
+
+        Does NOT run the analysis yet: the orchestrator skill call awaits the
+        confirmed request wire schema (message-from-qa-copilot/v1.0.17 §4.1).
+        The response reports what was assembled, not a verdict. SNAPSHOT_SANCTITY
+        assembles exactly one state; LIFECYCLE_COMPARISON a sequence.
+      operationId: createAnalysis
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreateAnalysisRequest' }
+      responses:
+        '200':
+          description: Assembled
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CreateAnalysisResponse' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
   /runs/{runId}:
     parameters:
       - name: runId
@@ -966,6 +998,71 @@ components:
           description: |
             Ignore rules and validation config. Overrides scope defaults.
             e.g. {"ignore_columns":["updated_at"],"tolerance":{"amount":0.01}}
+
+    CreateAnalysisRequest:
+      type: object
+      required: [analysis_mode, order_number, states]
+      properties:
+        analysis_mode:
+          type: string
+          enum: [SNAPSHOT_SANCTITY, LIFECYCLE_COMPARISON]
+          description: |
+            SNAPSHOT_SANCTITY assembles exactly one state (internal consistency
+            of one order picture); LIFECYCLE_COMPARISON a sequence.
+        order_number: { type: string }
+        states:
+          type: array
+          minItems: 1
+          items: { $ref: '#/components/schemas/StateRef' }
+
+    StateRef:
+      type: object
+      required: [kind]
+      description: |
+        A tester's selection of one persisted piece of session evidence, with
+        optional overrides for the inferred tags shown in the picker.
+      properties:
+        kind:
+          type: string
+          enum: [EVENT, ARTIFACT]
+          description: EVENT = an event_record; ARTIFACT = an artifact (fetch_order response, snapshot, upload).
+        id: { type: string, format: uuid }
+        state_type:
+          type: string
+          description: Override the inferred StateType. One of the orchestrator's nine values.
+          enum: [ORDER_SNAPSHOT, API_REQUEST, API_RESPONSE, DOMAIN_EVENT, INVOICE_SNAPSHOT, PAYMENT_SNAPSHOT, REFUND_EVENT, CALCULATION_RESULT, OTHER]
+        source:
+          type: string
+          description: Override the inferred SourceSystem. One of the orchestrator's eleven values.
+          enum: [ORDER_DB, CALCULATE_API, UPDATE_LINES_API, CANCEL_CALCULATE_API, TAX_EXEMPTION_API, ISSUE_CREDIT_API, INVOICE_DB, PAYMENT_DB, KAFKA_EVENT, REFUND_SERVICE, UNKNOWN]
+        label: { type: string, description: Override the derived label. }
+        lifecycle_stage: { type: string, description: The tester's stage tag; defaults to "unspecified". }
+
+    CreateAnalysisResponse:
+      type: object
+      required: [analysis_id, analysis_mode, order_number, persisted, deduped, states]
+      properties:
+        analysis_id: { type: string }
+        analysis_mode: { type: string }
+        order_number: { type: string }
+        persisted: { type: integer, description: States newly written this call. }
+        deduped:
+          type: integer
+          description: Selections that hashed identical to an existing state and were dropped (idempotency).
+        states:
+          type: array
+          items: { $ref: '#/components/schemas/AnalysisStateView' }
+        note: { type: string }
+
+    AnalysisStateView:
+      type: object
+      required: [sequence, label, state_type, source, lifecycle_stage]
+      properties:
+        sequence: { type: integer }
+        label: { type: string }
+        state_type: { type: string }
+        source: { type: string }
+        lifecycle_stage: { type: string }
 
     RunAccepted:
       type: object
