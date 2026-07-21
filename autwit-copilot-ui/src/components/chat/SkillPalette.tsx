@@ -64,11 +64,19 @@ export function SkillPalette({
 
   if (!open) return null;
 
-  const skills = (data?.skills ?? []).filter((s) =>
-    `${s.skill_name} ${s.title ?? ''} ${s.description ?? ''}`
-      .toLowerCase()
-      .includes(filter.toLowerCase()),
-  );
+  const skills = (data?.skills ?? [])
+    // financial.* skills are driven from the evidence-picker, not a raw form: their
+    // input is a StateEnvelope assembled from captured evidence, which a SchemaForm
+    // cannot hand-key. Hiding them here routes the tester to the right surface rather
+    // than offering a form that can't produce a valid call (agreed in v1.0.20 §4.3).
+    // Other skills — including compare.cross_system, whose whole input is one order_id —
+    // render normally.
+    .filter((s) => !s.skill_name.startsWith('financial.'))
+    .filter((s) =>
+      `${s.skill_name} ${s.title ?? ''} ${s.description ?? ''}`
+        .toLowerCase()
+        .includes(filter.toLowerCase()),
+    );
 
   const schema = (selected?.input_schema ?? {}) as JsonSchema;
   const missing = selected ? missingRequired(schema, input) : [];
