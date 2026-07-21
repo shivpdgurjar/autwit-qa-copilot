@@ -8,6 +8,7 @@ import { useEndSession } from '../../hooks/useSubmitRun';
 import { Composer } from '../../components/chat/Composer';
 import { MessageList } from '../../components/chat/MessageList';
 import { SkillPalette } from '../../components/chat/SkillPalette';
+import { EvidencePicker } from '../../components/analysis/EvidencePicker';
 import { Timeline } from '../../components/timeline/Timeline';
 import { EventBatchCard } from '../../components/timeline/EventBatchCard';
 import { ArtifactDrawer } from '../../components/drawer/ArtifactViewer';
@@ -24,6 +25,7 @@ export default function SessionRoute() {
     { kind: 'snapshot'; snapshot: Snapshot } | { kind: 'comparison'; comparison: Comparison } | null
   >(null);
   const [palette, setPalette] = useState(false);
+  const [analysis, setAnalysis] = useState(false);
 
   const stream = useSessionStream(sessionId);
   const { data: session, isLoading, error } = useSession(sessionId, {
@@ -112,7 +114,17 @@ export default function SessionRoute() {
 
         {/* The timeline is the record: milestones, snapshots, comparisons. */}
         <main className="min-w-0 flex-1 overflow-y-auto p-4">
-          <Subjects subjects={session.subjects} />
+          <div className="mb-3 flex items-center justify-between gap-2">
+            <Subjects subjects={session.subjects} />
+            <button
+              onClick={() => setAnalysis(true)}
+              disabled={ended}
+              title="Assemble captured evidence into a financial analysis"
+              className="ml-auto shrink-0 rounded border border-ink-700 px-2 py-1 text-[11px] text-sky-400 hover:border-ink-600 hover:text-sky-300 disabled:opacity-40"
+            >
+              Financial analysis
+            </button>
+          </div>
           <Timeline
             session={session}
             onOpenSnapshot={(snapshot) => setDrawer({ kind: 'snapshot', snapshot })}
@@ -160,6 +172,12 @@ export default function SessionRoute() {
       </div>
 
       <SkillPalette sessionId={sessionId} open={palette} onClose={() => setPalette(false)} />
+      <EvidencePicker
+        sessionId={sessionId}
+        open={analysis}
+        onClose={() => setAnalysis(false)}
+        orderId={session.subjects?.order_id}
+      />
     </div>
   );
 }
