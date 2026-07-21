@@ -53,8 +53,12 @@ class FinancialAnalysisRunTest extends AbstractPostgresIT {
     }
 
     private UUID captureOrder() {
-        return artifacts.persist(sessionId, null, null, null, "api_response", "oms", "order",
-                ArtifactFormat.JSON, Map.of("orderId", "XXXX", "total", "24.00"), null, null, Map.of())
+        return captureOrder("order", "24.00");
+    }
+
+    private UUID captureOrder(String name, String total) {
+        return artifacts.persist(sessionId, null, null, null, "api_response", "oms", name,
+                ArtifactFormat.JSON, Map.of("orderId", "XXXX", "total", total), null, null, Map.of())
                 .artifactId();
     }
 
@@ -97,6 +101,35 @@ class FinancialAnalysisRunTest extends AbstractPostgresIT {
         assertThat(session.latestResponseId()).isEqualTo("resp-fake-" + analysisId);
         assertThat(session.ruleVersion()).isEqualTo("oms-financial-rules-v1.1");
         assertThat(session.promptVersion()).isEqualTo("oms-financial-validator-v1.0");
+    }
+
+    @Test
+    void aMultiStateLifecycleRunTakesTheAnalyzeLifecyclePath() {
+        // Two states, LIFECYCLE_COMPARISON — exercises the runner's analyzeLifecycle
+        // branch (the snapshot test covers analyzeSnapshot). This is the path
+        // financial.analyze_lifecycle needs proven before the orchestrator registers it.
+        var a = captureOrder("order-v1", "24.00");
+        var b = captureOrder("order-v2", "26.00");
+
+        var result = analyses.createAndAssemble(sessionId, "LIFECYCLE_COMPARISON", "XXXX",
+                List.of(EvidenceRef.of(EvidenceRef.Kind.ARTIFACT, a),
+                        EvidenceRef.of(EvidenceRef.Kind.ARTIFACT, b)));
+        var analysisId = result.session().analysisId();
+        var runId = result.run().run().runId();
+
+        assertThat(worker.pollOnce()).isTrue();
+
+        assertThat(jdbc.queryForObject("select status from autwit.run where run_id = ?", String.class, runId))
+                .isEqualTo("succeeded");
+        var summary = jdbc.queryForObject(
+                "select result_summary::text from autwit.run where run_id = ?", String.class, runId);
+        assertThat(summary).contains("\"overall_status\": \"FAIL\"");
+
+        // Two states were assembled and sent; the session records the lifecycle mode.
+        assertThat(analysisRepo.readStates(analysisId)).hasSize(2);
+        var session = analysisRepo.findSession(analysisId).orElseThrow();
+        assertThat(session.analysisMode()).isEqualTo("LIFECYCLE_COMPARISON");
+        assertThat(session.latestResponseId()).isEqualTo("resp-fake-" + analysisId);
     }
 
     @Test
