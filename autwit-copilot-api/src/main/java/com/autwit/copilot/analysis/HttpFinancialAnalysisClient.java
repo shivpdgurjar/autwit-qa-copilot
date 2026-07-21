@@ -41,6 +41,15 @@ import org.springframework.web.client.RestClient;
 public class HttpFinancialAnalysisClient implements FinancialAnalysisClient {
 
     private static final Logger log = LoggerFactory.getLogger(HttpFinancialAnalysisClient.class);
+
+    /**
+     * Its own logger so the exchange lands in the committable integration log for
+     * cross-machine diagnosis, alongside the skill wire log. INFO, not DEBUG: it is one
+     * PII-safe line per call (metadata + verdict), low volume, and useful without the
+     * {@code integration} profile — a live financial failure on another machine is
+     * diagnosed from this.
+     */
+    private static final Logger wire = LoggerFactory.getLogger("com.autwit.copilot.analysis.financial.wire");
     private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(10);
 
     private final RestClient client;
@@ -90,13 +99,30 @@ public class HttpFinancialAnalysisClient implements FinancialAnalysisClient {
         } catch (Exception e) {
             throw new IllegalArgumentException("Could not serialise the analysis request: " + e.getMessage(), e);
         }
+        // Metadata only — NEVER the request body. The states carry the raw order picture
+        // including member PII and card data (docs/KNOWN_ISSUES.md PII-1); a committable
+        // integration log must not become a PII sink. This is enough to diagnose a live
+        // failure cross-machine: which analysis, which mode, how many states, was a token
+        // sent (an empty token is a 401 that looks like a network fault).
+        wire.info("--> POST {}{} analysisId={} mode={} order={} states={} authorization={}",
+                props.orchestrator().baseUrl(), path, request.analysisId(), request.analysisMode(),
+                request.orderNumber(), request.states() == null ? 0 : request.states().size(),
+                props.orchestrator().token().isBlank() ? "Bearer <EMPTY - no token configured>" : "Bearer <redacted>");
         try {
-            return client.post()
+            var result = client.post()
                     .uri(path)
+                    // §3: the correlation id is propagated to every downstream. analysisId
+                    // is our stable per-analysis identifier and rides through here.
+                    .header("X-Autwit-Correlation-Id", request.analysisId())
                     .body(body)
                     .exchange((req, response) -> {
                         var raw = new String(response.getBody().readAllBytes(), StandardCharsets.UTF_8);
                         if (response.getStatusCode().isError()) {
+                            // The error body IS logged (truncated): a 400 is the validation
+                            // message, not order data, and it is exactly what a cross-machine
+                            // diagnosis needs.
+                            wire.warn("<-- {} FAILED analysisId={}: HTTP {} {}",
+                                    path, request.analysisId(), response.getStatusCode().value(), truncate(raw));
                             throw new OrchestratorException.Failed(
                                     "Financial analysis %s returned %s: %s"
                                             .formatted(path, response.getStatusCode().value(), truncate(raw)),
@@ -104,12 +130,22 @@ public class HttpFinancialAnalysisClient implements FinancialAnalysisClient {
                         }
                         return mapper.readValue(raw, FinancialAnalysisResult.class);
                     });
+            // Response summary — verdict and shape, not the finding bodies (which can echo
+            // order values). Enough to see what happened.
+            wire.info("<-- 200 analysisId={} verdict={} findings={} ai={} responseId={}",
+                    result.analysisId(), result.overallStatus(),
+                    result.findings() == null ? 0 : result.findings().size(),
+                    result.aiAnalysisStatus(), result.responseId() != null ? "present" : "none");
+            return result;
         } catch (OrchestratorException e) {
             throw e;
         } catch (ResourceAccessException e) {
+            wire.warn("<-- {} TIMEOUT analysisId={} after {}", path, request.analysisId(),
+                    props.orchestrator().timeout());
             throw new OrchestratorException.Failed(
                     "Financial analysis did not respond within %s".formatted(props.orchestrator().timeout()), null, e);
         } catch (Exception e) {
+            wire.warn("<-- {} ERROR analysisId={}: {}", path, request.analysisId(), e.getMessage());
             throw new OrchestratorException.Failed("Financial analysis call failed: " + e.getMessage(), null, e);
         }
     }
