@@ -23,6 +23,7 @@ export type Snapshot = Schemas['Snapshot'];
 export type SnapshotPart = Schemas['SnapshotPart'];
 export type Artifact = Schemas['Artifact'];
 export type ArtifactRef = Schemas['ArtifactRef'];
+export type CreateArtifactRequest = Schemas['CreateArtifactRequest'];
 export type EventRecord = Schemas['EventRecord'];
 export type CreateAnalysisRequest = Schemas['CreateAnalysisRequest'];
 export type CreateAnalysisResponse = Schemas['CreateAnalysisResponse'];

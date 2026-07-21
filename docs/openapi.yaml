@@ -1151,7 +1151,9 @@ components:
             xml/text/csv/html/md, base64 for binary.
           oneOf:
             - type: object
+              additionalProperties: true
             - type: array
+              items: {}
             - type: string
         row_count: { type: integer }
         content_hash:

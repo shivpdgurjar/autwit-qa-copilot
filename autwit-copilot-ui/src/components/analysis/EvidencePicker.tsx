@@ -3,6 +3,7 @@ import { isActive } from '../../api/client';
 import type {
   ArtifactRef,
   CreateAnalysisResponse,
+  CreateArtifactRequest,
   EventRecord,
   Run,
   StateRef,
@@ -11,8 +12,10 @@ import type {
 import {
   SOURCES,
   STATE_TYPES,
+  UPLOAD_ARTIFACT_TYPES,
   useArtifacts,
   useCreateAnalysis,
+  useUploadArtifact,
   useEvidenceEvents,
   useRun,
   type Source,
@@ -38,10 +41,13 @@ import { Ago, Mono, Muted, Spinner } from '../ui';
  * from the inferred default (keeps the request honest about what the tester actually
  * changed).
  *
- * DEFERRED (follow-ons, intentionally not built here):
- *   (a) uploading a NEW event/artifact with tagging from inside this picker;
- *   (b) the "previous-response-context" chaining selector that threads one analysis's
- *       output into the next.
+ * Upload: a tester can attach evidence the session did not capture (paste an order
+ * response or event JSON, tagged with an artifact_type + source_system). It persists as a
+ * normal artifact and joins the Artifacts list, selectable like any captured one.
+ *
+ * DEFERRED (follow-on, intentionally not built here):
+ *   the "previous-response-context" chaining selector that threads one analysis's output
+ *   into the next.
  */
 
 type Kind = StateRef['kind'];
@@ -101,6 +107,7 @@ export function EvidencePicker({
   orderId?: string;
 }) {
   const [tab, setTab] = useState<Kind>('ARTIFACT');
+  const [showUpload, setShowUpload] = useState(false);
   const [orderNumber, setOrderNumber] = useState('');
   // Ordered — for LIFECYCLE_COMPARISON the array order IS the sequence.
   const [selections, setSelections] = useState<Selection[]>([]);
@@ -114,6 +121,7 @@ export function EvidencePicker({
   useEffect(() => {
     if (open) {
       setTab('ARTIFACT');
+      setShowUpload(false);
       setOrderNumber(orderId ?? '');
       setSelections([]);
       create.reset();
@@ -254,23 +262,47 @@ export function EvidencePicker({
             <div className="grid min-h-0 flex-1 grid-cols-[1fr_22rem]">
               {/* left: evidence lists */}
               <div className="flex min-h-0 flex-col border-r border-ink-700">
-                <div className="flex gap-1 border-b border-ink-700 px-2 py-1.5">
+                <div className="flex items-center gap-1 border-b border-ink-700 px-2 py-1.5">
                   <TabButton
-                    active={tab === 'ARTIFACT'}
-                    onClick={() => setTab('ARTIFACT')}
+                    active={tab === 'ARTIFACT' && !showUpload}
+                    onClick={() => {
+                      setTab('ARTIFACT');
+                      setShowUpload(false);
+                    }}
                     label="Artifacts"
                     count={artifacts.data?.length}
                   />
                   <TabButton
-                    active={tab === 'EVENT'}
-                    onClick={() => setTab('EVENT')}
+                    active={tab === 'EVENT' && !showUpload}
+                    onClick={() => {
+                      setTab('EVENT');
+                      setShowUpload(false);
+                    }}
                     label="Events"
                     count={events.data?.events.length}
                   />
+                  <button
+                    onClick={() => setShowUpload((v) => !v)}
+                    className={`ml-auto rounded px-2 py-1 text-[11px] ${
+                      showUpload
+                        ? 'bg-ink-700 text-ink-100'
+                        : 'text-sky-400 hover:text-sky-300'
+                    }`}
+                  >
+                    {showUpload ? '← Back' : '＋ Upload'}
+                  </button>
                 </div>
 
                 <div className="min-h-0 flex-1 overflow-y-auto">
-                  {tab === 'ARTIFACT' ? (
+                  {showUpload ? (
+                    <UploadForm
+                      sessionId={sessionId}
+                      onUploaded={() => {
+                        setShowUpload(false);
+                        setTab('ARTIFACT');
+                      }}
+                    />
+                  ) : tab === 'ARTIFACT' ? (
                     <ArtifactList
                       query={artifacts}
                       selectedIds={selectedIds}
@@ -459,6 +491,133 @@ function ArtifactList({
         </li>
       ))}
     </ul>
+  );
+}
+
+/**
+ * Attach evidence the session did not capture. The tester pastes JSON and tags it; on
+ * upload it persists as an artifact (content_hash computed server-side) and joins the
+ * Artifacts list. The JSON is validated here so a paste error is caught before the round
+ * trip, not surfaced as a server 400.
+ */
+function UploadForm({
+  sessionId,
+  onUploaded,
+}: {
+  sessionId: string;
+  onUploaded: () => void;
+}) {
+  const [logicalName, setLogicalName] = useState('');
+  const [artifactType, setArtifactType] =
+    useState<(typeof UPLOAD_ARTIFACT_TYPES)[number]>('api_response');
+  const [sourceSystem, setSourceSystem] = useState('');
+  const [text, setText] = useState('');
+  const upload = useUploadArtifact(sessionId);
+
+  let parsed: CreateArtifactRequest['body'] | undefined;
+  let parseError: string | null = null;
+  if (text.trim().length > 0) {
+    try {
+      parsed = JSON.parse(text);
+    } catch (e) {
+      parseError = e instanceof Error ? e.message : 'Invalid JSON';
+    }
+  }
+  const ready =
+    logicalName.trim().length > 0 &&
+    sourceSystem.trim().length > 0 &&
+    text.trim().length > 0 &&
+    !parseError;
+
+  const submit = () => {
+    if (!ready || parsed === undefined) return;
+    upload.mutate(
+      {
+        logical_name: logicalName.trim(),
+        artifact_type: artifactType,
+        source_system: sourceSystem.trim(),
+        body: parsed,
+      },
+      { onSuccess: onUploaded },
+    );
+  };
+
+  const label = 'mb-1 block text-[11px] font-semibold uppercase tracking-wide text-ink-400';
+  const field =
+    'w-full rounded border border-ink-700 bg-ink-950 px-2 py-1 text-[12px] text-ink-100 focus:border-sky-600 focus:outline-none';
+
+  return (
+    <div className="flex flex-col gap-3 p-3">
+      <p className="text-[12px] text-ink-300">
+        Attach evidence not captured this session — paste an order response or event.
+      </p>
+
+      <div>
+        <label className={label}>Name</label>
+        <input
+          className={field}
+          value={logicalName}
+          onChange={(e) => setLogicalName(e.target.value)}
+          placeholder="e.g. order_response"
+        />
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        <div>
+          <label className={label}>Kind</label>
+          <select
+            className={field}
+            value={artifactType}
+            onChange={(e) =>
+              setArtifactType(e.target.value as (typeof UPLOAD_ARTIFACT_TYPES)[number])
+            }
+          >
+            {UPLOAD_ARTIFACT_TYPES.map((t) => (
+              <option key={t} value={t}>
+                {t}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className={label}>Source system</label>
+          <input
+            className={field}
+            value={sourceSystem}
+            onChange={(e) => setSourceSystem(e.target.value)}
+            placeholder="e.g. oms"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className={label}>Body (JSON)</label>
+        <textarea
+          className={`${field} h-40 resize-none font-mono`}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          placeholder='{ "orderId": "…", "orderLines": [ … ] }'
+          spellCheck={false}
+        />
+        {parseError && (
+          <p className="mt-1 text-[11px] text-red-300">Not valid JSON — {parseError}</p>
+        )}
+      </div>
+
+      {upload.error != null && (
+        <p className="rounded border border-red-900/60 bg-red-950/20 px-2 py-1.5 text-[11px] text-red-300">
+          {(upload.error as { detail?: string }).detail ?? 'Upload failed.'}
+        </p>
+      )}
+
+      <button
+        onClick={submit}
+        disabled={!ready || upload.isPending}
+        className="self-start rounded bg-sky-600 px-3 py-1.5 text-[12px] font-medium text-white hover:bg-sky-500 disabled:opacity-40"
+      >
+        {upload.isPending ? 'Uploading…' : 'Upload evidence'}
+      </button>
+    </div>
   );
 }
 

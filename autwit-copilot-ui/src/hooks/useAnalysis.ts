@@ -6,6 +6,7 @@ import {
   type ArtifactRef,
   type CreateAnalysisRequest,
   type CreateAnalysisResponse,
+  type CreateArtifactRequest,
   type EventRecord,
   type Run,
   type StateRef,
@@ -57,6 +58,48 @@ export const SOURCES: Source[] = [
   'REFUND_SERVICE',
   'UNKNOWN',
 ];
+
+/** artifact_type values sensible for a hand-uploaded body (the ones that project cleanly
+ * and don't need extra structure — rdbms_table would demand meta.pk_columns). */
+export const UPLOAD_ARTIFACT_TYPES = ['api_response', 'event_batch', 'other'] as const;
+
+/**
+ * Attach a new piece of evidence the session did not capture — a tester pastes an order
+ * response or an event they have from elsewhere. It persists through the same tester-facing
+ * path (POST /sessions/{id}/artifacts, content_hash computed server-side) and then becomes
+ * selectable in the picker like any captured artifact. Foreign JSON has no source_system to
+ * infer from, so the uploader supplies artifact_type + source_system here.
+ */
+export function useUploadArtifact(sessionId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    retry: false,
+    mutationFn: async (input: {
+      logical_name: string;
+      artifact_type: CreateArtifactRequest['artifact_type'];
+      source_system: string;
+      body: CreateArtifactRequest['body'];
+    }) =>
+      unwrap(
+        await api.POST('/sessions/{sessionId}/artifacts', {
+          params: { path: { sessionId } },
+          body: {
+            artifact_type: input.artifact_type,
+            source_system: input.source_system,
+            logical_name: input.logical_name,
+            format: 'json',
+            body: input.body,
+          },
+        }),
+      ),
+    // Refresh the picker's artifact list so the upload shows up immediately, and the
+    // session (its timeline holds the artifact too).
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['evidence', 'artifacts', sessionId] });
+      queryClient.invalidateQueries({ queryKey: sessionKey(sessionId) });
+    },
+  });
+}
 
 /** The session's artifacts — selectable as kind=ARTIFACT. */
 export function useArtifacts(sessionId: string, enabled = true) {
