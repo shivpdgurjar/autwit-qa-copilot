@@ -61,7 +61,7 @@ class FinancialAnalysisControllerTest extends AbstractPostgresIT {
                                 {"analysis_mode":"SNAPSHOT_SANCTITY","order_number":"XXXX",
                                  "states":[{"kind":"ARTIFACT","id":"%s"}]}
                                 """.formatted(a)))
-                .andExpect(status().isOk())
+                .andExpect(status().isAccepted())
                 .andExpect(jsonPath("$.analysis_id", notNullValue()))
                 .andExpect(jsonPath("$.persisted", is(1)))
                 .andExpect(jsonPath("$.states[0].sequence", is(1)))
@@ -95,7 +95,7 @@ class FinancialAnalysisControllerTest extends AbstractPostgresIT {
                                 {"analysis_mode":"LIFECYCLE_COMPARISON","order_number":"XXXX",
                                  "states":[{"kind":"ARTIFACT","id":"%s"},{"kind":"ARTIFACT","id":"%s"}]}
                                 """.formatted(a, b)))
-                .andExpect(status().isOk())
+                .andExpect(status().isAccepted())
                 .andExpect(jsonPath("$.persisted", is(2)))
                 .andReturn().getResponse().getContentAsString();
 
@@ -116,7 +116,7 @@ class FinancialAnalysisControllerTest extends AbstractPostgresIT {
                                             "state_type":"INVOICE_SNAPSHOT","source":"INVOICE_DB",
                                             "lifecycle_stage":"billing"}]}
                                 """.formatted(a)))
-                .andExpect(status().isOk())
+                .andExpect(status().isAccepted())
                 .andExpect(jsonPath("$.states[0].state_type", is("INVOICE_SNAPSHOT")))
                 .andExpect(jsonPath("$.states[0].source", is("INVOICE_DB")))
                 .andExpect(jsonPath("$.states[0].lifecycle_stage", is("billing")));

@@ -29,7 +29,16 @@ public enum RunType {
     COMPARISON("comparison", 2),
 
     /** Local render. Never touches the orchestrator. */
-    REPORT("report", 2);
+    REPORT("report", 2),
+
+    /**
+     * OMS financial-integrity analysis. Calls the orchestrator's financial API (a separate
+     * surface from the skill routes), not a local run. max_attempts 1: the call is a
+     * ~40-57s OpenAI round trip with a side effect on OpenAI's hosted state (a stored
+     * response), so it is never auto-retried — a re-run is a deliberate act, same posture
+     * as INVOKE.
+     */
+    FINANCIAL_ANALYSIS("financial_analysis", 1);
 
     private final String wire;
     private final int defaultMaxAttempts;

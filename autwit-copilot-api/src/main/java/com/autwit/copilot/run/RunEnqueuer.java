@@ -191,6 +191,31 @@ public class RunEnqueuer {
      * artifact appears when the run completes.
      */
     @Transactional
+    /**
+     * A financial-analysis run. The states were already assembled and persisted under
+     * {@code analysisId} (see {@code AnalysisService}); this enqueues the run that sends
+     * them to the orchestrator and records the verdict. kind=system, on the timeline beside
+     * the evidence it analysed — the analysis is a thing the tester did, not chat commentary.
+     */
+    public Accepted enqueueFinancialAnalysis(UUID sessionId, String analysisId, String orderNumber,
+            String idempotencyKey) {
+        lockAndRequireActive(sessionId);
+        var replay = replay(sessionId, idempotencyKey);
+        if (replay.isPresent()) {
+            return replay.get();
+        }
+
+        var step = steps.insert(sessionId, "system",
+                "Financial analysis (order %s)".formatted(orderNumber), "user", "pending",
+                null, Map.of("analysis_id", analysisId));
+
+        var request = new LinkedHashMap<String, Object>();
+        request.put("analysis_id", analysisId);
+
+        return accept(sessionId, step.stepId(), RunType.FINANCIAL_ANALYSIS,
+                RunType.FINANCIAL_ANALYSIS.defaultMaxAttempts(), request, idempotencyKey, null, null);
+    }
+
     public Accepted enqueueReport(UUID sessionId, String format, String notes, String idempotencyKey) {
         lockAndRequireActive(sessionId);
         var replay = replay(sessionId, idempotencyKey);

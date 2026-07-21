@@ -60,9 +60,10 @@ class MigrationSmokeTest extends AbstractPostgresIT {
         var applied = jdbc.queryForList(
                 "select version, description, success from flyway_schema_history order by installed_rank");
 
-        assertThat(applied).hasSize(2);
+        assertThat(applied).hasSize(3);
         assertThat(applied.get(0)).containsEntry("version", "1").containsEntry("success", true);
         assertThat(applied.get(1)).containsEntry("version", "2").containsEntry("success", true);
+        assertThat(applied.get(2)).containsEntry("version", "3").containsEntry("success", true);
     }
 
     @Test

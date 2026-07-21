@@ -5,6 +5,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import com.autwit.copilot.common.Columns;
+import com.autwit.copilot.common.Json;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
@@ -17,10 +18,12 @@ import org.springframework.stereotype.Repository;
 public class AnalysisRepository {
 
     private final JdbcTemplate jdbc;
+    private final Json json;
     private final RowMapper<AnalysisSession> sessionMapper;
 
-    public AnalysisRepository(JdbcTemplate jdbc) {
+    public AnalysisRepository(JdbcTemplate jdbc, Json json) {
         this.jdbc = jdbc;
+        this.json = json;
         this.sessionMapper = (rs, n) -> new AnalysisSession(
                 rs.getString("analysis_id"),
                 Columns.uuid(rs, "session_id"),
@@ -108,6 +111,51 @@ public class AnalysisRepository {
                 state.capturedAt() == null ? null : java.sql.Timestamp.from(state.capturedAt()),
                 payloadHash, payloadCanonicalJson);
         return inserted == 1;
+    }
+
+    /**
+     * The full states, payload and all, rebuilt as {@link StateEnvelope}s — what the
+     * financial run sends to the orchestrator. {@code correlationId} is not persisted
+     * (analysis_state has no column for it), so it comes back null, which is what the
+     * projection put there.
+     */
+    public List<StateEnvelope> readStates(String analysisId) {
+        return jdbc.query(
+                "select sequence, label, state_type, lifecycle_stage, source, captured_at, payload "
+                        + "from autwit.analysis_state where analysis_id = ? order by sequence",
+                (rs, n) -> new StateEnvelope(
+                        rs.getInt("sequence"),
+                        rs.getString("label"),
+                        StateType.valueOf(rs.getString("state_type")),
+                        rs.getString("lifecycle_stage"),
+                        SourceSystem.valueOf(rs.getString("source")),
+                        Columns.instant(rs, "captured_at"),
+                        null,
+                        json.readTree(rs.getString("payload"))),
+                analysisId);
+    }
+
+    /**
+     * Records a completed analysis on the session head: the OpenAI chaining token for a
+     * follow-up, and the versions the verdict was actually produced under (they replace the
+     * {@code unpinned} placeholder). Optimistically locked like {@link #bumpSession}.
+     *
+     * @return true if this writer won the version race
+     */
+    public boolean recordResult(String analysisId, int expectedVersion, String latestResponseId,
+            String promptVersion, String ruleVersion) {
+        int updated = jdbc.update(
+                """
+                update autwit.analysis_session
+                   set latest_response_id = ?,
+                       prompt_version     = coalesce(?, prompt_version),
+                       rule_version       = coalesce(?, rule_version),
+                       version            = version + 1,
+                       updated_at         = now()
+                 where analysis_id = ? and version = ?
+                """,
+                latestResponseId, promptVersion, ruleVersion, analysisId, expectedVersion);
+        return updated == 1;
     }
 
     /** States in analysis order — what a replay recomputes from (v1.0.16 §3). */

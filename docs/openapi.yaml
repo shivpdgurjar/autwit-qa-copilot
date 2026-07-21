@@ -270,8 +270,10 @@ paths:
           application/json:
             schema: { $ref: '#/components/schemas/CreateAnalysisRequest' }
       responses:
-        '200':
-          description: Assembled
+        '202':
+          description: |
+            Assembled and enqueued. The analysis runs asynchronously (a ~40-57s
+            orchestrator round trip); poll the returned run_id for the verdict.
           content:
             application/json:
               schema: { $ref: '#/components/schemas/CreateAnalysisResponse' }
@@ -1040,7 +1042,7 @@ components:
 
     CreateAnalysisResponse:
       type: object
-      required: [analysis_id, analysis_mode, order_number, persisted, deduped, states]
+      required: [analysis_id, analysis_mode, order_number, persisted, deduped, states, run_id, step_id]
       properties:
         analysis_id: { type: string }
         analysis_mode: { type: string }
@@ -1052,6 +1054,11 @@ components:
         states:
           type: array
           items: { $ref: '#/components/schemas/AnalysisStateView' }
+        run_id:
+          type: string
+          format: uuid
+          description: The async analysis run. Poll GET /runs/{runId} for the verdict.
+        step_id: { type: string, format: uuid }
         note: { type: string }
 
     AnalysisStateView:

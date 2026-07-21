@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(docker compose ps *)",
+      "Bash(docker compose config *)",
+      "Bash(docker compose logs *)"
+    ]
+  }
+}

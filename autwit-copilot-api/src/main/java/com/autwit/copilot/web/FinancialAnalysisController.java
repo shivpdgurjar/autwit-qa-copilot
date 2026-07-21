@@ -68,6 +68,8 @@ public class FinancialAnalysisController {
             int persisted,
             int deduped,
             List<StateView> states,
+            String runId,
+            String stepId,
             String note) {
     }
 
@@ -88,14 +90,16 @@ public class FinancialAnalysisController {
                         st.source().name(), st.lifecycleStage()))
                 .toList();
 
+        var run = result.run().run();
         var body = new CreateAnalysisResponse(
                 result.session().analysisId(), result.session().analysisMode(),
                 result.session().orderNumber(), result.assembled().persisted(),
                 result.assembled().deduped(), states,
-                "Assembled and persisted. The analysis run is not wired yet "
-                        + "(awaiting the orchestrator's request schema, v1.0.17 §4.1).");
+                run.runId().toString(), run.stepId().toString(),
+                "Assembled and enqueued. The analysis runs asynchronously; watch the run "
+                        + "for the verdict (run_id " + run.runId() + ").");
 
-        return ResponseEntity.ok(body);
+        return ResponseEntity.accepted().body(body);
     }
 
     private static EvidenceRef.Kind kind(String raw) {

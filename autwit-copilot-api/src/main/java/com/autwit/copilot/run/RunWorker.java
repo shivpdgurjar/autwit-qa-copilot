@@ -51,6 +51,7 @@ public class RunWorker {
     private final AutwitProperties props;
     private final com.autwit.copilot.session.SessionRepository sessions;
     private final LocalRunExecutor localRuns;
+    private final com.autwit.copilot.analysis.FinancialAnalysisRunner financialRuns;
 
     private final String workerId = "worker-" + UUID.randomUUID().toString().substring(0, 8);
     private final AtomicBoolean running = new AtomicBoolean(false);
@@ -59,7 +60,7 @@ public class RunWorker {
     public RunWorker(RunRepository runs, StepRepository steps, SessionLocks locks,
             OrchestratorClient orchestrator, SessionContextBuilder contexts, EnvelopePersister persister,
             AutwitProperties props, com.autwit.copilot.session.SessionRepository sessions,
-            LocalRunExecutor localRuns) {
+            LocalRunExecutor localRuns, com.autwit.copilot.analysis.FinancialAnalysisRunner financialRuns) {
         this.runs = runs;
         this.steps = steps;
         this.locks = locks;
@@ -69,6 +70,7 @@ public class RunWorker {
         this.props = props;
         this.sessions = sessions;
         this.localRuns = localRuns;
+        this.financialRuns = financialRuns;
     }
 
     @EventListener(ApplicationReadyEvent.class)
@@ -183,6 +185,15 @@ public class RunWorker {
             // Only the execution differs.
             if (localRuns.handles(run.runType())) {
                 localRuns.execute(run);
+                runs.notifyRun(run.sessionId(), run.runId(), run.stepId(), "succeeded", "run.succeeded");
+                return;
+            }
+
+            // Financial analysis calls the orchestrator's financial API — a separate surface
+            // from the skill routes — so it does not go through call()/EnvelopePersister.
+            // Still a run: same queue, lock and lease.
+            if (financialRuns.handles(run.runType())) {
+                financialRuns.execute(run);
                 runs.notifyRun(run.sessionId(), run.runId(), run.stepId(), "succeeded", "run.succeeded");
                 return;
             }

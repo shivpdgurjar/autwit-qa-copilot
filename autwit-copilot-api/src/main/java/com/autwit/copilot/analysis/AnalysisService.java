@@ -4,6 +4,7 @@ import java.util.List;
 import java.util.UUID;
 
 import com.autwit.copilot.common.ApiException;
+import com.autwit.copilot.run.RunEnqueuer;
 import com.autwit.copilot.session.SessionRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,14 +33,17 @@ public class AnalysisService {
     private final SessionRepository sessions;
     private final AnalysisRepository analysis;
     private final StateAssembler assembler;
+    private final RunEnqueuer enqueuer;
 
-    public AnalysisService(SessionRepository sessions, AnalysisRepository analysis, StateAssembler assembler) {
+    public AnalysisService(SessionRepository sessions, AnalysisRepository analysis,
+            StateAssembler assembler, RunEnqueuer enqueuer) {
         this.sessions = sessions;
         this.analysis = analysis;
         this.assembler = assembler;
+        this.enqueuer = enqueuer;
     }
 
-    public record Result(AnalysisSession session, StateAssembler.Assembled assembled) {
+    public record Result(AnalysisSession session, StateAssembler.Assembled assembled, RunEnqueuer.Accepted run) {
     }
 
     /**
@@ -82,6 +86,11 @@ public class AnalysisService {
         // last_sequence reflects what actually landed, so a follow-up appends after it.
         analysis.bumpSession(analysisId, 0, assembled.states().size(), null);
 
-        return new Result(analysis.findSession(analysisId).orElseThrow(), assembled);
+        // Enqueue the analysis run in the same transaction. The worker dequeues via
+        // SKIP LOCKED and cannot see the run until this commits — by which point the
+        // states are committed too — so it never reads a half-assembled analysis.
+        var run = enqueuer.enqueueFinancialAnalysis(sessionId, analysisId, orderNumber, null);
+
+        return new Result(analysis.findSession(analysisId).orElseThrow(), assembled, run);
     }
 }
