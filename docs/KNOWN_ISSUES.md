@@ -35,3 +35,26 @@ request logging is status-only), and the §6.1 hash is over the projected payloa
 leak surface is our durable store specifically.
 
 **Owner:** qa-copilot side (we own the durable store). Revisit before first real capture.
+
+## FIX-1 — fake-profile skill catalog fixture is stale (cosmetic, dev-only)
+
+**Status:** open, optional. `autwit-copilot-api/src/main/resources/fixtures/orchestrator/skills_catalog.json`
+is pinned at `v1/279960341625` (5 skills) and is missing both `financial.analyze_snapshot`
+and `compare.cross_system` (live catalog is now `v1/54395dc819e3`, 7 skills). Consumed ONLY
+by `FakeOrchestratorClient` (`@Profile("fake")`) for `GET /skills`; the real profile's
+`SkillCatalogSync` content-compares the live catalog and re-syncs automatically, so nothing
+is broken. Refreshing it = copy the orchestrator's frozen `message-to-qa-copilot/v1.0.21/
+skills_catalog.json`, BUT `HttpOrchestratorClientTest` asserts `skills().hasSize(5)` + the
+specific mutating skills, so that test must be updated in the same change. Low priority.
+
+## FIX-2 — financial reconciliation config keyed on demo part_keys (latent no-op)
+
+**Status:** open, optional. This is the **diff/comparison** feature's own financial
+reconciliation (`autwit.compare.financial` in `application.yml`, `FinancialRules.java`), not
+the new orchestrator financial-analysis. Its `sum-invariants`/`cross-source` rules key on
+the demo part_keys (`oms.orders`, `oms.order_items`, `dynamo.order_doc`, `api.order_response`).
+Real-mode `snapshot.capture` now emits `orders.orders`, `orders.order_lines`, `shipments.*`,
+`pickpack.qa3_pick_pack`. `FinancialRules.checkSum`/`checkCrossSource` return early on an
+absent part_key — a **silent no-op**, not a crash or false finding — so these invariants
+simply won't fire over a real snapshot until the config part_keys are re-keyed. Fake/demo
+mode is unaffected (byte-identical `oms.*`).
