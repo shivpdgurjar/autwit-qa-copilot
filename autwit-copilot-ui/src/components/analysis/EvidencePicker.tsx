@@ -1,9 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
+import { isActive } from '../../api/client';
 import type {
   ArtifactRef,
   CreateAnalysisResponse,
   EventRecord,
+  Run,
   StateRef,
+  Verdict,
 } from '../../api/client';
 import {
   SOURCES,
@@ -11,9 +14,12 @@ import {
   useArtifacts,
   useCreateAnalysis,
   useEvidenceEvents,
+  useRun,
   type Source,
   type StateType,
 } from '../../hooks/useAnalysis';
+import { FailedRunCard, PendingRunCard } from '../chat/PendingRunCard';
+import { VerdictBadge } from '../findings/SeverityBadge';
 import { Ago, Mono, Muted, Spinner } from '../ui';
 
 /**
@@ -705,9 +711,10 @@ function ResultView({
           </tbody>
         </table>
 
-        <p className="mt-3 text-[11px] text-ink-400 italic">
-          This reports the assembled states, not a verdict — the analysis run is wired separately.
+        <p className="mt-4 mb-1 text-[11px] font-semibold uppercase tracking-wide text-ink-400">
+          Verdict
         </p>
+        <RunVerdict runId={data.run_id} />
       </div>
 
       <footer className="flex items-center gap-2 border-t border-ink-700 px-4 py-2.5">
@@ -724,6 +731,162 @@ function ResultView({
           Done
         </button>
       </footer>
+    </div>
+  );
+}
+
+/**
+ * overall_status → VerdictBadge. The badge speaks the Comparison vocabulary
+ * (pass/fail/warn/inconclusive); an analysis speaks a slightly different one, so we map:
+ * PASS_WITH_WARNINGS is a warn (it passed, with caveats), and NOT_VERIFIABLE is
+ * inconclusive — the grey, deliberately-not-green badge, because "could not verify" must
+ * never read as a mild pass.
+ */
+const OVERALL_TO_VERDICT: Record<string, Verdict> = {
+  PASS: 'pass',
+  FAIL: 'fail',
+  PASS_WITH_WARNINGS: 'warn',
+  NOT_VERIFIABLE: 'inconclusive',
+};
+
+/**
+ * result_summary is an open map in the generated client ({ [key]: unknown }), so read
+ * each field by type rather than trusting a shape — a missing or oddly-typed field
+ * simply renders as absent instead of throwing.
+ */
+type ResultSummary = NonNullable<Run['result_summary']>;
+
+function summaryText(summary: ResultSummary | undefined, key: string): string | undefined {
+  const v = summary?.[key];
+  return typeof v === 'string' && v.length > 0 ? v : undefined;
+}
+
+function summaryNum(summary: ResultSummary | undefined, key: string): number | undefined {
+  const v = summary?.[key];
+  return typeof v === 'number' && Number.isFinite(v) ? v : undefined;
+}
+
+/**
+ * Watches the analysis run to its verdict.
+ *
+ * The picker's POST returns a run_id; the verdict lands on the run asynchronously. This
+ * polls the run (useRun) and renders honestly at each stage: an optimistic pending card
+ * while it works, the deterministic verdict once it succeeds, and a failed/timed_out card
+ * that is NOT dressed up as a verdict when the run did not actually produce one.
+ */
+function RunVerdict({ runId }: { runId: string }) {
+  const run = useRun(runId, true);
+
+  if (run.isLoading || (!run.data && !run.error)) {
+    return (
+      <p className="flex items-center gap-2 py-2 text-[12px] text-ink-400">
+        <Spinner /> Waiting for the analysis run…
+      </p>
+    );
+  }
+
+  if (run.error || !run.data) {
+    const problem = run.error as { detail?: string; title?: string } | undefined;
+    return (
+      <p className="rounded border border-red-900/60 bg-red-950/20 px-3 py-2 text-[12px] text-red-300">
+        {problem?.detail ?? problem?.title ?? 'Could not read the analysis run.'}
+      </p>
+    );
+  }
+
+  const r = run.data;
+
+  // Still queued or running — the same optimistic card the timeline uses. No cancel here:
+  // this is a read-only watch of an analysis the tester just kicked off.
+  if (isActive(r.status)) {
+    return <PendingRunCard run={r} />;
+  }
+
+  // Failed / timed_out are NOT verdicts. timed_out means the outcome is unknown; failed
+  // means it errored. FailedRunCard says exactly that.
+  if (r.status === 'failed' || r.status === 'timed_out') {
+    return <FailedRunCard run={r} />;
+  }
+
+  if (r.status === 'cancelled') {
+    return (
+      <p className="rounded border border-ink-700 bg-ink-950 px-3 py-2 text-[12px] text-ink-300">
+        This analysis run was cancelled before it produced a verdict.
+      </p>
+    );
+  }
+
+  // Terminal & succeeded — read the deterministic verdict off result_summary.
+  const summary = r.result_summary;
+  const overall = summaryText(summary, 'overall_status');
+  const verdict = overall ? OVERALL_TO_VERDICT[overall] : undefined;
+  const confidence = summaryNum(summary, 'confidence');
+  const executive = summaryText(summary, 'executive_summary');
+  const aiStatus = summaryText(summary, 'ai_analysis_status');
+  const aiReason = summaryText(summary, 'ai_unavailable_reason');
+  const findingsTotal = summaryNum(summary, 'findings_total');
+  const findingsFail = summaryNum(summary, 'findings_fail');
+  const model = summaryText(summary, 'model');
+
+  return (
+    <div className="rounded-lg border border-ink-700 bg-ink-900 p-3">
+      <div className="flex flex-wrap items-center gap-2">
+        {verdict ? (
+          <VerdictBadge verdict={verdict} />
+        ) : (
+          <span className="rounded bg-ink-800 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-ink-300 ring-1 ring-inset ring-ink-600">
+            {overall ?? 'no verdict reported'}
+          </span>
+        )}
+        {overall && verdict && <Mono className="text-ink-400">{overall}</Mono>}
+        {confidence !== undefined && (
+          <span className="ml-auto text-[11px]">
+            <Muted>confidence</Muted>{' '}
+            <Mono className="text-ink-200 tabular-nums">{confidence.toFixed(2)}</Mono>
+          </span>
+        )}
+      </div>
+
+      {executive && <p className="mt-2.5 text-[12px] leading-relaxed text-ink-100">{executive}</p>}
+
+      {/* AI status, muted — deterministic analysis is authoritative; the AI layer is a
+          garnish and we say so honestly rather than hiding an UNAVAILABLE behind silence. */}
+      {aiStatus && (
+        <p className="mt-2.5 text-[11px] text-ink-400">
+          AI analysis: <Mono className="text-ink-300">{aiStatus}</Mono>
+          {aiStatus !== 'OK' && aiReason ? ` — ${aiReason}` : ''}
+        </p>
+      )}
+
+      {(findingsTotal !== undefined || findingsFail !== undefined) && (
+        <div className="mt-2.5 flex flex-wrap items-center gap-3 text-[11px]">
+          {findingsTotal !== undefined && (
+            <span>
+              <Muted>findings</Muted>{' '}
+              <Mono className="text-ink-200 tabular-nums">{findingsTotal}</Mono>
+            </span>
+          )}
+          {findingsFail !== undefined && (
+            <span>
+              <Muted>failing</Muted>{' '}
+              <Mono
+                className={`tabular-nums ${findingsFail > 0 ? 'text-red-300' : 'text-ink-200'}`}
+              >
+                {findingsFail}
+              </Mono>
+            </span>
+          )}
+          {model && (
+            <span className="ml-auto">
+              <Muted>model</Muted> <Mono className="text-ink-400">{model}</Mono>
+            </span>
+          )}
+        </div>
+      )}
+
+      <p className="mt-2.5 text-[11px] text-ink-400 italic">
+        The individual findings appear in this session's findings feed.
+      </p>
     </div>
   );
 }

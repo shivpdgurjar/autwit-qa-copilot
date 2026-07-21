@@ -1,11 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   api,
+  isTerminal,
   unwrap,
   type ArtifactRef,
   type CreateAnalysisRequest,
   type CreateAnalysisResponse,
   type EventRecord,
+  type Run,
   type StateRef,
 } from '../api/client';
 import { sessionKey } from './useSession';
@@ -122,5 +124,38 @@ export function useCreateAnalysis(sessionId: string) {
         }),
       ),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: sessionKey(sessionId) }),
+  });
+}
+
+export const runKey = (runId: string) => ['run', runId] as const;
+
+/**
+ * GET /runs/{runId} — watch one run to its verdict.
+ *
+ * The analysis submitted from the evidence picker runs asynchronously through the
+ * worker; POST /analyses returns a run_id and the verdict lands on the RUN later.
+ * This polls until the run reaches a terminal status, then stops — the same
+ * "refetch only while active" discipline useSession uses (an idle poll of a finished
+ * run is pure waste), except keyed off the run's own status rather than a session's
+ * active_runs, since a run has no separate stream to fall back from.
+ */
+export function useRun(runId: string | undefined, enabled = true) {
+  return useQuery({
+    queryKey: runKey(runId ?? ''),
+    enabled: enabled && Boolean(runId),
+    queryFn: async ({ signal }): Promise<Run> =>
+      unwrap(
+        await api.GET('/runs/{runId}', {
+          params: { path: { runId: runId! } },
+          signal,
+        }),
+      ),
+
+    // Poll while the run is non-terminal (queued/running); stop the moment it settles.
+    // isTerminal(undefined) is false, so the very first fetch is never treated as done.
+    refetchInterval: (query) => (isTerminal(query.state.data?.status) ? false : 2000),
+
+    // A stale run is a stale verdict — always show where the run actually is.
+    staleTime: 0,
   });
 }
