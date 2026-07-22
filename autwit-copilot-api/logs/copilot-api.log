@@ -1944,3 +1944,4 @@ org.springframework.http.converter.HttpMessageNotWritableException: No converter
 	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1741)
 	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)
 	at java.base/java.lang.VirtualThread.run(Unknown Source)
+2026-07-21T16:24:15.155Z WARN  [tomcat-handler-65] o.s.w.s.m.s.DefaultHandlerExceptionResolver - Resolved [org.springframework.web.context.request.async.AsyncRequestNotUsableException: ServletOutputStream failed to flush: java.io.IOException: Broken pipe]
