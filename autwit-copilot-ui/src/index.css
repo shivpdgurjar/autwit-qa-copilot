@@ -1,19 +1,72 @@
 @import 'tailwindcss';
 
 /*
-  Dark by default: this thing is read next to a terminal and a database client, for
-  hours, by someone hunting a bug.
+  Light theme, aligned to acuverconsulting.com: a clean corporate consulting look —
+  white/soft-grey surfaces, deep-navy text, a professional blue accent. Replaces the
+  original terminal-dark theme.
+
+  The whole app is driven by three token groups, all overridden here in one place:
+    - ink-*    : the neutral scale. Used by luminance ROLE — ink-950 = page background,
+                 ink-900 = cards, 850/800 = subtle surfaces, 700/600 = borders,
+                 400/300 = muted/secondary text, 100 = primary text. Flipped to light.
+    - sky-*    : the accent (buttons, links, selected state) → Acuver blue.
+    - red/amber/emerald/orange : semantic (error/warning/success/severity). Re-ramped for
+                 a light ground — dark readable text, faint tint backgrounds. The app uses
+                 opacity modifiers (bg-red-950/20, border-red-900/60), so the *-950 shades
+                 are the lightest tint and text uses the mid/dark shades.
+
+  NOTE ON BRAND EXACTNESS: Acuver's stylesheet is external and its exact brand hex could
+  not be scraped, so the accent blue is an estimate of the corporate palette. It is tuned
+  in one place — swap --color-sky-600/700 (and the sky text shades) to the real brand
+  values to match precisely.
 */
 @theme {
-  --color-ink-950: #0b0d10;
-  --color-ink-900: #12151a;
-  --color-ink-850: #171b22;
-  --color-ink-800: #1d222b;
-  --color-ink-700: #2a313d;
-  --color-ink-600: #3b4453;
-  --color-ink-400: #7c889b;
-  --color-ink-300: #a3adbd;
-  --color-ink-100: #e6eaf0;
+  /* ---- neutrals: light surfaces, navy text ---- */
+  --color-ink-950: #ffffff; /* page background */
+  --color-ink-900: #f5f7fa; /* cards / panels */
+  --color-ink-850: #eef1f6; /* subtle raised surface */
+  --color-ink-800: #e6eaf1; /* inputs / hover / selected row */
+  --color-ink-700: #d6dde6; /* borders */
+  --color-ink-600: #bcc6d3; /* stronger borders / disabled */
+  --color-ink-400: #647082; /* muted text (~4.6:1 on white) */
+  --color-ink-300: #3c4757; /* secondary text */
+  --color-ink-100: #15233c; /* primary text — deep navy */
+
+  /* ---- accent: Acuver blue ---- */
+  --color-sky-200: #12508f; /* darkest accent text */
+  --color-sky-300: #17588f; /* accent text hover */
+  --color-sky-400: #1a6ac0; /* links / accent text (~4.6:1 on white) */
+  --color-sky-500: #2f83d6; /* button hover (light) */
+  --color-sky-600: #1a6ac0; /* primary button */
+  --color-sky-700: #175a9e; /* button default / accent border */
+  --color-sky-800: #17588f; /* ring */
+  --color-sky-900: #cadffa; /* light blue border/tint */
+  --color-sky-950: #eaf2fc; /* lightest blue tint background */
+
+  /* ---- error / critical (red) ---- */
+  --color-red-200: #8f1d1d; /* darkest error text */
+  --color-red-300: #bd2822; /* error text */
+  --color-red-400: #d13029; /* error accent */
+  --color-red-900: #e7a6a2; /* error border (used at /60) */
+  --color-red-950: #f7dcda; /* error background tint (used at /20) */
+
+  /* ---- warning / partial (amber) ---- */
+  --color-amber-200: #7a5300; /* darkest warning text */
+  --color-amber-300: #986600; /* warning text (~4.5:1 on white) */
+  --color-amber-400: #c2870f; /* solid warning chip/dot */
+  --color-amber-900: #e6c584; /* warning border */
+  --color-amber-950: #f8edd0; /* warning background tint */
+
+  /* ---- success / pass (emerald) ---- */
+  --color-emerald-300: #0e7a51; /* success text */
+  --color-emerald-400: #128f68; /* solid success chip/dot */
+  --color-emerald-900: #a6dcc3; /* success border */
+  --color-emerald-950: #e1f4eb; /* success background tint */
+
+  /* ---- extra severity (orange) ---- */
+  --color-orange-300: #b85515; /* orange text */
+  --color-orange-900: #f0b48a; /* orange border */
+  --color-orange-950: #fbe6d8; /* orange background tint */
 }
 
 html,
