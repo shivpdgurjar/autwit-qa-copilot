@@ -249,6 +249,21 @@ paths:
   /sessions/{sessionId}/analyses:
     parameters:
       - $ref: '#/components/parameters/SessionId'
+    get:
+      tags: [analysis]
+      summary: List a session's analyses (for the follow-up chaining selector)
+      description: |
+        The analyses assembled in this session, newest first. The evidence-picker
+        uses this to let a new analysis continue a prior one's ChatGPT conversation:
+        only entries with chainable=true (they have produced an OpenAI response) can
+        seed a follow-up via previous_analysis_id.
+      operationId: listAnalyses
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AnalysisListResponse' }
     post:
       tags: [analysis]
       summary: Assemble a financial analysis from selected session evidence
@@ -1016,6 +1031,13 @@ components:
           type: array
           minItems: 1
           items: { $ref: '#/components/schemas/StateRef' }
+        previous_analysis_id:
+          type: string
+          description: |
+            Optional. A prior analysis of this session (from GET /analyses,
+            chainable=true) whose ChatGPT conversation this analysis continues:
+            its OpenAI response id seeds the first call as previous_response_id.
+            A cache, never a dependency — resolved and validated server-side.
 
     StateRef:
       type: object
@@ -1059,7 +1081,35 @@ components:
           format: uuid
           description: The async analysis run. Poll GET /runs/{runId} for the verdict.
         step_id: { type: string, format: uuid }
+        chained_from:
+          type: string
+          nullable: true
+          description: The prior analysis this one continues, or absent for a fresh conversation.
         note: { type: string }
+
+    AnalysisListResponse:
+      type: object
+      required: [analyses]
+      properties:
+        analyses:
+          type: array
+          items: { $ref: '#/components/schemas/AnalysisSummary' }
+
+    AnalysisSummary:
+      type: object
+      required: [analysis_id, analysis_mode, order_number, state_count, chainable]
+      description: A prior analysis as the follow-up chaining selector sees it.
+      properties:
+        analysis_id: { type: string }
+        analysis_mode: { type: string }
+        order_number: { type: string }
+        state_count: { type: integer, description: States assembled into this analysis. }
+        chainable:
+          type: boolean
+          description: True once the analysis has produced an OpenAI response to continue from.
+        prompt_version: { type: string }
+        rule_version: { type: string }
+        updated_at: { type: string, format: date-time }
 
     AnalysisStateView:
       type: object

@@ -15,7 +15,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.context.ActiveProfiles;
 
+import com.autwit.copilot.common.ApiException;
+
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * The financial analysis run end to end against the {@code fake} client: assemble evidence →
@@ -130,6 +133,51 @@ class FinancialAnalysisRunTest extends AbstractPostgresIT {
         var session = analysisRepo.findSession(analysisId).orElseThrow();
         assertThat(session.analysisMode()).isEqualTo("LIFECYCLE_COMPARISON");
         assertThat(session.latestResponseId()).isEqualTo("resp-fake-" + analysisId);
+    }
+
+    @Test
+    void aFollowUpSeedsThePriorConversationToken() {
+        // Run analysis A to completion — the fake pins a response id on its session head.
+        var a = captureOrder("order-a", "24.00");
+        var first = analyses.createAndAssemble(sessionId, "SNAPSHOT_SANCTITY", "XXXX",
+                List.of(EvidenceRef.of(EvidenceRef.Kind.ARTIFACT, a)));
+        var priorAnalysisId = first.session().analysisId();
+        assertThat(worker.pollOnce()).isTrue();
+        var priorToken = analysisRepo.findSession(priorAnalysisId).orElseThrow().latestResponseId();
+        assertThat(priorToken).isEqualTo("resp-fake-" + priorAnalysisId);
+
+        // A follow-up that continues A is seeded with A's token, so its first orchestrator
+        // call will send it as previous_response_id (checked before it runs, so the fake has
+        // not yet overwritten it with the follow-up's own response).
+        var b = captureOrder("order-b", "26.00");
+        var followUp = analyses.createAndAssemble(sessionId, "SNAPSHOT_SANCTITY", "XXXX",
+                List.of(EvidenceRef.of(EvidenceRef.Kind.ARTIFACT, b)), priorAnalysisId);
+        assertThat(followUp.chainedFrom()).isEqualTo(priorAnalysisId);
+        assertThat(analysisRepo.findSession(followUp.session().analysisId()).orElseThrow()
+                .latestResponseId()).isEqualTo(priorToken);
+
+        // Drain the follow-up's own run so the queue is left as empty as we found it — the
+        // queue is a JVM-wide FIFO with no per-method reset, and a leftover would be claimed
+        // by a sibling test's pollOnce() (see AbstractPostgresIT).
+        assertThat(worker.pollOnce()).isTrue();
+    }
+
+    @Test
+    void chainingToANotYetRunAnalysisIsRejected() {
+        // A prior analysis that has not run has no response to continue — reject, don't
+        // silently seed null (the tester asked to continue a conversation that does not exist).
+        var a = captureOrder("order-a", "24.00");
+        var prior = analyses.createAndAssemble(sessionId, "SNAPSHOT_SANCTITY", "XXXX",
+                List.of(EvidenceRef.of(EvidenceRef.Kind.ARTIFACT, a)));
+        var b = captureOrder("order-b", "26.00");
+        assertThatThrownBy(() -> analyses.createAndAssemble(sessionId, "SNAPSHOT_SANCTITY", "XXXX",
+                List.of(EvidenceRef.of(EvidenceRef.Kind.ARTIFACT, b)), prior.session().analysisId()))
+                .isInstanceOf(ApiException.BadRequest.class)
+                .hasMessageContaining("has no conversation");
+
+        // Drain the prior's run — it was enqueued but never polled here (see the note in
+        // aFollowUpSeedsThePriorConversationToken): leave the FIFO queue empty for siblings.
+        assertThat(worker.pollOnce()).isTrue();
     }
 
     @Test

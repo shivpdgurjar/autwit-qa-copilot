@@ -15,6 +15,7 @@ import {
   UPLOAD_ARTIFACT_TYPES,
   useArtifacts,
   useCreateAnalysis,
+  usePriorAnalyses,
   useUploadArtifact,
   useEvidenceEvents,
   useRun,
@@ -45,9 +46,10 @@ import { Ago, Mono, Muted, Spinner } from '../ui';
  * response or event JSON, tagged with an artifact_type + source_system). It persists as a
  * normal artifact and joins the Artifacts list, selectable like any captured one.
  *
- * DEFERRED (follow-on, intentionally not built here):
- *   the "previous-response-context" chaining selector that threads one analysis's output
- *   into the next.
+ * Follow-up chaining: an analysis can continue a PRIOR analysis's ChatGPT conversation
+ * (OpenAI previous_response_id) so the model keeps context across calls. The "Continue
+ * from" selector lists this session's chainable prior analyses; picking one sends its
+ * previous_analysis_id, and the server seeds the new analysis's conversation token.
  */
 
 type Kind = StateRef['kind'];
@@ -111,10 +113,19 @@ export function EvidencePicker({
   const [orderNumber, setOrderNumber] = useState('');
   // Ordered — for LIFECYCLE_COMPARISON the array order IS the sequence.
   const [selections, setSelections] = useState<Selection[]>([]);
+  // A prior analysis to continue the ChatGPT conversation from ('' = fresh conversation).
+  const [chainFrom, setChainFrom] = useState('');
 
   const artifacts = useArtifacts(sessionId, open);
   const events = useEvidenceEvents(sessionId, open);
+  const priorAnalyses = usePriorAnalyses(sessionId, open);
   const create = useCreateAnalysis(sessionId);
+
+  // Only analyses that have produced an AI response can seed a follow-up.
+  const chainable = useMemo(
+    () => (priorAnalyses.data ?? []).filter((a) => a.chainable),
+    [priorAnalyses.data],
+  );
 
   // Reset per opening: a picker that remembers last time's half-built selection is one
   // that submits something the tester did not mean to (cf. SkillPalette).
@@ -124,6 +135,7 @@ export function EvidencePicker({
       setShowUpload(false);
       setOrderNumber(orderId ?? '');
       setSelections([]);
+      setChainFrom('');
       create.reset();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -212,6 +224,7 @@ export function EvidencePicker({
       analysis_mode: mode,
       order_number: orderNumber.trim(),
       states: selections.map(toStateRef),
+      previous_analysis_id: chainFrom || undefined,
     });
   };
 
@@ -258,6 +271,37 @@ export function EvidencePicker({
                 <Muted className="text-[11px]">prefilled from subjects.order_id</Muted>
               )}
             </div>
+
+            {/* Follow-up chaining — continue a prior analysis's ChatGPT conversation. Shown
+                only when this session has an analysis that already produced an AI response. */}
+            {chainable.length > 0 && (
+              <div className="flex items-center gap-2 border-b border-ink-700 px-4 py-2">
+                <label className="flex items-center gap-2">
+                  <span className="font-mono text-[12px] text-ink-100">continue_from</span>
+                  <Muted className="text-[10px]">optional</Muted>
+                </label>
+                <select
+                  value={chainFrom}
+                  onChange={(e) => setChainFrom(e.target.value)}
+                  className="w-72 rounded border border-ink-700 bg-ink-950 px-2 py-1 font-mono text-[12px] text-ink-100 outline-none focus:border-sky-700"
+                >
+                  <option value="">— fresh conversation —</option>
+                  {chainable.map((a) => (
+                    <option key={a.analysis_id} value={a.analysis_id}>
+                      {a.analysis_mode} · order {a.order_number} · {a.state_count} state
+                      {a.state_count === 1 ? '' : 's'}
+                    </option>
+                  ))}
+                </select>
+                {chainFrom ? (
+                  <Muted className="text-[11px]">
+                    threads the prior LLM response as context (previous_response_id)
+                  </Muted>
+                ) : (
+                  <Muted className="text-[11px]">or continue an earlier analysis's conversation</Muted>
+                )}
+              </div>
+            )}
 
             <div className="grid min-h-0 flex-1 grid-cols-[1fr_22rem]">
               {/* left: evidence lists */}
@@ -829,6 +873,15 @@ function ResultView({
         <Mono className="mt-2 block text-[11px] text-ink-400" title="analysis_id">
           {data.analysis_id}
         </Mono>
+
+        {data.chained_from && (
+          <p className="mt-2 inline-flex items-center gap-1.5 rounded border border-sky-900 bg-sky-950 px-2 py-0.5 text-[11px] text-sky-300">
+            <span aria-hidden>⛓</span> continuing the conversation from{' '}
+            <Mono className="text-sky-300" title="previous analysis_id">
+              {data.chained_from}
+            </Mono>
+          </p>
+        )}
 
         {data.note && (
           <p className="mt-3 rounded border border-ink-700 bg-ink-950 px-3 py-2 text-[12px] text-ink-200">

@@ -54,7 +54,9 @@ public class FinancialAnalysisController {
     public record CreateAnalysisRequest(
             @NotBlank String analysisMode,
             @NotBlank String orderNumber,
-            @NotEmpty List<StateRef> states) {
+            @NotEmpty List<StateRef> states,
+            /** Optional — a prior analysis of this session whose ChatGPT conversation to continue. */
+            String previousAnalysisId) {
     }
 
     /** One assembled state, echoed back so the picker can show what it produced. */
@@ -70,7 +72,39 @@ public class FinancialAnalysisController {
             List<StateView> states,
             String runId,
             String stepId,
+            /** The prior analysis this one continues, or null for a fresh conversation. */
+            String chainedFrom,
             String note) {
+    }
+
+    /**
+     * A prior analysis, as the follow-up chaining selector sees it. {@code chainable} is
+     * true once the analysis has produced an OpenAI response to continue from — only those
+     * can seed a follow-up.
+     */
+    public record AnalysisSummary(
+            String analysisId,
+            String analysisMode,
+            String orderNumber,
+            int stateCount,
+            boolean chainable,
+            String promptVersion,
+            String ruleVersion,
+            java.time.Instant updatedAt) {
+    }
+
+    public record AnalysisListResponse(List<AnalysisSummary> analyses) {
+    }
+
+    @org.springframework.web.bind.annotation.GetMapping("/sessions/{sessionId}/analyses")
+    AnalysisListResponse list(@PathVariable UUID sessionId) {
+        var out = analyses.listAnalyses(sessionId).stream()
+                .map(s -> new AnalysisSummary(
+                        s.analysisId(), s.analysisMode(), s.orderNumber(),
+                        s.lastSequence(), s.latestResponseId() != null,
+                        s.promptVersion(), s.ruleVersion(), s.updatedAt()))
+                .toList();
+        return new AnalysisListResponse(out);
     }
 
     @PostMapping("/sessions/{sessionId}/analyses")
@@ -83,7 +117,8 @@ public class FinancialAnalysisController {
                         s.label(), s.lifecycleStage()))
                 .toList();
 
-        var result = analyses.createAndAssemble(sessionId, req.analysisMode(), req.orderNumber(), refs);
+        var result = analyses.createAndAssemble(sessionId, req.analysisMode(), req.orderNumber(),
+                refs, req.previousAnalysisId());
 
         var states = result.assembled().states().stream()
                 .map(st -> new StateView(st.sequence(), st.label(), st.stateType().name(),
@@ -91,13 +126,17 @@ public class FinancialAnalysisController {
                 .toList();
 
         var run = result.run().run();
+        var note = "Assembled and enqueued. The analysis runs asynchronously; watch the run "
+                + "for the verdict (run_id " + run.runId() + ").";
+        if (result.chainedFrom() != null) {
+            note += " Continuing the conversation from " + result.chainedFrom() + ".";
+        }
         var body = new CreateAnalysisResponse(
                 result.session().analysisId(), result.session().analysisMode(),
                 result.session().orderNumber(), result.assembled().persisted(),
                 result.assembled().deduped(), states,
                 run.runId().toString(), run.stepId().toString(),
-                "Assembled and enqueued. The analysis runs asynchronously; watch the run "
-                        + "for the verdict (run_id " + run.runId() + ").");
+                result.chainedFrom(), note);
 
         return ResponseEntity.accepted().body(body);
     }

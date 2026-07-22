@@ -58,6 +58,15 @@ public class AnalysisRepository {
     }
 
     /**
+     * Every analysis of a session, newest first — the source for the follow-up chaining
+     * selector, which lets a new analysis continue a prior one's OpenAI conversation.
+     */
+    public List<AnalysisSession> listSessions(UUID sessionId) {
+        return jdbc.query("select * from autwit.analysis_session where session_id = ? order by created_at desc",
+                sessionMapper, sessionId);
+    }
+
+    /**
      * Optimistic update of the session head after a run.
      *
      * <p>Updates only when {@code version} still matches what the caller read, bumping it

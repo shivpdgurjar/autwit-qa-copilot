@@ -29,6 +29,7 @@ export type CreateAnalysisRequest = Schemas['CreateAnalysisRequest'];
 export type CreateAnalysisResponse = Schemas['CreateAnalysisResponse'];
 export type StateRef = Schemas['StateRef'];
 export type AnalysisStateView = Schemas['AnalysisStateView'];
+export type AnalysisSummary = Schemas['AnalysisSummary'];
 export type Finding = Schemas['Finding'];
 export type Comparison = Schemas['Comparison'];
 export type Skill = Schemas['Skill'];

@@ -43,17 +43,35 @@ public class AnalysisService {
         this.enqueuer = enqueuer;
     }
 
-    public record Result(AnalysisSession session, StateAssembler.Assembled assembled, RunEnqueuer.Accepted run) {
+    public record Result(AnalysisSession session, StateAssembler.Assembled assembled, RunEnqueuer.Accepted run,
+            String chainedFrom) {
+    }
+
+    /** Every analysis of a session, newest first — populates the follow-up chaining selector. */
+    public List<AnalysisSession> listAnalyses(UUID sessionId) {
+        return analysis.listSessions(sessionId);
+    }
+
+    /** No follow-up chaining — a fresh conversation. */
+    public Result createAndAssemble(UUID sessionId, String analysisMode, String orderNumber,
+            List<EvidenceRef> refs) {
+        return createAndAssemble(sessionId, analysisMode, orderNumber, refs, null);
     }
 
     /**
-     * @param analysisMode  SNAPSHOT_SANCTITY (exactly one state) or LIFECYCLE_COMPARISON.
-     * @param orderNumber   the order the evidence is about.
-     * @param refs          the tester's selection from the picker.
+     * @param analysisMode        SNAPSHOT_SANCTITY (exactly one state) or LIFECYCLE_COMPARISON.
+     * @param orderNumber         the order the evidence is about.
+     * @param refs                the tester's selection from the picker.
+     * @param previousAnalysisId  optional — a prior analysis of this session whose OpenAI
+     *                            conversation this one continues. Its {@code latest_response_id}
+     *                            seeds this analysis, so the first orchestrator call sends it as
+     *                            {@code previous_response_id}. A cache, never a dependency: it is
+     *                            resolved server-side (the UI never handles the raw token), and a
+     *                            cross-session or not-yet-run reference is rejected at the boundary.
      */
     @Transactional
     public Result createAndAssemble(UUID sessionId, String analysisMode, String orderNumber,
-            List<EvidenceRef> refs) {
+            List<EvidenceRef> refs, String previousAnalysisId) {
 
         if (sessions.find(sessionId).isEmpty()) {
             throw new ApiException.NotFound("session", sessionId);
@@ -77,20 +95,48 @@ public class AnalysisService {
                             + ". Use LIFECYCLE_COMPARISON to compare a sequence.");
         }
 
+        // Resolve the chaining seed before we create anything, so a bad reference fails the
+        // whole call rather than leaving a half-built analysis behind.
+        String seedResponseId = resolveChainSeed(sessionId, previousAnalysisId);
+
         var analysisId = "analysis-" + UUID.randomUUID();
         var session = new AnalysisSession(analysisId, sessionId, orderNumber, analysisMode,
-                null, 0, UNPINNED, UNPINNED, 0, null, null);
+                seedResponseId, 0, UNPINNED, UNPINNED, 0, null, null);
         analysis.createSession(session);
 
         var assembled = assembler.assemble(analysisId, refs);
-        // last_sequence reflects what actually landed, so a follow-up appends after it.
-        analysis.bumpSession(analysisId, 0, assembled.states().size(), null);
+        // last_sequence reflects what actually landed, so a follow-up appends after it. Carry
+        // the seed token through the bump (it writes latest_response_id) so it is not clobbered.
+        analysis.bumpSession(analysisId, 0, assembled.states().size(), seedResponseId);
 
         // Enqueue the analysis run in the same transaction. The worker dequeues via
         // SKIP LOCKED and cannot see the run until this commits — by which point the
         // states are committed too — so it never reads a half-assembled analysis.
         var run = enqueuer.enqueueFinancialAnalysis(sessionId, analysisId, orderNumber, null);
 
-        return new Result(analysis.findSession(analysisId).orElseThrow(), assembled, run);
+        var chainedFrom = seedResponseId == null ? null : previousAnalysisId;
+        return new Result(analysis.findSession(analysisId).orElseThrow(), assembled, run, chainedFrom);
+    }
+
+    /**
+     * The OpenAI response id a follow-up continues from, or null for a fresh conversation.
+     * Validates that the referenced analysis is real, belongs to this session, and has
+     * actually produced a response to continue.
+     */
+    private String resolveChainSeed(UUID sessionId, String previousAnalysisId) {
+        if (previousAnalysisId == null || previousAnalysisId.isBlank()) {
+            return null;
+        }
+        var prior = analysis.findSession(previousAnalysisId)
+                .filter(p -> p.sessionId().equals(sessionId))
+                .orElseThrow(() -> new ApiException.BadRequest("unknown_previous_analysis",
+                        "previous_analysis_id does not name an analysis in this session: "
+                                + previousAnalysisId));
+        if (prior.latestResponseId() == null) {
+            throw new ApiException.BadRequest("not_chainable",
+                    "That analysis has no conversation to continue yet — it has not produced an AI "
+                            + "response. Run it first, or start a fresh analysis.");
+        }
+        return prior.latestResponseId();
     }
 }

@@ -3,6 +3,7 @@ import {
   api,
   isTerminal,
   unwrap,
+  type AnalysisSummary,
   type ArtifactRef,
   type CreateAnalysisRequest,
   type CreateAnalysisResponse,
@@ -155,6 +156,8 @@ export function useCreateAnalysis(sessionId: string) {
       analysis_mode: AnalysisMode;
       order_number: string;
       states: StateRef[];
+      /** Optional: a prior chainable analysis to continue the ChatGPT conversation from. */
+      previous_analysis_id?: string;
     }): Promise<CreateAnalysisResponse> =>
       unwrap(
         await api.POST('/sessions/{sessionId}/analyses', {
@@ -163,10 +166,45 @@ export function useCreateAnalysis(sessionId: string) {
             analysis_mode: input.analysis_mode,
             order_number: input.order_number,
             states: input.states,
+            ...(input.previous_analysis_id
+              ? { previous_analysis_id: input.previous_analysis_id }
+              : {}),
           },
         }),
       ),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: sessionKey(sessionId) }),
+    // Invalidate the session AND the prior-analyses list: the new analysis should appear as
+    // a future chaining source once it exists.
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: sessionKey(sessionId) });
+      queryClient.invalidateQueries({ queryKey: priorAnalysesKey(sessionId) });
+    },
+  });
+}
+
+export const priorAnalysesKey = (sessionId: string) =>
+  ['analyses', sessionId] as const;
+
+/**
+ * The session's prior analyses — the follow-up chaining selector's options.
+ *
+ * A follow-up analysis can continue a prior one's ChatGPT conversation (OpenAI
+ * previous_response_id), so the LLM keeps context across calls instead of re-reading
+ * everything. Only `chainable` entries — those that already produced an AI response —
+ * can seed a follow-up; the picker filters to those.
+ */
+export function usePriorAnalyses(sessionId: string, enabled = true) {
+  return useQuery({
+    queryKey: priorAnalysesKey(sessionId),
+    enabled,
+    queryFn: async ({ signal }): Promise<AnalysisSummary[]> => {
+      const page = unwrap(
+        await api.GET('/sessions/{sessionId}/analyses', {
+          params: { path: { sessionId } },
+          signal,
+        }),
+      );
+      return page.analyses ?? [];
+    },
   });
 }
 
