@@ -10,6 +10,7 @@ import type {
   Verdict,
 } from '../../api/client';
 import {
+  ANALYSABLE_ARTIFACT_TYPES,
   SOURCES,
   STATE_TYPES,
   UPLOAD_ARTIFACT_TYPES,
@@ -30,7 +31,9 @@ import { Ago, Mono, Muted, Spinner } from '../ui';
  * The evidence picker — "assemble from evidence" for financial analysis.
  *
  * A tester picks already-persisted session evidence (artifacts + events) and submits it
- * to POST /sessions/{id}/analyses. Two paths:
+ * to POST /sessions/{id}/analyses. Only EVENTS and API RESPONSES are selectable — the
+ * Artifacts tab is filtered to ANALYSABLE_ARTIFACT_TYPES (api_response + event_batch), so
+ * DB snapshots (rdbms_table / dynamo_doc) and derived reports never appear here. Two paths:
  *   - "Analyze this"          → exactly ONE state → SNAPSHOT_SANCTITY.
  *   - "Build states → Analyze"→ an ordered sequence → LIFECYCLE_COMPARISON.
  *
@@ -125,6 +128,16 @@ export function EvidencePicker({
   const chainable = useMemo(
     () => (priorAnalyses.data ?? []).filter((a) => a.chainable),
     [priorAnalyses.data],
+  );
+
+  // Financial analysis only reasons over events + api responses. Filter DB snapshots
+  // (rdbms_table / dynamo_doc) and derived reports out of the selectable artifact list.
+  const analysableArtifacts = useMemo(
+    () =>
+      (artifacts.data ?? []).filter((a) =>
+        (ANALYSABLE_ARTIFACT_TYPES as readonly string[]).includes(a.artifact_type),
+      ),
+    [artifacts.data],
   );
 
   // Reset per opening: a picker that remembers last time's half-built selection is one
@@ -314,7 +327,7 @@ export function EvidencePicker({
                       setShowUpload(false);
                     }}
                     label="Artifacts"
-                    count={artifacts.data?.length}
+                    count={artifacts.data ? analysableArtifacts.length : undefined}
                   />
                   <TabButton
                     active={tab === 'EVENT' && !showUpload}
@@ -348,7 +361,8 @@ export function EvidencePicker({
                     />
                   ) : tab === 'ARTIFACT' ? (
                     <ArtifactList
-                      query={artifacts}
+                      isLoading={artifacts.isLoading}
+                      artifacts={analysableArtifacts}
                       selectedIds={selectedIds}
                       onToggle={toggleArtifact}
                     />
@@ -485,24 +499,31 @@ function Row({
 }
 
 function ArtifactList({
-  query,
+  isLoading,
+  artifacts,
   selectedIds,
   onToggle,
 }: {
-  query: ReturnType<typeof useArtifacts>;
+  isLoading: boolean;
+  /** Already filtered to the analysable types (api_response + event_batch). */
+  artifacts: ArtifactRef[];
   selectedIds: Set<string>;
   onToggle: (a: ArtifactRef) => void;
 }) {
-  if (query.isLoading) {
+  if (isLoading) {
     return (
       <p className="flex items-center gap-2 p-3 text-[12px] text-ink-400">
         <Spinner /> Loading artifacts…
       </p>
     );
   }
-  const artifacts = query.data ?? [];
   if (artifacts.length === 0) {
-    return <p className="p-4 text-center text-[12px] text-ink-400 italic">No artifacts captured yet.</p>;
+    return (
+      <p className="p-4 text-center text-[12px] text-ink-400 italic">
+        No api responses captured yet. Financial analysis reads events and api responses —
+        DB snapshots aren&apos;t selectable here.
+      </p>
+    );
   }
   return (
     <ul>
