@@ -60,9 +60,18 @@ export const SOURCES: Source[] = [
   'UNKNOWN',
 ];
 
-/** artifact_type values sensible for a hand-uploaded body (the ones that project cleanly
- * and don't need extra structure — rdbms_table would demand meta.pk_columns). */
-export const UPLOAD_ARTIFACT_TYPES = ['api_response', 'event_batch', 'other'] as const;
+/**
+ * Financial analysis reasons over EVENTS and API RESPONSES only — never DB snapshots
+ * (rdbms_table / dynamo_doc) or derived reports (log, diff_report, analysis, …). The
+ * evidence picker's Artifacts tab is filtered to these types; captured events come from the
+ * Events tab. An event_batch artifact is a batch of events, so it counts as "events" here.
+ */
+export const ANALYSABLE_ARTIFACT_TYPES = ['api_response', 'event_batch'] as const;
+
+/** artifact_type values sensible for a hand-uploaded body — the analysable ones only, so a
+ * tester never uploads something (e.g. a DB snapshot or an "other" blob) that then isn't
+ * selectable for the analysis. */
+export const UPLOAD_ARTIFACT_TYPES = ANALYSABLE_ARTIFACT_TYPES;
 
 /**
  * Attach a new piece of evidence the session did not capture — a tester pastes an order
