@@ -1945,3 +1945,824 @@ org.springframework.http.converter.HttpMessageNotWritableException: No converter
 	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)
 	at java.base/java.lang.VirtualThread.run(Unknown Source)
 2026-07-21T16:24:15.155Z WARN  [tomcat-handler-65] o.s.w.s.m.s.DefaultHandlerExceptionResolver - Resolved [org.springframework.web.context.request.async.AsyncRequestNotUsableException: ServletOutputStream failed to flush: java.io.IOException: Broken pipe]
+2026-07-22T09:52:15.915Z INFO  [background-preinit] o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-07-22T09:52:16.159Z INFO  [main] c.a.copilot.AutwitCopilotApplication - Starting AutwitCopilotApplication v0.1.0-SNAPSHOT using Java 21.0.11 with PID 1 (/app/app.jar started by autwit in /app)
+2026-07-22T09:52:16.160Z DEBUG [main] c.a.copilot.AutwitCopilotApplication - Running with Spring Boot v3.3.5, Spring v6.1.14
+2026-07-22T09:52:16.163Z INFO  [main] c.a.copilot.AutwitCopilotApplication - The following 2 profiles are active: "all", "integration"
+2026-07-22T09:52:19.203Z INFO  [main] o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-07-22T09:52:19.233Z INFO  [main] o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-07-22T09:52:19.256Z INFO  [main] o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-07-22T09:52:19.257Z INFO  [main] o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+2026-07-22T09:52:19.360Z INFO  [main] o.a.c.c.C.[.[localhost].[/api/v1] - Initializing Spring embedded WebApplicationContext
+2026-07-22T09:52:19.365Z INFO  [main] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 3047 ms
+2026-07-22T09:52:19.940Z INFO  [main] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-07-22T09:52:20.629Z INFO  [main] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@2db86a7c
+2026-07-22T09:52:20.633Z INFO  [main] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-07-22T09:52:20.746Z INFO  [main] org.flywaydb.core.FlywayExecutor - Database: jdbc:postgresql://postgres:5432/autwit (PostgreSQL 16.14)
+2026-07-22T09:52:21.017Z INFO  [main] o.f.core.internal.command.DbValidate - Successfully validated 1 migration (execution time 00:00.104s)
+2026-07-22T09:52:21.052Z INFO  [main] o.f.core.internal.command.DbMigrate - Current version of schema "public": 1
+2026-07-22T09:52:21.068Z INFO  [main] o.f.core.internal.command.DbMigrate - Schema "public" is up to date. No migration necessary.
+2026-07-22T09:52:21.468Z INFO  [main] c.a.c.o.HttpOrchestratorClient - HttpOrchestratorClient targeting http://host.docker.internal:9090 with a PT10M deadline
+2026-07-22T09:52:21.885Z INFO  [main] c.a.copilot.config.ConfigAssertions - Config assertion passed: run.lease=PT12M > orchestrator.timeout=PT10M
+2026-07-22T09:52:22.498Z INFO  [main] o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-07-22T09:52:22.524Z INFO  [main] o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/api/v1'
+2026-07-22T09:52:22.539Z INFO  [main] c.a.copilot.config.SchedulingConfig - Reaper scheduled every PT1M
+2026-07-22T09:52:22.540Z INFO  [main] c.a.copilot.config.SchedulingConfig - Skill catalog sync scheduled every PT1M
+2026-07-22T09:52:22.567Z INFO  [main] c.a.copilot.AutwitCopilotApplication - Started AutwitCopilotApplication in 8.259 seconds (process running for 10.815)
+2026-07-22T09:52:22.588Z INFO  [main] com.autwit.copilot.run.RunWorker - RunWorker worker-1245c83e started with concurrency 4
+2026-07-22T09:52:22.624Z INFO  [pg-listener] c.a.c.stream.PgNotificationListener - Listening on autwit_run
+2026-07-22T09:52:22.981Z INFO  [scheduling-1] c.a.c.registry.SkillCatalogSync - Synced 8 skills at catalog_version v1/a1d23a195e6a
+2026-07-22T09:52:26.355Z INFO  [tomcat-handler-0] o.a.c.c.C.[.[localhost].[/api/v1] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-07-22T09:52:26.356Z INFO  [tomcat-handler-0] o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-07-22T09:52:26.360Z INFO  [tomcat-handler-0] o.s.web.servlet.DispatcherServlet - Completed initialization in 2 ms
+2026-07-22T09:56:22.634Z INFO  [SpringApplicationShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-07-22T09:56:22.654Z INFO  [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-07-22T09:56:22.666Z INFO  [SpringApplicationShutdownHook] c.a.c.stream.PgNotificationListener - PgNotificationListener stopped
+2026-07-22T09:56:22.667Z INFO  [SpringApplicationShutdownHook] com.autwit.copilot.run.RunWorker - RunWorker worker-1245c83e draining in-flight runs…
+2026-07-22T09:56:22.768Z INFO  [SpringApplicationShutdownHook] com.autwit.copilot.run.RunWorker - RunWorker worker-1245c83e stopped
+2026-07-22T09:56:22.771Z INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-07-22T09:56:22.790Z INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-07-22T09:56:48.924Z INFO  [background-preinit] o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-07-22T09:56:49.054Z INFO  [main] c.a.copilot.AutwitCopilotApplication - Starting AutwitCopilotApplication v0.1.0-SNAPSHOT using Java 21.0.11 with PID 1 (/app/app.jar started by autwit in /app)
+2026-07-22T09:56:49.059Z DEBUG [main] c.a.copilot.AutwitCopilotApplication - Running with Spring Boot v3.3.5, Spring v6.1.14
+2026-07-22T09:56:49.061Z INFO  [main] c.a.copilot.AutwitCopilotApplication - The following 2 profiles are active: "all", "integration"
+2026-07-22T09:56:51.388Z INFO  [main] o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-07-22T09:56:51.418Z INFO  [main] o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-07-22T09:56:51.429Z INFO  [main] o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-07-22T09:56:51.430Z INFO  [main] o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+2026-07-22T09:56:51.509Z INFO  [main] o.a.c.c.C.[.[localhost].[/api/v1] - Initializing Spring embedded WebApplicationContext
+2026-07-22T09:56:51.523Z INFO  [main] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 2315 ms
+2026-07-22T09:56:52.045Z INFO  [main] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-07-22T09:56:52.394Z INFO  [main] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@76216830
+2026-07-22T09:56:52.402Z INFO  [main] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-07-22T09:56:52.464Z INFO  [main] org.flywaydb.core.FlywayExecutor - Database: jdbc:postgresql://postgres:5432/autwit (PostgreSQL 16.14)
+2026-07-22T09:56:52.559Z INFO  [main] o.f.core.internal.command.DbValidate - Successfully validated 1 migration (execution time 00:00.054s)
+2026-07-22T09:56:52.592Z INFO  [main] o.f.core.internal.command.DbMigrate - Current version of schema "public": 1
+2026-07-22T09:56:52.602Z INFO  [main] o.f.core.internal.command.DbMigrate - Schema "public" is up to date. No migration necessary.
+2026-07-22T09:56:52.850Z INFO  [main] c.a.c.o.HttpOrchestratorClient - HttpOrchestratorClient targeting http://host.docker.internal:9090 with a PT10M deadline
+2026-07-22T09:56:53.154Z INFO  [main] c.a.copilot.config.ConfigAssertions - Config assertion passed: run.lease=PT12M > orchestrator.timeout=PT10M
+2026-07-22T09:56:53.780Z INFO  [main] o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-07-22T09:56:53.805Z INFO  [main] o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/api/v1'
+2026-07-22T09:56:53.829Z INFO  [main] c.a.copilot.config.SchedulingConfig - Reaper scheduled every PT1M
+2026-07-22T09:56:53.831Z INFO  [main] c.a.copilot.config.SchedulingConfig - Skill catalog sync scheduled every PT1M
+2026-07-22T09:56:53.856Z INFO  [main] c.a.copilot.AutwitCopilotApplication - Started AutwitCopilotApplication in 6.17 seconds (process running for 8.476)
+2026-07-22T09:56:53.871Z INFO  [main] com.autwit.copilot.run.RunWorker - RunWorker worker-c53bea1b started with concurrency 4
+2026-07-22T09:56:53.899Z INFO  [pg-listener] c.a.c.stream.PgNotificationListener - Listening on autwit_run
+2026-07-22T09:57:44.920Z INFO  [tomcat-handler-1] o.a.c.c.C.[.[localhost].[/api/v1] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-07-22T09:57:44.926Z INFO  [tomcat-handler-1] o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-07-22T09:57:44.939Z INFO  [tomcat-handler-1] o.s.web.servlet.DispatcherServlet - Completed initialization in 9 ms
+2026-07-22T10:19:18.436Z INFO  [SpringApplicationShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-07-22T10:19:18.457Z INFO  [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-07-22T10:19:18.480Z INFO  [SpringApplicationShutdownHook] c.a.c.stream.PgNotificationListener - PgNotificationListener stopped
+2026-07-22T10:19:18.483Z INFO  [SpringApplicationShutdownHook] com.autwit.copilot.run.RunWorker - RunWorker worker-c53bea1b draining in-flight runs…
+2026-07-22T10:19:18.730Z INFO  [SpringApplicationShutdownHook] com.autwit.copilot.run.RunWorker - RunWorker worker-c53bea1b stopped
+2026-07-22T10:19:18.736Z INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-07-22T10:19:18.757Z INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-07-22T10:19:24.917Z INFO  [background-preinit] o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-07-22T10:19:25.088Z INFO  [main] c.a.copilot.AutwitCopilotApplication - Starting AutwitCopilotApplication v0.1.0-SNAPSHOT using Java 21.0.11 with PID 1 (/app/app.jar started by autwit in /app)
+2026-07-22T10:19:25.089Z DEBUG [main] c.a.copilot.AutwitCopilotApplication - Running with Spring Boot v3.3.5, Spring v6.1.14
+2026-07-22T10:19:25.093Z INFO  [main] c.a.copilot.AutwitCopilotApplication - The following 2 profiles are active: "all", "integration"
+2026-07-22T10:19:27.673Z INFO  [main] o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-07-22T10:19:27.707Z INFO  [main] o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-07-22T10:19:27.723Z INFO  [main] o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-07-22T10:19:27.725Z INFO  [main] o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+2026-07-22T10:19:27.799Z INFO  [main] o.a.c.c.C.[.[localhost].[/api/v1] - Initializing Spring embedded WebApplicationContext
+2026-07-22T10:19:27.802Z INFO  [main] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 2571 ms
+2026-07-22T10:19:28.443Z INFO  [main] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-07-22T10:19:29.248Z INFO  [main] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@37606fee
+2026-07-22T10:19:29.254Z INFO  [main] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-07-22T10:19:29.474Z INFO  [main] org.flywaydb.core.FlywayExecutor - Database: jdbc:postgresql://postgres:5432/autwit (PostgreSQL 16.14)
+2026-07-22T10:19:29.839Z INFO  [main] o.f.core.internal.command.DbValidate - Successfully validated 3 migrations (execution time 00:00.214s)
+2026-07-22T10:19:29.927Z INFO  [main] o.f.core.internal.command.DbMigrate - Current version of schema "public": 1
+2026-07-22T10:19:30.053Z INFO  [main] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "2 - financial analysis session"
+2026-07-22T10:19:31.020Z INFO  [main] o.f.core.internal.command.DbMigrate - Migrating schema "public" to version "3 - run type financial analysis"
+2026-07-22T10:19:31.127Z INFO  [main] o.f.core.internal.command.DbMigrate - Successfully applied 2 migrations to schema "public", now at version v3 (execution time 00:00.905s)
+2026-07-22T10:19:31.811Z INFO  [main] c.a.c.o.HttpOrchestratorClient - HttpOrchestratorClient targeting http://host.docker.internal:9090 with a PT10M deadline
+2026-07-22T10:19:32.232Z INFO  [main] c.a.c.a.HttpFinancialAnalysisClient - HttpFinancialAnalysisClient targeting http://host.docker.internal:9090 with a PT10M deadline
+2026-07-22T10:19:32.346Z INFO  [main] c.a.copilot.config.ConfigAssertions - Config assertion passed: run.lease=PT12M > orchestrator.timeout=PT10M
+2026-07-22T10:19:33.150Z INFO  [main] o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-07-22T10:19:33.189Z INFO  [main] o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/api/v1'
+2026-07-22T10:19:33.209Z INFO  [main] c.a.copilot.config.SchedulingConfig - Reaper scheduled every PT1M
+2026-07-22T10:19:33.213Z INFO  [main] c.a.copilot.config.SchedulingConfig - Skill catalog sync scheduled every PT1M
+2026-07-22T10:19:33.254Z INFO  [main] c.a.copilot.AutwitCopilotApplication - Started AutwitCopilotApplication in 9.71 seconds (process running for 11.443)
+2026-07-22T10:19:33.273Z INFO  [main] com.autwit.copilot.run.RunWorker - RunWorker worker-a3a6496b started with concurrency 4
+2026-07-22T10:19:33.341Z INFO  [pg-listener] c.a.c.stream.PgNotificationListener - Listening on autwit_run
+2026-07-22T10:19:34.430Z INFO  [tomcat-handler-0] o.a.c.c.C.[.[localhost].[/api/v1] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-07-22T10:19:34.431Z INFO  [tomcat-handler-0] o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-07-22T10:19:34.435Z INFO  [tomcat-handler-0] o.s.web.servlet.DispatcherServlet - Completed initialization in 3 ms
+2026-07-22T10:19:39.880Z DEBUG [tomcat-handler-4] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 0c91b5ca-aac8-4581-9c6a-f89197b665fc (1 watching)
+2026-07-22T10:49:43.359Z DEBUG [tomcat-handler-7] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 0c91b5ca-aac8-4581-9c6a-f89197b665fc (1 watching)
+2026-07-22T11:19:47.240Z DEBUG [tomcat-handler-9] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 0c91b5ca-aac8-4581-9c6a-f89197b665fc (1 watching)
+2026-07-22T11:49:51.284Z DEBUG [tomcat-handler-11] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 0c91b5ca-aac8-4581-9c6a-f89197b665fc (1 watching)
+2026-07-22T12:19:55.299Z DEBUG [tomcat-handler-13] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 0c91b5ca-aac8-4581-9c6a-f89197b665fc (1 watching)
+2026-07-22T12:49:59.312Z DEBUG [tomcat-handler-15] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 0c91b5ca-aac8-4581-9c6a-f89197b665fc (1 watching)
+2026-07-22T13:20:03.252Z DEBUG [tomcat-handler-17] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 0c91b5ca-aac8-4581-9c6a-f89197b665fc (1 watching)
+2026-07-22T13:50:07.271Z DEBUG [tomcat-handler-19] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 0c91b5ca-aac8-4581-9c6a-f89197b665fc (1 watching)
+2026-07-22T14:20:11.234Z DEBUG [tomcat-handler-21] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 0c91b5ca-aac8-4581-9c6a-f89197b665fc (1 watching)
+2026-07-22T14:50:15.261Z DEBUG [tomcat-handler-23] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 0c91b5ca-aac8-4581-9c6a-f89197b665fc (1 watching)
+2026-07-22T15:00:45.765Z DEBUG [tomcat-handler-30] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 6dc3f132-6bf6-4865-bf0a-8109a0b0cd19 (1 watching)
+2026-07-22T15:02:44.025Z DEBUG [tomcat-handler-34] com.autwit.copilot.run.RunEnqueuer - Enqueued financial_analysis run 74783a48-31c7-4bfe-b6f1-1191978be767 for session 6dc3f132-6bf6-4865-bf0a-8109a0b0cd19 (max_attempts=1)
+2026-07-22T15:02:44.217Z INFO  [virtual-43] c.a.copilot.analysis.financial.wire - --> POST http://host.docker.internal:9090/v1/financial-analysis/snapshot analysisId=analysis-344384ee-fb97-45e9-98b4-8bb7fe1f25a1 mode=SNAPSHOT_SANCTITY order=2648100002 states=1 authorization=Bearer <EMPTY - no token configured>
+2026-07-22T15:02:54.825Z INFO  [virtual-43] c.a.copilot.analysis.financial.wire - <-- 200 analysisId=analysis-344384ee-fb97-45e9-98b4-8bb7fe1f25a1 verdict=FAIL findings=19 ai=OK responseId=present
+2026-07-22T15:20:19.298Z DEBUG [tomcat-handler-50] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 0c91b5ca-aac8-4581-9c6a-f89197b665fc (1 watching)
+2026-07-22T15:30:49.234Z DEBUG [tomcat-handler-52] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 6dc3f132-6bf6-4865-bf0a-8109a0b0cd19 (1 watching)
+2026-07-22T15:33:00.950Z ERROR [tomcat-handler-53] c.autwit.copilot.web.ProblemHandler - Unhandled exception
+org.springframework.web.context.request.async.AsyncRequestNotUsableException: ServletOutputStream failed to flush: java.io.IOException: Broken pipe
+	at org.springframework.web.context.request.async.StandardServletAsyncWebRequest$LifecycleHttpServletResponse.handleIOException(StandardServletAsyncWebRequest.java:343)
+	at org.springframework.web.context.request.async.StandardServletAsyncWebRequest$LifecycleServletOutputStream.flush(StandardServletAsyncWebRequest.java:415)
+	at org.springframework.util.StreamUtils.copy(StreamUtils.java:135)
+	at org.springframework.http.converter.StringHttpMessageConverter.writeInternal(StringHttpMessageConverter.java:128)
+	at org.springframework.http.converter.StringHttpMessageConverter.writeInternal(StringHttpMessageConverter.java:44)
+	at org.springframework.http.converter.AbstractHttpMessageConverter.write(AbstractHttpMessageConverter.java:235)
+	at org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitterReturnValueHandler$HttpMessageConvertingHandler.sendInternal(ResponseBodyEmitterReturnValueHandler.java:221)
+	at org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitterReturnValueHandler$HttpMessageConvertingHandler.send(ResponseBodyEmitterReturnValueHandler.java:212)
+	at org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter.sendInternal(ResponseBodyEmitter.java:223)
+	at org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter.send(ResponseBodyEmitter.java:214)
+	at org.springframework.web.servlet.mvc.method.annotation.SseEmitter.send(SseEmitter.java:135)
+	at com.autwit.copilot.stream.SseHub.lambda$heartbeat$4(SseHub.java:105)
+	at java.base/java.util.concurrent.ConcurrentHashMap.forEach(Unknown Source)
+	at com.autwit.copilot.stream.SseHub.heartbeat(SseHub.java:102)
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Unknown Source)
+	at java.base/java.util.concurrent.FutureTask.runAndReset(Unknown Source)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)
+	at java.base/java.lang.VirtualThread.run(Unknown Source)
+Caused by: org.apache.catalina.connector.ClientAbortException: java.io.IOException: Broken pipe
+	at org.apache.catalina.connector.OutputBuffer.doFlush(OutputBuffer.java:303)
+	at org.apache.catalina.connector.OutputBuffer.flush(OutputBuffer.java:265)
+	at org.apache.catalina.connector.CoyoteOutputStream.flush(CoyoteOutputStream.java:136)
+	at org.springframework.web.context.request.async.StandardServletAsyncWebRequest$LifecycleServletOutputStream.flush(StandardServletAsyncWebRequest.java:412)
+	... 19 common frames omitted
+Caused by: java.io.IOException: Broken pipe
+	at java.base/sun.nio.ch.SocketDispatcher.write0(Native Method)
+	at java.base/sun.nio.ch.SocketDispatcher.write(Unknown Source)
+	at java.base/sun.nio.ch.IOUtil.writeFromNativeBuffer(Unknown Source)
+	at java.base/sun.nio.ch.IOUtil.write(Unknown Source)
+	at java.base/sun.nio.ch.IOUtil.write(Unknown Source)
+	at java.base/sun.nio.ch.SocketChannelImpl.write(Unknown Source)
+	at org.apache.tomcat.util.net.NioChannel.write(NioChannel.java:122)
+	at org.apache.tomcat.util.net.NioEndpoint$NioSocketWrapper.doWrite(NioEndpoint.java:1378)
+	at org.apache.tomcat.util.net.SocketWrapperBase.doWrite(SocketWrapperBase.java:764)
+	at org.apache.tomcat.util.net.SocketWrapperBase.flushBlocking(SocketWrapperBase.java:728)
+	at org.apache.tomcat.util.net.SocketWrapperBase.flush(SocketWrapperBase.java:712)
+	at org.apache.coyote.http11.Http11OutputBuffer$SocketOutputBuffer.flush(Http11OutputBuffer.java:574)
+	at org.apache.coyote.http11.filters.ChunkedOutputFilter.flush(ChunkedOutputFilter.java:156)
+	at org.apache.coyote.http11.Http11OutputBuffer.flush(Http11OutputBuffer.java:216)
+	at org.apache.coyote.http11.Http11Processor.flush(Http11Processor.java:1252)
+	at org.apache.coyote.AbstractProcessor.action(AbstractProcessor.java:408)
+	at org.apache.coyote.Response.action(Response.java:208)
+	at org.apache.catalina.connector.OutputBuffer.doFlush(OutputBuffer.java:299)
+	... 22 common frames omitted
+2026-07-22T15:33:00.999Z WARN  [tomcat-handler-53] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Failure in @ExceptionHandler com.autwit.copilot.web.ProblemHandler#handleUnexpected(Exception)
+org.springframework.http.converter.HttpMessageNotWritableException: No converter for [class org.springframework.http.ProblemDetail] with preset Content-Type 'text/event-stream'
+	at org.springframework.web.servlet.mvc.method.annotation.AbstractMessageConverterMethodProcessor.writeWithMessageConverters(AbstractMessageConverterMethodProcessor.java:319)
+	at org.springframework.web.servlet.mvc.method.annotation.HttpEntityMethodProcessor.handleReturnValue(HttpEntityMethodProcessor.java:245)
+	at org.springframework.web.method.support.HandlerMethodReturnValueHandlerComposite.handleReturnValue(HandlerMethodReturnValueHandlerComposite.java:78)
+	at org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:136)
+	at org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExceptionResolver.doResolveHandlerMethodException(ExceptionHandlerExceptionResolver.java:432)
+	at org.springframework.web.servlet.handler.AbstractHandlerMethodExceptionResolver.doResolveException(AbstractHandlerMethodExceptionResolver.java:74)
+	at org.springframework.web.servlet.handler.AbstractHandlerExceptionResolver.resolveException(AbstractHandlerExceptionResolver.java:175)
+	at org.springframework.web.servlet.handler.HandlerExceptionResolverComposite.resolveException(HandlerExceptionResolverComposite.java:80)
+	at org.springframework.web.servlet.DispatcherServlet.processHandlerException(DispatcherServlet.java:1358)
+	at org.springframework.web.servlet.DispatcherServlet.processDispatchResult(DispatcherServlet.java:1161)
+	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1106)
+	at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:979)
+	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1014)
+	at org.springframework.web.servlet.FrameworkServlet.doGet(FrameworkServlet.java:903)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:564)
+	at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:885)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:658)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:195)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:101)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:101)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.apache.catalina.core.ApplicationDispatcher.invoke(ApplicationDispatcher.java:632)
+	at org.apache.catalina.core.ApplicationDispatcher.doDispatch(ApplicationDispatcher.java:560)
+	at org.apache.catalina.core.ApplicationDispatcher.dispatch(ApplicationDispatcher.java:531)
+	at org.apache.catalina.core.AsyncContextImpl$AsyncRunnable.run(AsyncContextImpl.java:601)
+	at org.apache.catalina.core.AsyncContextImpl.doInternalDispatch(AsyncContextImpl.java:344)
+	at org.apache.catalina.core.StandardWrapperValve.invoke(StandardWrapperValve.java:165)
+	at org.apache.catalina.core.StandardContextValve.invoke(StandardContextValve.java:90)
+	at org.apache.catalina.authenticator.AuthenticatorBase.invoke(AuthenticatorBase.java:483)
+	at org.apache.catalina.core.StandardHostValve.invoke(StandardHostValve.java:115)
+	at org.apache.catalina.valves.ErrorReportValve.invoke(ErrorReportValve.java:93)
+	at org.apache.catalina.core.StandardEngineValve.invoke(StandardEngineValve.java:74)
+	at org.apache.catalina.connector.CoyoteAdapter.asyncDispatch(CoyoteAdapter.java:239)
+	at org.apache.coyote.AbstractProcessor.dispatch(AbstractProcessor.java:243)
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:57)
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:905)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1741)
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)
+	at java.base/java.lang.VirtualThread.run(Unknown Source)
+2026-07-22T15:33:01.014Z WARN  [tomcat-handler-53] o.s.w.s.m.s.DefaultHandlerExceptionResolver - Resolved [org.springframework.web.context.request.async.AsyncRequestNotUsableException: ServletOutputStream failed to flush: java.io.IOException: Broken pipe]
+2026-07-22T16:00:53.274Z DEBUG [tomcat-handler-55] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 6dc3f132-6bf6-4865-bf0a-8109a0b0cd19 (1 watching)
+2026-07-22T16:30:57.445Z DEBUG [tomcat-handler-57] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 6dc3f132-6bf6-4865-bf0a-8109a0b0cd19 (1 watching)
+2026-07-22T17:01:01.264Z DEBUG [tomcat-handler-59] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 6dc3f132-6bf6-4865-bf0a-8109a0b0cd19 (1 watching)
+2026-07-22T17:31:05.280Z DEBUG [tomcat-handler-61] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 6dc3f132-6bf6-4865-bf0a-8109a0b0cd19 (1 watching)
+2026-07-22T18:01:09.309Z DEBUG [tomcat-handler-63] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 6dc3f132-6bf6-4865-bf0a-8109a0b0cd19 (1 watching)
+2026-07-22T18:31:13.243Z DEBUG [tomcat-handler-65] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 6dc3f132-6bf6-4865-bf0a-8109a0b0cd19 (1 watching)
+2026-07-22T19:01:17.259Z DEBUG [tomcat-handler-67] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 6dc3f132-6bf6-4865-bf0a-8109a0b0cd19 (1 watching)
+2026-07-22T19:31:21.245Z DEBUG [tomcat-handler-69] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 6dc3f132-6bf6-4865-bf0a-8109a0b0cd19 (1 watching)
+2026-07-22T20:01:25.242Z DEBUG [tomcat-handler-71] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 6dc3f132-6bf6-4865-bf0a-8109a0b0cd19 (1 watching)
+2026-07-22T20:31:29.252Z DEBUG [tomcat-handler-73] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 6dc3f132-6bf6-4865-bf0a-8109a0b0cd19 (1 watching)
+2026-07-22T21:01:33.238Z DEBUG [tomcat-handler-75] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 6dc3f132-6bf6-4865-bf0a-8109a0b0cd19 (1 watching)
+2026-07-22T21:31:37.238Z DEBUG [tomcat-handler-77] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 6dc3f132-6bf6-4865-bf0a-8109a0b0cd19 (1 watching)
+2026-07-22T22:01:41.231Z DEBUG [tomcat-handler-79] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 6dc3f132-6bf6-4865-bf0a-8109a0b0cd19 (1 watching)
+2026-07-22T22:31:45.236Z DEBUG [tomcat-handler-81] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 6dc3f132-6bf6-4865-bf0a-8109a0b0cd19 (1 watching)
+2026-07-22T23:01:49.255Z DEBUG [tomcat-handler-83] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 6dc3f132-6bf6-4865-bf0a-8109a0b0cd19 (1 watching)
+2026-07-22T23:31:53.248Z DEBUG [tomcat-handler-85] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 6dc3f132-6bf6-4865-bf0a-8109a0b0cd19 (1 watching)
+2026-07-23T05:41:00.682Z INFO  [background-preinit] o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-07-23T05:41:00.835Z INFO  [main] c.a.copilot.AutwitCopilotApplication - Starting AutwitCopilotApplication v0.1.0-SNAPSHOT using Java 21.0.11 with PID 1 (/app/app.jar started by autwit in /app)
+2026-07-23T05:41:00.837Z DEBUG [main] c.a.copilot.AutwitCopilotApplication - Running with Spring Boot v3.3.5, Spring v6.1.14
+2026-07-23T05:41:00.840Z INFO  [main] c.a.copilot.AutwitCopilotApplication - The following 2 profiles are active: "all", "integration"
+2026-07-23T05:41:03.985Z INFO  [main] o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-07-23T05:41:04.013Z INFO  [main] o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-07-23T05:41:04.047Z INFO  [main] o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-07-23T05:41:04.050Z INFO  [main] o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+2026-07-23T05:41:04.153Z INFO  [main] o.a.c.c.C.[.[localhost].[/api/v1] - Initializing Spring embedded WebApplicationContext
+2026-07-23T05:41:04.156Z INFO  [main] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 3181 ms
+2026-07-23T05:41:04.688Z INFO  [main] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-07-23T05:41:05.296Z INFO  [main] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@45037e16
+2026-07-23T05:41:05.302Z INFO  [main] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-07-23T05:41:05.400Z INFO  [main] org.flywaydb.core.FlywayExecutor - Database: jdbc:postgresql://postgres:5432/autwit (PostgreSQL 16.14)
+2026-07-23T05:41:05.634Z INFO  [main] o.f.core.internal.command.DbValidate - Successfully validated 3 migrations (execution time 00:00.099s)
+2026-07-23T05:41:05.664Z INFO  [main] o.f.core.internal.command.DbMigrate - Current version of schema "public": 3
+2026-07-23T05:41:05.682Z INFO  [main] o.f.core.internal.command.DbMigrate - Schema "public" is up to date. No migration necessary.
+2026-07-23T05:41:06.070Z INFO  [main] c.a.c.o.HttpOrchestratorClient - HttpOrchestratorClient targeting http://host.docker.internal:9090 with a PT10M deadline
+2026-07-23T05:41:06.418Z INFO  [main] c.a.c.a.HttpFinancialAnalysisClient - HttpFinancialAnalysisClient targeting http://host.docker.internal:9090 with a PT10M deadline
+2026-07-23T05:41:06.505Z INFO  [main] c.a.copilot.config.ConfigAssertions - Config assertion passed: run.lease=PT12M > orchestrator.timeout=PT10M
+2026-07-23T05:41:07.128Z INFO  [main] o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-07-23T05:41:07.155Z INFO  [main] o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/api/v1'
+2026-07-23T05:41:07.171Z INFO  [main] c.a.copilot.config.SchedulingConfig - Reaper scheduled every PT1M
+2026-07-23T05:41:07.173Z INFO  [main] c.a.copilot.config.SchedulingConfig - Skill catalog sync scheduled every PT1M
+2026-07-23T05:41:07.200Z INFO  [main] c.a.copilot.AutwitCopilotApplication - Started AutwitCopilotApplication in 8.152 seconds (process running for 10.391)
+2026-07-23T05:41:07.210Z INFO  [main] com.autwit.copilot.run.RunWorker - RunWorker worker-1f7331ed started with concurrency 4
+2026-07-23T05:41:07.247Z INFO  [pg-listener] c.a.c.stream.PgNotificationListener - Listening on autwit_run
+2026-07-23T05:43:30.906Z INFO  [SpringApplicationShutdownHook] o.s.b.w.e.tomcat.GracefulShutdown - Commencing graceful shutdown. Waiting for active requests to complete
+2026-07-23T05:43:30.924Z INFO  [tomcat-shutdown] o.s.b.w.e.tomcat.GracefulShutdown - Graceful shutdown complete
+2026-07-23T05:43:30.934Z INFO  [SpringApplicationShutdownHook] c.a.c.stream.PgNotificationListener - PgNotificationListener stopped
+2026-07-23T05:43:30.937Z INFO  [SpringApplicationShutdownHook] com.autwit.copilot.run.RunWorker - RunWorker worker-1f7331ed draining in-flight runs…
+2026-07-23T05:43:31.171Z INFO  [SpringApplicationShutdownHook] com.autwit.copilot.run.RunWorker - RunWorker worker-1f7331ed stopped
+2026-07-23T05:43:31.177Z INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown initiated...
+2026-07-23T05:43:31.195Z INFO  [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Shutdown completed.
+2026-07-23T05:44:42.860Z INFO  [background-preinit] o.h.validator.internal.util.Version - HV000001: Hibernate Validator 8.0.1.Final
+2026-07-23T05:44:42.972Z INFO  [main] c.a.copilot.AutwitCopilotApplication - Starting AutwitCopilotApplication v0.1.0-SNAPSHOT using Java 21.0.11 with PID 1 (/app/app.jar started by autwit in /app)
+2026-07-23T05:44:42.974Z DEBUG [main] c.a.copilot.AutwitCopilotApplication - Running with Spring Boot v3.3.5, Spring v6.1.14
+2026-07-23T05:44:42.977Z INFO  [main] c.a.copilot.AutwitCopilotApplication - The following 2 profiles are active: "all", "integration"
+2026-07-23T05:44:46.489Z INFO  [main] o.s.b.w.e.tomcat.TomcatWebServer - Tomcat initialized with port 8080 (http)
+2026-07-23T05:44:46.512Z INFO  [main] o.a.coyote.http11.Http11NioProtocol - Initializing ProtocolHandler ["http-nio-8080"]
+2026-07-23T05:44:46.519Z INFO  [main] o.a.catalina.core.StandardService - Starting service [Tomcat]
+2026-07-23T05:44:46.520Z INFO  [main] o.a.catalina.core.StandardEngine - Starting Servlet engine: [Apache Tomcat/10.1.31]
+2026-07-23T05:44:46.589Z INFO  [main] o.a.c.c.C.[.[localhost].[/api/v1] - Initializing Spring embedded WebApplicationContext
+2026-07-23T05:44:46.592Z INFO  [main] o.s.b.w.s.c.ServletWebServerApplicationContext - Root WebApplicationContext: initialization completed in 3519 ms
+2026-07-23T05:44:47.006Z INFO  [main] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Starting...
+2026-07-23T05:44:47.373Z INFO  [main] com.zaxxer.hikari.pool.HikariPool - HikariPool-1 - Added connection org.postgresql.jdbc.PgConnection@6222391a
+2026-07-23T05:44:47.378Z INFO  [main] com.zaxxer.hikari.HikariDataSource - HikariPool-1 - Start completed.
+2026-07-23T05:44:47.445Z INFO  [main] org.flywaydb.core.FlywayExecutor - Database: jdbc:postgresql://postgres:5432/autwit (PostgreSQL 16.14)
+2026-07-23T05:44:47.558Z INFO  [main] o.f.core.internal.command.DbValidate - Successfully validated 3 migrations (execution time 00:00.065s)
+2026-07-23T05:44:47.587Z INFO  [main] o.f.core.internal.command.DbMigrate - Current version of schema "public": 3
+2026-07-23T05:44:47.593Z INFO  [main] o.f.core.internal.command.DbMigrate - Schema "public" is up to date. No migration necessary.
+2026-07-23T05:44:47.874Z INFO  [main] c.a.c.o.HttpOrchestratorClient - HttpOrchestratorClient targeting http://host.docker.internal:9090 with a PT10M deadline
+2026-07-23T05:44:48.163Z INFO  [main] c.a.c.a.HttpFinancialAnalysisClient - HttpFinancialAnalysisClient targeting http://host.docker.internal:9090 with a PT10M deadline
+2026-07-23T05:44:48.257Z INFO  [main] c.a.copilot.config.ConfigAssertions - Config assertion passed: run.lease=PT12M > orchestrator.timeout=PT10M
+2026-07-23T05:44:48.858Z INFO  [main] o.a.coyote.http11.Http11NioProtocol - Starting ProtocolHandler ["http-nio-8080"]
+2026-07-23T05:44:48.881Z INFO  [main] o.s.b.w.e.tomcat.TomcatWebServer - Tomcat started on port 8080 (http) with context path '/api/v1'
+2026-07-23T05:44:48.899Z INFO  [main] c.a.copilot.config.SchedulingConfig - Reaper scheduled every PT1M
+2026-07-23T05:44:48.902Z INFO  [main] c.a.copilot.config.SchedulingConfig - Skill catalog sync scheduled every PT1M
+2026-07-23T05:44:48.920Z INFO  [main] c.a.copilot.AutwitCopilotApplication - Started AutwitCopilotApplication in 7.07 seconds (process running for 7.92)
+2026-07-23T05:44:48.944Z INFO  [main] com.autwit.copilot.run.RunWorker - RunWorker worker-0441df51 started with concurrency 4
+2026-07-23T05:44:49.012Z INFO  [pg-listener] c.a.c.stream.PgNotificationListener - Listening on autwit_run
+2026-07-23T05:47:18.986Z INFO  [tomcat-handler-1] o.a.c.c.C.[.[localhost].[/api/v1] - Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-07-23T05:47:18.993Z INFO  [tomcat-handler-1] o.s.web.servlet.DispatcherServlet - Initializing Servlet 'dispatcherServlet'
+2026-07-23T05:47:19.008Z INFO  [tomcat-handler-1] o.s.web.servlet.DispatcherServlet - Completed initialization in 12 ms
+2026-07-23T05:47:23.448Z DEBUG [tomcat-handler-4] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 6dc3f132-6bf6-4865-bf0a-8109a0b0cd19 (1 watching)
+2026-07-23T05:47:43.861Z DEBUG [tomcat-handler-6] com.autwit.copilot.run.RunEnqueuer - Enqueued skill_execute run 68941f0f-aea4-4498-8af5-91d575b68da2 for session 6dc3f132-6bf6-4865-bf0a-8109a0b0cd19 (max_attempts=2)
+2026-07-23T05:47:44.207Z DEBUG [virtual-44] c.autwit.copilot.orchestrator.wire - --> POST http://host.docker.internal:9090/skills/api.fetch_order/execute correlation_id=autwit-qa2-20260720-b760b232 run_id=68941f0f-aea4-4498-8af5-91d575b68da2 authorization=Bearer <EMPTY - no token configured>
+{"session_id":"6dc3f132-6bf6-4865-bf0a-8109a0b0cd19","correlation_id":"autwit-qa2-20260720-b760b232","run_id":"68941f0f-aea4-4498-8af5-91d575b68da2","input":{"order_id":"2648100002"},"session_context":{"env":"qa2","tester_id":"Shiv","subjects":{"order_id":"2648100002","shipment_id":"SHP-99"},"milestones":[],"event_cursors":{},"recent_steps":[{"seq":1,"kind":"skill_invocation","label":"api.fetch_order"},{"seq":2,"kind":"skill_invocation","label":"events.capture_since"},{"seq":3,"kind":"skill_invocation","label":"snapshot.capture"},{"seq":4,"kind":"analysis","label":"Captured 9 tables. Shipment SHP-99 discovered in shipment_pg."},{"seq":5,"kind":"skill_invocation","label":"financial.analyze_snapshot"},{"seq":6,"kind":"system","label":"Financial analysis — FAIL"},{"seq":7,"kind":"skill_invocation","label":"api.fetch_order"}]}}
+2026-07-23T05:47:44.242Z DEBUG [virtual-44] c.autwit.copilot.orchestrator.wire - <-- /skills/api.fetch_order/execute HTTP 200 run_id=68941f0f-aea4-4498-8af5-91d575b68da2
+{"run_id":"68941f0f-aea4-4498-8af5-91d575b68da2","status":"succeeded","started_at":"2026-07-23T05:47:44.232Z","ended_at":"2026-07-23T05:47:44.233Z","duration_ms":1,"invocations":[{"skill_name":"api.fetch_order","skill_version":"1.0.0","input":{"order_id":"2648100002"},"status":"succeeded","exit_code":0,"duration_ms":0,"output_inline":{"order_id":"2648100002","http_status":200,"resolved_url":"https://qa2-digital-oes-orderuniversalapi-ms.bjs.com/v1/order/2648100002?include=all"}}],"artifacts":[{"client_ref":"a1","artifact_type":"api_response","source_system":"order_universal_api","logical_name":"order","format":"json","body":{},"content_hash":"sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a"}],"milestone":null,"error":null}
+2026-07-23T05:47:44.309Z DEBUG [virtual-44] c.a.copilot.artifact.ArtifactService - artifact ok order_universal_api/order (json) hash=sha256:44136fa355b3678a1146ad16f7e8649e94fb4fc21fe77e8310c060f61caaff8a bytes=2 declared=matched
+2026-07-23T05:47:44.362Z INFO  [virtual-44] com.autwit.copilot.run.RunWorker - Run 68941f0f-aea4-4498-8af5-91d575b68da2 succeeded: 1 artifacts, 0 new events
+2026-07-23T05:49:05.654Z DEBUG [tomcat-handler-14] com.autwit.copilot.run.RunEnqueuer - Enqueued financial_analysis run 44cb48bd-3a06-4ec6-b252-a86c80d88150 for session 6dc3f132-6bf6-4865-bf0a-8109a0b0cd19 (max_attempts=1)
+2026-07-23T05:49:05.821Z INFO  [virtual-48] c.a.copilot.analysis.financial.wire - --> POST http://host.docker.internal:9090/v1/financial-analysis/snapshot analysisId=analysis-507c77a5-9af8-4a1e-ba91-c8baa5662e7a mode=SNAPSHOT_SANCTITY order=2648100002 states=1 authorization=Bearer <EMPTY - no token configured>
+2026-07-23T05:49:16.186Z INFO  [virtual-48] c.a.copilot.analysis.financial.wire - <-- 200 analysisId=analysis-507c77a5-9af8-4a1e-ba91-c8baa5662e7a verdict=FAIL findings=21 ai=OK responseId=present
+2026-07-23T05:49:58.828Z DEBUG [tomcat-handler-28] com.autwit.copilot.run.RunEnqueuer - Enqueued financial_analysis run 47ca24c3-4776-448d-8c87-4f5a4fbd078c for session 6dc3f132-6bf6-4865-bf0a-8109a0b0cd19 (max_attempts=1)
+2026-07-23T05:49:58.966Z INFO  [virtual-42] c.a.copilot.analysis.financial.wire - --> POST http://host.docker.internal:9090/v1/financial-analysis/snapshot analysisId=analysis-0aacdee9-4fc1-48ad-abd4-81f6a76e26e1 mode=SNAPSHOT_SANCTITY order=2648100002 states=1 authorization=Bearer <EMPTY - no token configured>
+2026-07-23T05:50:09.885Z INFO  [virtual-42] c.a.copilot.analysis.financial.wire - <-- 200 analysisId=analysis-0aacdee9-4fc1-48ad-abd4-81f6a76e26e1 verdict=PASS_WITH_WARNINGS findings=19 ai=OK responseId=present
+2026-07-23T05:51:53.729Z DEBUG [tomcat-handler-42] com.autwit.copilot.run.RunEnqueuer - Enqueued report run e5c07298-8705-4a71-9555-a37805a902d4 for session 6dc3f132-6bf6-4865-bf0a-8109a0b0cd19 (max_attempts=2)
+2026-07-23T05:51:54.507Z DEBUG [virtual-44] c.a.copilot.artifact.ArtifactService - artifact ok copilot/report.html (html) hash=sha256:f6f484ed0251db4df84857652461b2deb0b66aebff87f32a680b848c45d31872 bytes=8833 declared=<none, computed>
+2026-07-23T05:51:54.552Z DEBUG [virtual-44] c.a.copilot.artifact.ArtifactService - artifact ok copilot/report.md (md) hash=sha256:a4058ad321fd966ce3d17700b2c5c53e96d75da96219d04402622c7d62324368 bytes=3676 declared=<none, computed>
+2026-07-23T05:51:54.561Z INFO  [virtual-44] c.a.copilot.report.ReportRenderer - Rendered 2 report artifact(s) for session 6dc3f132-6bf6-4865-bf0a-8109a0b0cd19
+2026-07-23T05:55:14.708Z DEBUG [tomcat-handler-52] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 6dc3f132-6bf6-4865-bf0a-8109a0b0cd19 (2 watching)
+2026-07-23T05:55:36.709Z DEBUG [tomcat-handler-59] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 74e1a49f-73d2-4413-b53f-f9fcb9fb490a (1 watching)
+2026-07-23T05:55:49.509Z ERROR [scheduling-1] o.s.s.s.TaskUtils$LoggingErrorHandler - Unexpected error occurred in scheduled task
+java.lang.IllegalStateException: A non-container (application) thread attempted to use the AsyncContext after an error had occurred and the call to AsyncListener.onError() had returned. This is not allowed to avoid race conditions.
+	at org.apache.catalina.core.AsyncContextImpl.check(AsyncContextImpl.java:537)
+	at org.apache.catalina.core.AsyncContextImpl.dispatch(AsyncContextImpl.java:152)
+	at org.springframework.web.context.request.async.StandardServletAsyncWebRequest.dispatch(StandardServletAsyncWebRequest.java:170)
+	at org.springframework.web.context.request.async.WebAsyncManager.setConcurrentResultAndDispatch(WebAsyncManager.java:411)
+	at org.springframework.web.context.request.async.WebAsyncManager.lambda$startDeferredResultProcessing$8(WebAsyncManager.java:489)
+	at org.springframework.web.context.request.async.DeferredResult.setResultInternal(DeferredResult.java:272)
+	at org.springframework.web.context.request.async.DeferredResult.setErrorResult(DeferredResult.java:287)
+	at org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitterReturnValueHandler$HttpMessageConvertingHandler.completeWithError(ResponseBodyEmitterReturnValueHandler.java:241)
+	at org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter.completeWithError(ResponseBodyEmitter.java:267)
+	at com.autwit.copilot.stream.SseHub.lambda$heartbeat$4(SseHub.java:108)
+	at java.base/java.util.concurrent.ConcurrentHashMap.forEach(Unknown Source)
+	at com.autwit.copilot.stream.SseHub.heartbeat(SseHub.java:102)
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Unknown Source)
+	at java.base/java.util.concurrent.FutureTask.runAndReset(Unknown Source)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)
+	at java.base/java.lang.VirtualThread.run(Unknown Source)
+2026-07-23T05:55:49.575Z ERROR [tomcat-handler-64] c.autwit.copilot.web.ProblemHandler - Unhandled exception
+org.springframework.web.context.request.async.AsyncRequestNotUsableException: ServletOutputStream failed to flush: java.io.IOException: Broken pipe
+	at org.springframework.web.context.request.async.StandardServletAsyncWebRequest$LifecycleHttpServletResponse.handleIOException(StandardServletAsyncWebRequest.java:343)
+	at org.springframework.web.context.request.async.StandardServletAsyncWebRequest$LifecycleServletOutputStream.flush(StandardServletAsyncWebRequest.java:415)
+	at org.springframework.util.StreamUtils.copy(StreamUtils.java:135)
+	at org.springframework.http.converter.StringHttpMessageConverter.writeInternal(StringHttpMessageConverter.java:128)
+	at org.springframework.http.converter.StringHttpMessageConverter.writeInternal(StringHttpMessageConverter.java:44)
+	at org.springframework.http.converter.AbstractHttpMessageConverter.write(AbstractHttpMessageConverter.java:235)
+	at org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitterReturnValueHandler$HttpMessageConvertingHandler.sendInternal(ResponseBodyEmitterReturnValueHandler.java:221)
+	at org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitterReturnValueHandler$HttpMessageConvertingHandler.send(ResponseBodyEmitterReturnValueHandler.java:212)
+	at org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter.sendInternal(ResponseBodyEmitter.java:223)
+	at org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter.send(ResponseBodyEmitter.java:214)
+	at org.springframework.web.servlet.mvc.method.annotation.SseEmitter.send(SseEmitter.java:135)
+	at com.autwit.copilot.stream.SseHub.lambda$heartbeat$4(SseHub.java:105)
+	at java.base/java.util.concurrent.ConcurrentHashMap.forEach(Unknown Source)
+	at com.autwit.copilot.stream.SseHub.heartbeat(SseHub.java:102)
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Unknown Source)
+	at java.base/java.util.concurrent.FutureTask.runAndReset(Unknown Source)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)
+	at java.base/java.lang.VirtualThread.run(Unknown Source)
+Caused by: org.apache.catalina.connector.ClientAbortException: java.io.IOException: Broken pipe
+	at org.apache.catalina.connector.OutputBuffer.doFlush(OutputBuffer.java:303)
+	at org.apache.catalina.connector.OutputBuffer.flush(OutputBuffer.java:265)
+	at org.apache.catalina.connector.CoyoteOutputStream.flush(CoyoteOutputStream.java:136)
+	at org.springframework.web.context.request.async.StandardServletAsyncWebRequest$LifecycleServletOutputStream.flush(StandardServletAsyncWebRequest.java:412)
+	... 19 common frames omitted
+Caused by: java.io.IOException: Broken pipe
+	at java.base/sun.nio.ch.SocketDispatcher.write0(Native Method)
+	at java.base/sun.nio.ch.SocketDispatcher.write(Unknown Source)
+	at java.base/sun.nio.ch.IOUtil.writeFromNativeBuffer(Unknown Source)
+	at java.base/sun.nio.ch.IOUtil.write(Unknown Source)
+	at java.base/sun.nio.ch.IOUtil.write(Unknown Source)
+	at java.base/sun.nio.ch.SocketChannelImpl.write(Unknown Source)
+	at org.apache.tomcat.util.net.NioChannel.write(NioChannel.java:122)
+	at org.apache.tomcat.util.net.NioEndpoint$NioSocketWrapper.doWrite(NioEndpoint.java:1378)
+	at org.apache.tomcat.util.net.SocketWrapperBase.doWrite(SocketWrapperBase.java:764)
+	at org.apache.tomcat.util.net.SocketWrapperBase.flushBlocking(SocketWrapperBase.java:728)
+	at org.apache.tomcat.util.net.SocketWrapperBase.flush(SocketWrapperBase.java:712)
+	at org.apache.coyote.http11.Http11OutputBuffer$SocketOutputBuffer.flush(Http11OutputBuffer.java:574)
+	at org.apache.coyote.http11.filters.ChunkedOutputFilter.flush(ChunkedOutputFilter.java:156)
+	at org.apache.coyote.http11.Http11OutputBuffer.flush(Http11OutputBuffer.java:216)
+	at org.apache.coyote.http11.Http11Processor.flush(Http11Processor.java:1252)
+	at org.apache.coyote.AbstractProcessor.action(AbstractProcessor.java:408)
+	at org.apache.coyote.Response.action(Response.java:208)
+	at org.apache.catalina.connector.OutputBuffer.doFlush(OutputBuffer.java:299)
+	... 22 common frames omitted
+2026-07-23T05:55:49.581Z WARN  [tomcat-handler-64] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Failure in @ExceptionHandler com.autwit.copilot.web.ProblemHandler#handleUnexpected(Exception)
+org.springframework.http.converter.HttpMessageNotWritableException: No converter for [class org.springframework.http.ProblemDetail] with preset Content-Type 'text/event-stream'
+	at org.springframework.web.servlet.mvc.method.annotation.AbstractMessageConverterMethodProcessor.writeWithMessageConverters(AbstractMessageConverterMethodProcessor.java:319)
+	at org.springframework.web.servlet.mvc.method.annotation.HttpEntityMethodProcessor.handleReturnValue(HttpEntityMethodProcessor.java:245)
+	at org.springframework.web.method.support.HandlerMethodReturnValueHandlerComposite.handleReturnValue(HandlerMethodReturnValueHandlerComposite.java:78)
+	at org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:136)
+	at org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExceptionResolver.doResolveHandlerMethodException(ExceptionHandlerExceptionResolver.java:432)
+	at org.springframework.web.servlet.handler.AbstractHandlerMethodExceptionResolver.doResolveException(AbstractHandlerMethodExceptionResolver.java:74)
+	at org.springframework.web.servlet.handler.AbstractHandlerExceptionResolver.resolveException(AbstractHandlerExceptionResolver.java:175)
+	at org.springframework.web.servlet.handler.HandlerExceptionResolverComposite.resolveException(HandlerExceptionResolverComposite.java:80)
+	at org.springframework.web.servlet.DispatcherServlet.processHandlerException(DispatcherServlet.java:1358)
+	at org.springframework.web.servlet.DispatcherServlet.processDispatchResult(DispatcherServlet.java:1161)
+	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1106)
+	at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:979)
+	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1014)
+	at org.springframework.web.servlet.FrameworkServlet.doGet(FrameworkServlet.java:903)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:564)
+	at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:885)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:658)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:195)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:101)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:101)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.apache.catalina.core.ApplicationDispatcher.invoke(ApplicationDispatcher.java:632)
+	at org.apache.catalina.core.ApplicationDispatcher.doInclude(ApplicationDispatcher.java:510)
+	at org.apache.catalina.core.ApplicationDispatcher.include(ApplicationDispatcher.java:453)
+	at org.apache.catalina.core.StandardHostValve.custom(StandardHostValve.java:343)
+	at org.apache.catalina.core.StandardHostValve.status(StandardHostValve.java:222)
+	at org.apache.catalina.core.StandardHostValve.throwable(StandardHostValve.java:308)
+	at org.apache.catalina.core.AsyncContextImpl.setErrorState(AsyncContextImpl.java:442)
+	at org.apache.catalina.connector.CoyoteAdapter.asyncDispatch(CoyoteAdapter.java:155)
+	at org.apache.coyote.AbstractProcessor.dispatch(AbstractProcessor.java:243)
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:57)
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:905)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1741)
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)
+	at java.base/java.lang.VirtualThread.run(Unknown Source)
+2026-07-23T05:55:49.586Z WARN  [tomcat-handler-64] o.s.w.s.m.s.DefaultHandlerExceptionResolver - Resolved [org.springframework.web.context.request.async.AsyncRequestNotUsableException: ServletOutputStream failed to flush: java.io.IOException: Broken pipe]
+2026-07-23T05:56:09.524Z ERROR [scheduling-1] o.s.s.s.TaskUtils$LoggingErrorHandler - Unexpected error occurred in scheduled task
+java.lang.IllegalStateException: A non-container (application) thread attempted to use the AsyncContext after an error had occurred and the call to AsyncListener.onError() had returned. This is not allowed to avoid race conditions.
+	at org.apache.catalina.core.AsyncContextImpl.check(AsyncContextImpl.java:537)
+	at org.apache.catalina.core.AsyncContextImpl.dispatch(AsyncContextImpl.java:175)
+	at org.apache.catalina.core.AsyncContextImpl.dispatch(AsyncContextImpl.java:170)
+	at org.springframework.web.context.request.async.StandardServletAsyncWebRequest.dispatch(StandardServletAsyncWebRequest.java:170)
+	at org.springframework.web.context.request.async.WebAsyncManager.setConcurrentResultAndDispatch(WebAsyncManager.java:411)
+	at org.springframework.web.context.request.async.WebAsyncManager.lambda$startDeferredResultProcessing$8(WebAsyncManager.java:489)
+	at org.springframework.web.context.request.async.DeferredResult.setResultInternal(DeferredResult.java:272)
+	at org.springframework.web.context.request.async.DeferredResult.setErrorResult(DeferredResult.java:287)
+	at org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitterReturnValueHandler$HttpMessageConvertingHandler.completeWithError(ResponseBodyEmitterReturnValueHandler.java:241)
+	at org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter.completeWithError(ResponseBodyEmitter.java:267)
+	at com.autwit.copilot.stream.SseHub.lambda$heartbeat$4(SseHub.java:108)
+	at java.base/java.util.concurrent.ConcurrentHashMap.forEach(Unknown Source)
+	at com.autwit.copilot.stream.SseHub.heartbeat(SseHub.java:102)
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Unknown Source)
+	at java.base/java.util.concurrent.FutureTask.runAndReset(Unknown Source)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)
+	at java.base/java.lang.VirtualThread.run(Unknown Source)
+2026-07-23T05:56:09.525Z ERROR [tomcat-handler-65] c.autwit.copilot.web.ProblemHandler - Unhandled exception
+org.springframework.web.context.request.async.AsyncRequestNotUsableException: ServletOutputStream failed to flush: java.io.IOException: Broken pipe
+	at org.springframework.web.context.request.async.StandardServletAsyncWebRequest$LifecycleHttpServletResponse.handleIOException(StandardServletAsyncWebRequest.java:343)
+	at org.springframework.web.context.request.async.StandardServletAsyncWebRequest$LifecycleServletOutputStream.flush(StandardServletAsyncWebRequest.java:415)
+	at org.springframework.util.StreamUtils.copy(StreamUtils.java:135)
+	at org.springframework.http.converter.StringHttpMessageConverter.writeInternal(StringHttpMessageConverter.java:128)
+	at org.springframework.http.converter.StringHttpMessageConverter.writeInternal(StringHttpMessageConverter.java:44)
+	at org.springframework.http.converter.AbstractHttpMessageConverter.write(AbstractHttpMessageConverter.java:235)
+	at org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitterReturnValueHandler$HttpMessageConvertingHandler.sendInternal(ResponseBodyEmitterReturnValueHandler.java:221)
+	at org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitterReturnValueHandler$HttpMessageConvertingHandler.send(ResponseBodyEmitterReturnValueHandler.java:212)
+	at org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter.sendInternal(ResponseBodyEmitter.java:223)
+	at org.springframework.web.servlet.mvc.method.annotation.ResponseBodyEmitter.send(ResponseBodyEmitter.java:214)
+	at org.springframework.web.servlet.mvc.method.annotation.SseEmitter.send(SseEmitter.java:135)
+	at com.autwit.copilot.stream.SseHub.lambda$heartbeat$4(SseHub.java:105)
+	at java.base/java.util.concurrent.ConcurrentHashMap.forEach(Unknown Source)
+	at com.autwit.copilot.stream.SseHub.heartbeat(SseHub.java:102)
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Unknown Source)
+	at java.base/java.util.concurrent.FutureTask.runAndReset(Unknown Source)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)
+	at java.base/java.lang.VirtualThread.run(Unknown Source)
+Caused by: org.apache.catalina.connector.ClientAbortException: java.io.IOException: Broken pipe
+	at org.apache.catalina.connector.OutputBuffer.doFlush(OutputBuffer.java:303)
+	at org.apache.catalina.connector.OutputBuffer.flush(OutputBuffer.java:265)
+	at org.apache.catalina.connector.CoyoteOutputStream.flush(CoyoteOutputStream.java:136)
+	at org.springframework.web.context.request.async.StandardServletAsyncWebRequest$LifecycleServletOutputStream.flush(StandardServletAsyncWebRequest.java:412)
+	... 19 common frames omitted
+Caused by: java.io.IOException: Broken pipe
+	at java.base/sun.nio.ch.SocketDispatcher.write0(Native Method)
+	at java.base/sun.nio.ch.SocketDispatcher.write(Unknown Source)
+	at java.base/sun.nio.ch.IOUtil.writeFromNativeBuffer(Unknown Source)
+	at java.base/sun.nio.ch.IOUtil.write(Unknown Source)
+	at java.base/sun.nio.ch.IOUtil.write(Unknown Source)
+	at java.base/sun.nio.ch.SocketChannelImpl.write(Unknown Source)
+	at org.apache.tomcat.util.net.NioChannel.write(NioChannel.java:122)
+	at org.apache.tomcat.util.net.NioEndpoint$NioSocketWrapper.doWrite(NioEndpoint.java:1378)
+	at org.apache.tomcat.util.net.SocketWrapperBase.doWrite(SocketWrapperBase.java:764)
+	at org.apache.tomcat.util.net.SocketWrapperBase.flushBlocking(SocketWrapperBase.java:728)
+	at org.apache.tomcat.util.net.SocketWrapperBase.flush(SocketWrapperBase.java:712)
+	at org.apache.coyote.http11.Http11OutputBuffer$SocketOutputBuffer.flush(Http11OutputBuffer.java:574)
+	at org.apache.coyote.http11.filters.ChunkedOutputFilter.flush(ChunkedOutputFilter.java:156)
+	at org.apache.coyote.http11.Http11OutputBuffer.flush(Http11OutputBuffer.java:216)
+	at org.apache.coyote.http11.Http11Processor.flush(Http11Processor.java:1252)
+	at org.apache.coyote.AbstractProcessor.action(AbstractProcessor.java:408)
+	at org.apache.coyote.Response.action(Response.java:208)
+	at org.apache.catalina.connector.OutputBuffer.doFlush(OutputBuffer.java:299)
+	... 22 common frames omitted
+2026-07-23T05:56:09.529Z WARN  [tomcat-handler-65] o.s.w.s.m.m.a.ExceptionHandlerExceptionResolver - Failure in @ExceptionHandler com.autwit.copilot.web.ProblemHandler#handleUnexpected(Exception)
+org.springframework.http.converter.HttpMessageNotWritableException: No converter for [class org.springframework.http.ProblemDetail] with preset Content-Type 'text/event-stream'
+	at org.springframework.web.servlet.mvc.method.annotation.AbstractMessageConverterMethodProcessor.writeWithMessageConverters(AbstractMessageConverterMethodProcessor.java:319)
+	at org.springframework.web.servlet.mvc.method.annotation.HttpEntityMethodProcessor.handleReturnValue(HttpEntityMethodProcessor.java:245)
+	at org.springframework.web.method.support.HandlerMethodReturnValueHandlerComposite.handleReturnValue(HandlerMethodReturnValueHandlerComposite.java:78)
+	at org.springframework.web.servlet.mvc.method.annotation.ServletInvocableHandlerMethod.invokeAndHandle(ServletInvocableHandlerMethod.java:136)
+	at org.springframework.web.servlet.mvc.method.annotation.ExceptionHandlerExceptionResolver.doResolveHandlerMethodException(ExceptionHandlerExceptionResolver.java:432)
+	at org.springframework.web.servlet.handler.AbstractHandlerMethodExceptionResolver.doResolveException(AbstractHandlerMethodExceptionResolver.java:74)
+	at org.springframework.web.servlet.handler.AbstractHandlerExceptionResolver.resolveException(AbstractHandlerExceptionResolver.java:175)
+	at org.springframework.web.servlet.handler.HandlerExceptionResolverComposite.resolveException(HandlerExceptionResolverComposite.java:80)
+	at org.springframework.web.servlet.DispatcherServlet.processHandlerException(DispatcherServlet.java:1358)
+	at org.springframework.web.servlet.DispatcherServlet.processDispatchResult(DispatcherServlet.java:1161)
+	at org.springframework.web.servlet.DispatcherServlet.doDispatch(DispatcherServlet.java:1106)
+	at org.springframework.web.servlet.DispatcherServlet.doService(DispatcherServlet.java:979)
+	at org.springframework.web.servlet.FrameworkServlet.processRequest(FrameworkServlet.java:1014)
+	at org.springframework.web.servlet.FrameworkServlet.doGet(FrameworkServlet.java:903)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:564)
+	at org.springframework.web.servlet.FrameworkServlet.service(FrameworkServlet.java:885)
+	at jakarta.servlet.http.HttpServlet.service(HttpServlet.java:658)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:195)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.RequestContextFilter.doFilterInternal(RequestContextFilter.java:100)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:116)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:101)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.springframework.web.filter.OncePerRequestFilter.doFilter(OncePerRequestFilter.java:101)
+	at org.apache.catalina.core.ApplicationFilterChain.internalDoFilter(ApplicationFilterChain.java:164)
+	at org.apache.catalina.core.ApplicationFilterChain.doFilter(ApplicationFilterChain.java:140)
+	at org.apache.catalina.core.ApplicationDispatcher.invoke(ApplicationDispatcher.java:632)
+	at org.apache.catalina.core.ApplicationDispatcher.doInclude(ApplicationDispatcher.java:510)
+	at org.apache.catalina.core.ApplicationDispatcher.include(ApplicationDispatcher.java:453)
+	at org.apache.catalina.core.StandardHostValve.custom(StandardHostValve.java:343)
+	at org.apache.catalina.core.StandardHostValve.status(StandardHostValve.java:222)
+	at org.apache.catalina.core.StandardHostValve.throwable(StandardHostValve.java:308)
+	at org.apache.catalina.core.AsyncContextImpl.setErrorState(AsyncContextImpl.java:442)
+	at org.apache.catalina.connector.CoyoteAdapter.asyncDispatch(CoyoteAdapter.java:155)
+	at org.apache.coyote.AbstractProcessor.dispatch(AbstractProcessor.java:243)
+	at org.apache.coyote.AbstractProcessorLight.process(AbstractProcessorLight.java:57)
+	at org.apache.coyote.AbstractProtocol$ConnectionHandler.process(AbstractProtocol.java:905)
+	at org.apache.tomcat.util.net.NioEndpoint$SocketProcessor.doRun(NioEndpoint.java:1741)
+	at org.apache.tomcat.util.net.SocketProcessorBase.run(SocketProcessorBase.java:52)
+	at java.base/java.lang.VirtualThread.run(Unknown Source)
+2026-07-23T05:56:09.531Z WARN  [tomcat-handler-65] o.s.w.s.m.s.DefaultHandlerExceptionResolver - Resolved [org.springframework.web.context.request.async.AsyncRequestNotUsableException: ServletOutputStream failed to flush: java.io.IOException: Broken pipe]
+2026-07-23T06:03:02.637Z DEBUG [tomcat-handler-66] c.a.copilot.artifact.ArtifactService - artifact ok OPS/Initiatl Starting Order API Output (json) hash=sha256:3d6f4e46d22fcf73fb327f482aa788a9fdcd5f5e0d7880fabd0fc0d917f09528 bytes=10237 declared=<none, computed>
+2026-07-23T06:03:11.557Z DEBUG [tomcat-handler-69] com.autwit.copilot.run.RunEnqueuer - Enqueued financial_analysis run feddce41-3b47-4682-ade0-07cd1f6e0f08 for session 74e1a49f-73d2-4413-b53f-f9fcb9fb490a (max_attempts=1)
+2026-07-23T06:03:11.603Z INFO  [virtual-48] c.a.copilot.analysis.financial.wire - --> POST http://host.docker.internal:9090/v1/financial-analysis/snapshot analysisId=analysis-555cb520-f963-42c0-97ea-67a7d13af70f mode=SNAPSHOT_SANCTITY order=2648100002 states=1 authorization=Bearer <EMPTY - no token configured>
+2026-07-23T06:03:28.043Z INFO  [virtual-48] c.a.copilot.analysis.financial.wire - <-- 200 analysisId=analysis-555cb520-f963-42c0-97ea-67a7d13af70f verdict=PASS_WITH_WARNINGS findings=24 ai=OK responseId=present
+2026-07-23T06:04:33.753Z DEBUG [tomcat-handler-87] com.autwit.copilot.run.RunEnqueuer - Enqueued skill_execute run 599ef6ab-e1dd-4a1e-b3dc-a3a70f6b9371 for session 74e1a49f-73d2-4413-b53f-f9fcb9fb490a (max_attempts=2)
+2026-07-23T06:04:33.937Z DEBUG [virtual-42] c.autwit.copilot.orchestrator.wire - --> POST http://host.docker.internal:9090/skills/snapshot.capture/execute correlation_id=autwit-qa2-20260723-3b49d615 run_id=599ef6ab-e1dd-4a1e-b3dc-a3a70f6b9371 authorization=Bearer <EMPTY - no token configured>
+{"session_id":"74e1a49f-73d2-4413-b53f-f9fcb9fb490a","correlation_id":"autwit-qa2-20260723-3b49d615","run_id":"599ef6ab-e1dd-4a1e-b3dc-a3a70f6b9371","input":{"label":"DB-state-starting","scope":"order_flow"},"session_context":{"env":"qa2","tester_id":"shiv","subjects":{"order_id":"2648100002"},"milestones":[],"event_cursors":{},"recent_steps":[{"seq":1,"kind":"system","label":"Financial analysis — PASS_WITH_WARNINGS"},{"seq":2,"kind":"skill_invocation","label":"snapshot.capture"}]}}
+2026-07-23T06:04:33.964Z DEBUG [virtual-42] c.autwit.copilot.orchestrator.wire - <-- /skills/snapshot.capture/execute HTTP 200 run_id=599ef6ab-e1dd-4a1e-b3dc-a3a70f6b9371
+{"run_id":"599ef6ab-e1dd-4a1e-b3dc-a3a70f6b9371","status":"succeeded","started_at":"2026-07-23T06:04:33.955Z","ended_at":"2026-07-23T06:04:33.958Z","duration_ms":3,"invocations":[{"skill_name":"snapshot.capture","skill_version":"1.4.0","input":{"label":"DB-state-starting","scope":"order_flow"},"status":"succeeded","exit_code":0,"duration_ms":0,"output_inline":{"part_count":9,"total_rows":9}}],"artifacts":[{"client_ref":"a1","artifact_type":"rdbms_table","source_system":"oms_pg","logical_name":"orders","format":"json","body":[{"order_id":"XXXX","member_id":"M-1234","status":"CREATED","total_amount":"1200.00","currency":"GBP","updated_at":"2026-07-16T09:14:00Z"}],"row_count":1,"content_hash":"sha256:ee087ed17d509e9fb0a19f7e79124d587449a282f7990000da1bf0de2abe153e","meta":{"pk_columns":["order_id"],"ignore_columns":["created_at","updated_at","trace_id"]}},{"client_ref":"a2","artifact_type":"rdbms_table","source_system":"oms_pg","logical_name":"order_items","format":"json","body":[{"order_id":"XXXX","line_no":1,"sku":"SKU-1","qty":2,"line_total":"800.00"},{"order_id":"XXXX","line_no":2,"sku":"SKU-2","qty":1,"line_total":"400.00"}],"row_count":2,"content_hash":"sha256:b94cfadcfc50b99a7f92cf75f4574a475555be6e10570e8d9cec2e5fb94ef341","meta":{"pk_columns":["order_id","line_no"],"ignore_columns":["created_at","updated_at","trace_id"]}},{"client_ref":"a3","artifact_type":"rdbms_table","source_system":"oms_pg","logical_name":"order_payments","format":"json","body":[{"payment_id":"P-1","order_id":"XXXX","amount":"1200.00","state":"AUTHORISED"}],"row_count":1,"content_hash":"sha256:48ed876beb62e296e031d449ab663e1330ec02bca80716efd6da1a5559e759a3","meta":{"pk_columns":["payment_id"],"ignore_columns":["created_at","updated_at","trace_id"]}},{"client_ref":"a4","artifact_type":"rdbms_table","source_system":"oms_pg","logical_name":"order_status_history","format":"json","body":[{"order_id":"XXXX","seq":1,"status":"CREATED","at":"2026-07-16T09:14:00Z"}],"row_count":1,"content_hash":"sha256:e504b3c801351baadf8d79ba9fbbf08fa04d2dd3d7012c4eca97145fa33116ab","meta":{"pk_columns":["order_id","seq"],"ignore_columns":["created_at","updated_at","trace_id"]}},{"client_ref":"a5","artifact_type":"rdbms_table","source_system":"oms_pg","logical_name":"order_addresses","format":"json","body":[{"order_id":"XXXX","kind":"SHIPPING","postcode":"SW1A 1AA","customer_email":"***MASKED***"}],"row_count":1,"content_hash":"sha256:920287d382719994f2264f501bc544ae30110cacebafb8cbdb18c15eb1e21003","meta":{"pk_columns":["order_id","kind"],"masked_columns":["customer_email"],"ignore_columns":["updated_at"]}},{"client_ref":"a6","artifact_type":"rdbms_table","source_system":"oms_pg","logical_name":"order_discounts","format":"json","body":[],"row_count":0,"content_hash":"sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945","meta":{"pk_columns":["order_id","code"],"ignore_columns":["created_at","updated_at","trace_id"]}},{"client_ref":"a7","artifact_type":"rdbms_table","source_system":"shipment_pg","logical_name":"shipments","format":"json","body":[{"shipment_id":"SHP-99","order_id":"XXXX","status":"PENDING"}],"row_count":1,"content_hash":"sha256:90e7db3f06601b7553324449472cbefc8da86f7f41290dd029f60e4c0c6e8aff","meta":{"pk_columns":["shipment_id"],"ignore_columns":["created_at","updated_at","trace_id"]}},{"client_ref":"a8","artifact_type":"rdbms_table","source_system":"shipment_pg","logical_name":"shipment_legs","format":"json","body":[{"shipment_id":"SHP-99","leg_no":1,"carrier":"DPD","status":"PENDING"}],"row_count":1,"content_hash":"sha256:b05107395cfd8ce8ddd002d3d52d57d6b568afb73a9fee44757535feff123da7","meta":{"pk_columns":["shipment_id","leg_no"],"ignore_columns":["created_at","updated_at","trace_id"]}},{"client_ref":"a9","artifact_type":"rdbms_table","source_system":"shipment_pg","logical_name":"shipment_events","format":"json","body":[{"shipment_id":"SHP-99","seq":1,"event":"CREATED"}],"row_count":1,"content_hash":"sha256:311f6f793c4c4f4db9a4481b7fd8e5f75c8fda7b2a2f81e1c274bc778a5e9f46","meta":{"pk_columns":["shipment_id","seq"],"ignore_columns":["created_at","updated_at","trace_id"]}}],"snapshots":[{"client_ref":"s1","label":"DB-state-starting","scope":"order_flow","scope_def":{"tables":["oms.orders","oms.order_items","oms.order_payments","oms.order_status_history","oms.order_addresses","oms.order_discounts","shipment.shipments","shipment.legs","shipment.events"],"resolved_at":"2026-07-23T06:04:33.955Z"},"status":"complete","parts":[{"part_key":"oms.orders","artifact_ref":"a1"},{"part_key":"oms.order_items","artifact_ref":"a2"},{"part_key":"oms.order_payments","artifact_ref":"a3"},{"part_key":"oms.order_status_history","artifact_ref":"a4"},{"part_key":"oms.order_addresses","artifact_ref":"a5"},{"part_key":"oms.order_discounts","artifact_ref":"a6"},{"part_key":"shipment.shipments","artifact_ref":"a7"},{"part_key":"shipment.legs","artifact_ref":"a8"},{"part_key":"shipment.events","artifact_ref":"a9"}]}],"notes":[{"at":"2026-07-23T06:04:33.955Z","text":"Captured 9 tables. Shipment SHP-99 discovered in shipment_pg."}],"subjects_discovered":{"shipment_id":"SHP-99"},"milestone":null,"error":null}
+2026-07-23T06:04:33.979Z DEBUG [virtual-42] c.a.copilot.artifact.ArtifactService - artifact ok oms_pg/orders (json) hash=sha256:ee087ed17d509e9fb0a19f7e79124d587449a282f7990000da1bf0de2abe153e bytes=139 declared=matched
+2026-07-23T06:04:33.986Z DEBUG [virtual-42] c.a.copilot.artifact.ArtifactService - artifact ok oms_pg/order_items (json) hash=sha256:b94cfadcfc50b99a7f92cf75f4574a475555be6e10570e8d9cec2e5fb94ef341 bytes=153 declared=matched
+2026-07-23T06:04:33.991Z DEBUG [virtual-42] c.a.copilot.artifact.ArtifactService - artifact ok oms_pg/order_payments (json) hash=sha256:48ed876beb62e296e031d449ab663e1330ec02bca80716efd6da1a5559e759a3 bytes=80 declared=matched
+2026-07-23T06:04:33.996Z DEBUG [virtual-42] c.a.copilot.artifact.ArtifactService - artifact ok oms_pg/order_status_history (json) hash=sha256:e504b3c801351baadf8d79ba9fbbf08fa04d2dd3d7012c4eca97145fa33116ab bytes=76 declared=matched
+2026-07-23T06:04:34.001Z DEBUG [virtual-42] c.a.copilot.artifact.ArtifactService - artifact ok oms_pg/order_addresses (json) hash=sha256:920287d382719994f2264f501bc544ae30110cacebafb8cbdb18c15eb1e21003 bytes=93 declared=matched
+2026-07-23T06:04:34.006Z DEBUG [virtual-42] c.a.copilot.artifact.ArtifactService - artifact ok oms_pg/order_discounts (json) hash=sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945 bytes=2 declared=matched
+2026-07-23T06:04:34.012Z DEBUG [virtual-42] c.a.copilot.artifact.ArtifactService - artifact ok shipment_pg/shipments (json) hash=sha256:90e7db3f06601b7553324449472cbefc8da86f7f41290dd029f60e4c0c6e8aff bytes=63 declared=matched
+2026-07-23T06:04:34.018Z DEBUG [virtual-42] c.a.copilot.artifact.ArtifactService - artifact ok shipment_pg/shipment_legs (json) hash=sha256:b05107395cfd8ce8ddd002d3d52d57d6b568afb73a9fee44757535feff123da7 bytes=72 declared=matched
+2026-07-23T06:04:34.023Z DEBUG [virtual-42] c.a.copilot.artifact.ArtifactService - artifact ok shipment_pg/shipment_events (json) hash=sha256:311f6f793c4c4f4db9a4481b7fd8e5f75c8fda7b2a2f81e1c274bc778a5e9f46 bytes=52 declared=matched
+2026-07-23T06:04:34.063Z INFO  [virtual-42] com.autwit.copilot.run.RunWorker - Run 599ef6ab-e1dd-4a1e-b3dc-a3a70f6b9371 succeeded: 9 artifacts, 0 new events, snapshot 261c5054-669e-4e22-b50b-74c9f8db976f
+2026-07-23T06:25:39.985Z DEBUG [tomcat-handler-93] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 74e1a49f-73d2-4413-b53f-f9fcb9fb490a (1 watching)
+2026-07-23T06:55:43.934Z DEBUG [tomcat-handler-95] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 74e1a49f-73d2-4413-b53f-f9fcb9fb490a (1 watching)
+2026-07-23T07:25:47.976Z DEBUG [tomcat-handler-97] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 74e1a49f-73d2-4413-b53f-f9fcb9fb490a (1 watching)
+2026-07-23T07:55:51.928Z DEBUG [tomcat-handler-99] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 74e1a49f-73d2-4413-b53f-f9fcb9fb490a (1 watching)
+2026-07-23T08:25:55.931Z DEBUG [tomcat-handler-101] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 74e1a49f-73d2-4413-b53f-f9fcb9fb490a (1 watching)
+2026-07-23T08:55:59.931Z DEBUG [tomcat-handler-103] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 74e1a49f-73d2-4413-b53f-f9fcb9fb490a (1 watching)
+2026-07-23T09:26:03.935Z DEBUG [tomcat-handler-105] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 74e1a49f-73d2-4413-b53f-f9fcb9fb490a (1 watching)
+2026-07-23T09:56:07.980Z DEBUG [tomcat-handler-107] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 74e1a49f-73d2-4413-b53f-f9fcb9fb490a (1 watching)
+2026-07-23T10:26:11.967Z DEBUG [tomcat-handler-109] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 74e1a49f-73d2-4413-b53f-f9fcb9fb490a (1 watching)
+2026-07-23T10:56:15.950Z DEBUG [tomcat-handler-111] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 74e1a49f-73d2-4413-b53f-f9fcb9fb490a (1 watching)
+2026-07-23T11:26:19.935Z DEBUG [tomcat-handler-113] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 74e1a49f-73d2-4413-b53f-f9fcb9fb490a (1 watching)
+2026-07-23T11:56:24.003Z DEBUG [tomcat-handler-115] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 74e1a49f-73d2-4413-b53f-f9fcb9fb490a (1 watching)
+2026-07-23T12:26:27.996Z DEBUG [tomcat-handler-117] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 74e1a49f-73d2-4413-b53f-f9fcb9fb490a (1 watching)
+2026-07-23T12:56:31.950Z DEBUG [tomcat-handler-119] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 74e1a49f-73d2-4413-b53f-f9fcb9fb490a (1 watching)
+2026-07-23T13:14:33.353Z DEBUG [tomcat-handler-121] com.autwit.copilot.run.RunEnqueuer - Enqueued skill_execute run 413a4122-ea07-4148-87f8-3872578b8f41 for session 74e1a49f-73d2-4413-b53f-f9fcb9fb490a (max_attempts=2)
+2026-07-23T13:14:33.582Z DEBUG [virtual-44] c.autwit.copilot.orchestrator.wire - --> POST http://host.docker.internal:9090/skills/events.capture_since/execute correlation_id=autwit-qa2-20260723-3b49d615 run_id=413a4122-ea07-4148-87f8-3872578b8f41 authorization=Bearer <EMPTY - no token configured>
+{"session_id":"74e1a49f-73d2-4413-b53f-f9fcb9fb490a","correlation_id":"autwit-qa2-20260723-3b49d615","run_id":"413a4122-ea07-4148-87f8-3872578b8f41","input":{"order_id":"2648100002"},"session_context":{"env":"qa2","tester_id":"shiv","subjects":{"order_id":"2648100002","shipment_id":"SHP-99"},"milestones":[],"event_cursors":{},"recent_steps":[{"seq":1,"kind":"system","label":"Financial analysis — PASS_WITH_WARNINGS"},{"seq":2,"kind":"skill_invocation","label":"snapshot.capture"},{"seq":3,"kind":"analysis","label":"Captured 9 tables. Shipment SHP-99 discovered in shipment_pg."},{"seq":4,"kind":"skill_invocation","label":"events.capture_since"}]}}
+2026-07-23T13:14:33.619Z DEBUG [virtual-44] c.autwit.copilot.orchestrator.wire - <-- /skills/events.capture_since/execute HTTP 200 run_id=413a4122-ea07-4148-87f8-3872578b8f41
+{"run_id":"413a4122-ea07-4148-87f8-3872578b8f41","status":"succeeded","started_at":"2026-07-23T13:14:33.600Z","ended_at":"2026-07-23T13:14:33.612Z","duration_ms":12,"invocations":[{"skill_name":"events.capture_since","skill_version":"1.2.0","input":{"order_id":"2648100002"},"status":"succeeded","exit_code":0,"duration_ms":0,"output_inline":{"events":0,"total_headers":0,"filtered":0}}],"artifacts":[{"client_ref":"eb1","artifact_type":"event_batch","source_system":"eventstore","logical_name":"order_events","format":"json","body":[],"row_count":0,"content_hash":"sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"}],"events":[],"cursors_advanced":{},"milestone":null,"error":null}
+2026-07-23T13:14:33.631Z DEBUG [virtual-44] c.a.copilot.artifact.ArtifactService - artifact ok eventstore/order_events (json) hash=sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945 bytes=2 declared=matched
+2026-07-23T13:14:33.661Z INFO  [virtual-44] com.autwit.copilot.run.RunWorker - Run 413a4122-ea07-4148-87f8-3872578b8f41 succeeded: 1 artifacts, 0 new events
+2026-07-23T13:16:39.769Z DEBUG [tomcat-handler-127] com.autwit.copilot.run.RunEnqueuer - Enqueued skill_execute run c920d7ab-117a-4496-aa50-47921724149a for session 74e1a49f-73d2-4413-b53f-f9fcb9fb490a (max_attempts=2)
+2026-07-23T13:16:39.926Z DEBUG [virtual-44] c.autwit.copilot.orchestrator.wire - --> POST http://host.docker.internal:9090/skills/events.capture_since/execute correlation_id=autwit-qa2-20260723-3b49d615 run_id=c920d7ab-117a-4496-aa50-47921724149a authorization=Bearer <EMPTY - no token configured>
+{"session_id":"74e1a49f-73d2-4413-b53f-f9fcb9fb490a","correlation_id":"autwit-qa2-20260723-3b49d615","run_id":"c920d7ab-117a-4496-aa50-47921724149a","input":{"order_id":"2648100002"},"session_context":{"env":"qa2","tester_id":"shiv","subjects":{"order_id":"2648100002","shipment_id":"SHP-99"},"milestones":[],"event_cursors":{},"recent_steps":[{"seq":1,"kind":"system","label":"Financial analysis — PASS_WITH_WARNINGS"},{"seq":2,"kind":"skill_invocation","label":"snapshot.capture"},{"seq":3,"kind":"analysis","label":"Captured 9 tables. Shipment SHP-99 discovered in shipment_pg."},{"seq":4,"kind":"skill_invocation","label":"events.capture_since"},{"seq":5,"kind":"skill_invocation","label":"events.capture_since"}]}}
+2026-07-23T13:16:39.958Z DEBUG [virtual-44] c.autwit.copilot.orchestrator.wire - <-- /skills/events.capture_since/execute HTTP 200 run_id=c920d7ab-117a-4496-aa50-47921724149a
+{"run_id":"c920d7ab-117a-4496-aa50-47921724149a","status":"succeeded","started_at":"2026-07-23T13:16:39.949Z","ended_at":"2026-07-23T13:16:39.950Z","duration_ms":1,"invocations":[{"skill_name":"events.capture_since","skill_version":"1.2.0","input":{"order_id":"2648100002"},"status":"succeeded","exit_code":0,"duration_ms":0,"output_inline":{"events":0,"total_headers":0,"filtered":0}}],"artifacts":[{"client_ref":"eb1","artifact_type":"event_batch","source_system":"eventstore","logical_name":"order_events","format":"json","body":[],"row_count":0,"content_hash":"sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945"}],"events":[],"cursors_advanced":{},"milestone":null,"error":null}
+2026-07-23T13:16:39.961Z DEBUG [virtual-44] c.a.copilot.artifact.ArtifactService - artifact ok eventstore/order_events (json) hash=sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945 bytes=2 declared=matched
+2026-07-23T13:16:39.986Z INFO  [virtual-44] com.autwit.copilot.run.RunWorker - Run c920d7ab-117a-4496-aa50-47921724149a succeeded: 1 artifacts, 0 new events
+2026-07-23T13:26:35.968Z DEBUG [tomcat-handler-133] com.autwit.copilot.stream.SseHub - SSE subscriber joined session 74e1a49f-73d2-4413-b53f-f9fcb9fb490a (1 watching)
+2026-07-23T13:39:00.696Z WARN  [scheduling-1] c.a.c.registry.SkillCatalogSync - Skill catalog sync failed; keeping the previous projection
+com.autwit.copilot.orchestrator.OrchestratorException$Failed: Could not reach the orchestrator catalog: I/O error on GET request for "http://host.docker.internal:9090/skills": Connection refused
+	at com.autwit.copilot.orchestrator.HttpOrchestratorClient.skills(HttpOrchestratorClient.java:153)
+	at com.autwit.copilot.registry.SkillCatalogSync.syncNow(SkillCatalogSync.java:39)
+	at com.autwit.copilot.registry.SkillCatalogSync.sync(SkillCatalogSync.java:29)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:355)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:716)
+	at com.autwit.copilot.registry.SkillCatalogSync$$SpringCGLIB$$0.sync(<generated>)
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Unknown Source)
+	at java.base/java.util.concurrent.FutureTask.runAndReset(Unknown Source)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)
+	at java.base/java.lang.VirtualThread.run(Unknown Source)
+Caused by: org.springframework.web.client.ResourceAccessException: I/O error on GET request for "http://host.docker.internal:9090/skills": Connection refused
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.createResourceAccessException(DefaultRestClient.java:584)
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchangeInternal(DefaultRestClient.java:498)
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.retrieve(DefaultRestClient.java:458)
+	at com.autwit.copilot.orchestrator.HttpOrchestratorClient.skills(HttpOrchestratorClient.java:147)
+	... 14 common frames omitted
+Caused by: java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Unknown Source)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(Unknown Source)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(Unknown Source)
+	at java.base/java.net.Socket.connect(Unknown Source)
+	at java.base/sun.net.NetworkClient.doConnect(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.openServer(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.openServer(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.<init>(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.New(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.New(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.getNewHttpClient(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect0(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.connect(Unknown Source)
+	at org.springframework.http.client.SimpleClientHttpRequest.executeInternal(SimpleClientHttpRequest.java:79)
+	at org.springframework.http.client.AbstractStreamingClientHttpRequest.executeInternal(AbstractStreamingClientHttpRequest.java:70)
+	at org.springframework.http.client.AbstractClientHttpRequest.execute(AbstractClientHttpRequest.java:66)
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchangeInternal(DefaultRestClient.java:492)
+	... 16 common frames omitted
+2026-07-23T13:40:00.733Z WARN  [scheduling-1] c.a.c.registry.SkillCatalogSync - Skill catalog sync failed; keeping the previous projection
+com.autwit.copilot.orchestrator.OrchestratorException$Failed: Could not reach the orchestrator catalog: I/O error on GET request for "http://host.docker.internal:9090/skills": Connection refused
+	at com.autwit.copilot.orchestrator.HttpOrchestratorClient.skills(HttpOrchestratorClient.java:153)
+	at com.autwit.copilot.registry.SkillCatalogSync.syncNow(SkillCatalogSync.java:39)
+	at com.autwit.copilot.registry.SkillCatalogSync.sync(SkillCatalogSync.java:29)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:355)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:716)
+	at com.autwit.copilot.registry.SkillCatalogSync$$SpringCGLIB$$0.sync(<generated>)
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Unknown Source)
+	at java.base/java.util.concurrent.FutureTask.runAndReset(Unknown Source)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)
+	at java.base/java.lang.VirtualThread.run(Unknown Source)
+Caused by: org.springframework.web.client.ResourceAccessException: I/O error on GET request for "http://host.docker.internal:9090/skills": Connection refused
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.createResourceAccessException(DefaultRestClient.java:584)
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchangeInternal(DefaultRestClient.java:498)
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.retrieve(DefaultRestClient.java:458)
+	at com.autwit.copilot.orchestrator.HttpOrchestratorClient.skills(HttpOrchestratorClient.java:147)
+	... 14 common frames omitted
+Caused by: java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Unknown Source)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(Unknown Source)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(Unknown Source)
+	at java.base/java.net.Socket.connect(Unknown Source)
+	at java.base/sun.net.NetworkClient.doConnect(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.openServer(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.openServer(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.<init>(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.New(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.New(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.getNewHttpClient(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect0(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.connect(Unknown Source)
+	at org.springframework.http.client.SimpleClientHttpRequest.executeInternal(SimpleClientHttpRequest.java:79)
+	at org.springframework.http.client.AbstractStreamingClientHttpRequest.executeInternal(AbstractStreamingClientHttpRequest.java:70)
+	at org.springframework.http.client.AbstractClientHttpRequest.execute(AbstractClientHttpRequest.java:66)
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchangeInternal(DefaultRestClient.java:492)
+	... 16 common frames omitted
+2026-07-23T13:41:00.759Z WARN  [scheduling-1] c.a.c.registry.SkillCatalogSync - Skill catalog sync failed; keeping the previous projection
+com.autwit.copilot.orchestrator.OrchestratorException$Failed: Could not reach the orchestrator catalog: I/O error on GET request for "http://host.docker.internal:9090/skills": Connection refused
+	at com.autwit.copilot.orchestrator.HttpOrchestratorClient.skills(HttpOrchestratorClient.java:153)
+	at com.autwit.copilot.registry.SkillCatalogSync.syncNow(SkillCatalogSync.java:39)
+	at com.autwit.copilot.registry.SkillCatalogSync.sync(SkillCatalogSync.java:29)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:355)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:716)
+	at com.autwit.copilot.registry.SkillCatalogSync$$SpringCGLIB$$0.sync(<generated>)
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Unknown Source)
+	at java.base/java.util.concurrent.FutureTask.runAndReset(Unknown Source)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)
+	at java.base/java.lang.VirtualThread.run(Unknown Source)
+Caused by: org.springframework.web.client.ResourceAccessException: I/O error on GET request for "http://host.docker.internal:9090/skills": Connection refused
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.createResourceAccessException(DefaultRestClient.java:584)
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchangeInternal(DefaultRestClient.java:498)
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.retrieve(DefaultRestClient.java:458)
+	at com.autwit.copilot.orchestrator.HttpOrchestratorClient.skills(HttpOrchestratorClient.java:147)
+	... 14 common frames omitted
+Caused by: java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Unknown Source)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(Unknown Source)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(Unknown Source)
+	at java.base/java.net.Socket.connect(Unknown Source)
+	at java.base/sun.net.NetworkClient.doConnect(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.openServer(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.openServer(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.<init>(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.New(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.New(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.getNewHttpClient(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect0(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.connect(Unknown Source)
+	at org.springframework.http.client.SimpleClientHttpRequest.executeInternal(SimpleClientHttpRequest.java:79)
+	at org.springframework.http.client.AbstractStreamingClientHttpRequest.executeInternal(AbstractStreamingClientHttpRequest.java:70)
+	at org.springframework.http.client.AbstractClientHttpRequest.execute(AbstractClientHttpRequest.java:66)
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchangeInternal(DefaultRestClient.java:492)
+	... 16 common frames omitted
+2026-07-23T13:42:00.783Z WARN  [scheduling-1] c.a.c.registry.SkillCatalogSync - Skill catalog sync failed; keeping the previous projection
+com.autwit.copilot.orchestrator.OrchestratorException$Failed: Could not reach the orchestrator catalog: I/O error on GET request for "http://host.docker.internal:9090/skills": Connection refused
+	at com.autwit.copilot.orchestrator.HttpOrchestratorClient.skills(HttpOrchestratorClient.java:153)
+	at com.autwit.copilot.registry.SkillCatalogSync.syncNow(SkillCatalogSync.java:39)
+	at com.autwit.copilot.registry.SkillCatalogSync.sync(SkillCatalogSync.java:29)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:355)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:716)
+	at com.autwit.copilot.registry.SkillCatalogSync$$SpringCGLIB$$0.sync(<generated>)
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Unknown Source)
+	at java.base/java.util.concurrent.FutureTask.runAndReset(Unknown Source)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)
+	at java.base/java.lang.VirtualThread.run(Unknown Source)
+Caused by: org.springframework.web.client.ResourceAccessException: I/O error on GET request for "http://host.docker.internal:9090/skills": Connection refused
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.createResourceAccessException(DefaultRestClient.java:584)
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchangeInternal(DefaultRestClient.java:498)
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.retrieve(DefaultRestClient.java:458)
+	at com.autwit.copilot.orchestrator.HttpOrchestratorClient.skills(HttpOrchestratorClient.java:147)
+	... 14 common frames omitted
+Caused by: java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Unknown Source)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(Unknown Source)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(Unknown Source)
+	at java.base/java.net.Socket.connect(Unknown Source)
+	at java.base/sun.net.NetworkClient.doConnect(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.openServer(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.openServer(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.<init>(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.New(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.New(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.getNewHttpClient(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect0(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.connect(Unknown Source)
+	at org.springframework.http.client.SimpleClientHttpRequest.executeInternal(SimpleClientHttpRequest.java:79)
+	at org.springframework.http.client.AbstractStreamingClientHttpRequest.executeInternal(AbstractStreamingClientHttpRequest.java:70)
+	at org.springframework.http.client.AbstractClientHttpRequest.execute(AbstractClientHttpRequest.java:66)
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchangeInternal(DefaultRestClient.java:492)
+	... 16 common frames omitted
+2026-07-23T13:43:00.816Z WARN  [scheduling-1] c.a.c.registry.SkillCatalogSync - Skill catalog sync failed; keeping the previous projection
+com.autwit.copilot.orchestrator.OrchestratorException$Failed: Could not reach the orchestrator catalog: I/O error on GET request for "http://host.docker.internal:9090/skills": Connection refused
+	at com.autwit.copilot.orchestrator.HttpOrchestratorClient.skills(HttpOrchestratorClient.java:153)
+	at com.autwit.copilot.registry.SkillCatalogSync.syncNow(SkillCatalogSync.java:39)
+	at com.autwit.copilot.registry.SkillCatalogSync.sync(SkillCatalogSync.java:29)
+	at java.base/jdk.internal.reflect.DirectMethodHandleAccessor.invoke(Unknown Source)
+	at java.base/java.lang.reflect.Method.invoke(Unknown Source)
+	at org.springframework.aop.support.AopUtils.invokeJoinpointUsingReflection(AopUtils.java:355)
+	at org.springframework.aop.framework.CglibAopProxy$DynamicAdvisedInterceptor.intercept(CglibAopProxy.java:716)
+	at com.autwit.copilot.registry.SkillCatalogSync$$SpringCGLIB$$0.sync(<generated>)
+	at org.springframework.scheduling.support.DelegatingErrorHandlingRunnable.run(DelegatingErrorHandlingRunnable.java:54)
+	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Unknown Source)
+	at java.base/java.util.concurrent.FutureTask.runAndReset(Unknown Source)
+	at java.base/java.util.concurrent.ScheduledThreadPoolExecutor$ScheduledFutureTask.run(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(Unknown Source)
+	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(Unknown Source)
+	at java.base/java.lang.VirtualThread.run(Unknown Source)
+Caused by: org.springframework.web.client.ResourceAccessException: I/O error on GET request for "http://host.docker.internal:9090/skills": Connection refused
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.createResourceAccessException(DefaultRestClient.java:584)
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchangeInternal(DefaultRestClient.java:498)
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.retrieve(DefaultRestClient.java:458)
+	at com.autwit.copilot.orchestrator.HttpOrchestratorClient.skills(HttpOrchestratorClient.java:147)
+	... 14 common frames omitted
+Caused by: java.net.ConnectException: Connection refused
+	at java.base/sun.nio.ch.Net.pollConnect(Native Method)
+	at java.base/sun.nio.ch.Net.pollConnectNow(Unknown Source)
+	at java.base/sun.nio.ch.NioSocketImpl.timedFinishConnect(Unknown Source)
+	at java.base/sun.nio.ch.NioSocketImpl.connect(Unknown Source)
+	at java.base/java.net.Socket.connect(Unknown Source)
+	at java.base/sun.net.NetworkClient.doConnect(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.openServer(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.openServer(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.<init>(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.New(Unknown Source)
+	at java.base/sun.net.www.http.HttpClient.New(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.getNewHttpClient(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect0(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.plainConnect(Unknown Source)
+	at java.base/sun.net.www.protocol.http.HttpURLConnection.connect(Unknown Source)
+	at org.springframework.http.client.SimpleClientHttpRequest.executeInternal(SimpleClientHttpRequest.java:79)
+	at org.springframework.http.client.AbstractStreamingClientHttpRequest.executeInternal(AbstractStreamingClientHttpRequest.java:70)
+	at org.springframework.http.client.AbstractClientHttpRequest.execute(AbstractClientHttpRequest.java:66)
+	at org.springframework.web.client.DefaultRestClient$DefaultRequestBodyUriSpec.exchangeInternal(DefaultRestClient.java:492)
+	... 16 common frames omitted
