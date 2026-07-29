@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Test Plan & Data Studio — Wireframes</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#1C2733;
+  --line:#B7C4D1;
+  --line-soft:#DCE3EA;
+  --paper:#FBFBF9;
+  --blue:#2D6CDF;
+  --blue-soft:#EAF0FD;
+  --bar:#D6DCE2;
+  --bar-dark:#AEB9C4;
+  --text-2:#5B6773;
+  --text-3:#8D97A1;
+  --sans:'Inter',sans-serif;
+  --mono:'IBM Plex Mono',monospace;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  background:
+    radial-gradient(circle,#E4E9EF 1px,transparent 1px) 0 0/22px 22px,
+    var(--paper);
+  color:var(--ink);
+  font-family:var(--sans);
+  padding-bottom:80px;
+}
+.top{
+  position:sticky;top:0;z-index:50;
+  background:rgba(251,251,249,0.92);
+  backdrop-filter:blur(6px);
+  border-bottom:1px solid var(--line-soft);
+  padding:18px 40px;
+  display:flex;align-items:center;justify-content:space-between;
+}
+.top .brand{font-weight:700;font-size:15px;}
+.top .brand span{color:var(--blue);}
+.top .brand small{display:block;font-family:var(--mono);font-size:10.5px;color:var(--text-3);font-weight:400;letter-spacing:.06em;text-transform:uppercase;margin-top:2px;}
+.top nav{display:flex;gap:6px;}
+.top nav a{
+  font-family:var(--mono);font-size:11.5px;color:var(--text-2);text-decoration:none;
+  padding:7px 12px;border-radius:20px;border:1px solid var(--line-soft);transition:.15s;
+}
+.top nav a:hover{border-color:var(--blue);color:var(--blue);}
+
+.wrap{max-width:1180px;margin:0 auto;padding:0 40px;}
+.intro{padding:48px 0 20px;max-width:640px;}
+.intro .eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue);}
+.intro h1{font-size:26px;margin-top:8px;line-height:1.25;}
+.intro p{color:var(--text-2);font-size:14px;margin-top:10px;line-height:1.6;}
+.legend-key{display:flex;gap:18px;margin-top:20px;flex-wrap:wrap;}
+.legend-key .lk{display:flex;align-items:center;gap:7px;font-size:12px;color:var(--text-2);}
+.badge-sm{width:18px;height:18px;border-radius:50%;background:var(--blue);color:#fff;font-family:var(--mono);font-size:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+
+section{padding:56px 0;border-top:1px solid var(--line-soft);}
+.sc-head{display:flex;align-items:baseline;gap:12px;margin-bottom:26px;}
+.sc-num{font-family:var(--mono);font-size:12px;color:var(--blue);background:var(--blue-soft);padding:4px 10px;border-radius:20px;}
+.sc-head h2{font-size:19px;}
+.sc-head .sc-sub{color:var(--text-3);font-size:12.5px;}
+
+.panel{display:grid;grid-template-columns:1.55fr 1fr;gap:26px;align-items:start;}
+.frame{
+  background:#fff;
+  border:1.5px solid var(--line);
+  border-radius:10px;
+  padding:0;
+  position:relative;
+  overflow:hidden;
+  box-shadow:0 1px 0 var(--line-soft);
+}
+.frame-inner{padding:18px;}
+.badge{
+  width:20px;height:20px;border-radius:50%;background:var(--blue);color:#fff;
+  font-family:var(--mono);font-size:10.5px;display:inline-flex;align-items:center;justify-content:center;
+  flex-shrink:0;position:relative;top:-1px;
+}
+
+/* generic wireframe atoms */
+.bar{height:7px;background:var(--bar);border-radius:3px;}
+.bar.dark{background:var(--bar-dark);}
+.box{border:1.4px dashed var(--line);border-radius:8px;}
+.box.solid{border-style:solid;}
+.row{display:flex;gap:10px;align-items:center;}
+.circle{width:13px;height:13px;border-radius:50%;border:1.4px solid var(--line);flex-shrink:0;}
+.sq{width:13px;height:13px;border:1.4px solid var(--line);flex-shrink:0;}
+
+/* wf topbar */
+.wf-top{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:1.4px solid var(--line);}
+.wf-rail{width:118px;border-right:1.4px solid var(--line);padding:14px 10px;display:flex;flex-direction:column;gap:14px;flex-shrink:0;}
+.wf-step{display:flex;gap:8px;align-items:center;}
+.wf-step .dot{width:18px;height:18px;border-radius:50%;border:1.4px solid var(--line);flex-shrink:0;}
+.wf-step.on .dot{background:var(--blue);border-color:var(--blue);}
+.wf-body-flex{display:flex;}
+.wf-main{flex:1;padding:18px;}
+
+.annot{list-style:none;}
+.annot li{display:flex;gap:10px;margin-bottom:14px;font-size:12.5px;color:var(--text-2);line-height:1.5;}
+.annot li b{color:var(--ink);font-weight:600;}
+
+.two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.stack{display:flex;flex-direction:column;gap:8px;}
+
+footer{max-width:1180px;margin:0 auto;padding:30px 40px 0;color:var(--text-3);font-size:12px;font-family:var(--mono);}
+</style>
+</head>
+<body>
+
+<div class="top">
+  <div class="brand">Test Plan &amp; Data Studio <span>· wireframes</span><small>Low-fidelity · annotated · v1</small></div>
+  <nav>
+    <a href="#s1">01 Inputs</a>
+    <a href="#s2">02 Fetch</a>
+    <a href="#s3">03 Plan</a>
+    <a href="#s4">04 Data</a>
+  </nav>
+</div>
+
+<div class="wrap">
+  <div class="intro">
+    <div class="eyebrow">UX Wireframes</div>
+    <h1>Four screens, one pipeline: docs in, test plan and test data out.</h1>
+    <p>Structure first, styling later. Each frame below shows layout and hierarchy only — grey bars stand in for real copy. Numbered markers explain the intent behind each region.</p>
+    <div class="legend-key">
+      <div class="lk"><span class="badge-sm">i</span> numbered marker → see annotation list</div>
+      <div class="lk"><span class="box" style="width:16px;height:16px;display:inline-block;"></span> dashed = drop zone / input</div>
+      <div class="lk"><span class="box solid" style="width:16px;height:16px;display:inline-block;"></span> solid = static content</div>
+    </div>
+  </div>
+
+  <!-- ===================== SCREEN 1 ===================== -->
+  <section id="s1">
+    <div class="sc-head">
+      <span class="sc-num">01</span>
+      <h2>Add inputs</h2>
+      <span class="sc-sub">— upload source material, name the feature</span>
+    </div>
+    <div class="panel">
+      <div class="frame">
+        <div class="wf-top">
+          <div class="row"><span class="badge">1</span><div class="bar dark" style="width:120px;"></div></div>
+          <div class="bar" style="width:90px;"></div>
+        </div>
+        <div class="wf-body-flex">
+          <div class="wf-rail">
+            <div class="wf-step on"><span class="dot"></span><div class="bar" style="width:40px;"></div></div>
+            <div class="wf-step"><span class="dot"></span><div class="bar" style="width:40px;"></div></div>
+            <div class="wf-step"><span class="dot"></span><div class="bar" style="width:40px;"></div></div>
+            <div class="wf-step"><span class="dot"></span><div class="bar" style="width:40px;"></div></div>
+          </div>
+          <div class="wf-main">
+            <div class="two-col">
+              <div class="stack">
+                <div class="row"><span class="badge">2</span><div class="bar dark" style="width:140px;"></div></div>
+                <div class="box" style="height:76px;"></div>
+                <div class="row" style="margin-top:2px;"><span class="sq"></span><div class="bar" style="width:100px;"></div></div>
+                <div class="row"><span class="badge">3</span><div class="bar dark" style="width:170px;"></div></div>
+                <div class="box" style="height:76px;"></div>
+              </div>
+              <div class="stack">
+                <div class="row"><span class="badge">4</span><div class="bar dark" style="width:150px;"></div></div>
+                <div class="box solid" style="height:34px;"></div>
+                <div class="bar" style="width:70%;margin-top:6px;"></div>
+                <div class="box solid" style="height:64px;margin-top:6px;"></div>
+              </div>
+            </div>
+            <div class="row" style="justify-content:flex-end;margin-top:22px;gap:8px;">
+              <span class="badge">5</span>
+              <div class="box solid" style="width:150px;height:30px;background:var(--blue-soft);border-color:var(--blue);"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <ul class="annot">
+        <li><span class="badge-sm">1</span><span><b>Feature tag</b> in the header keeps the ticket key visible on every screen — no losing context mid-flow.</span></li>
+        <li><span class="badge-sm">2</span><span><b>Design doc drop zone.</b> Primary upload; accepts PDF/DOCX/MD. Sets the intent for the whole plan.</span></li>
+        <li><span class="badge-sm">3</span><span><b>Existing test cases</b> — optional second drop zone so teams with prior coverage can seed style, not just start blank.</span></li>
+        <li><span class="badge-sm">4</span><span><b>Feature key + short description</b> — the anchor used to search Jira/Confluence next, so it sits beside the uploads, not buried in step 2.</span></li>
+        <li><span class="badge-sm">5</span><span>Primary action is the only strong color on the screen — keeps the eye moving forward.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ===================== SCREEN 2 ===================== -->
+  <section id="s2">
+    <div class="sc-head">
+      <span class="sc-num">02</span>
+      <h2>Fetch context</h2>
+      <span class="sc-sub">— Jira &amp; Confluence, made visible</span>
+    </div>
+    <div class="panel">
+      <div class="frame">
+        <div class="wf-body-flex">
+          <div class="wf-rail">
+            <div class="wf-step"><span class="dot"></span><div class="bar" style="width:40px;"></div></div>
+            <div class="wf-step on"><span class="dot"></span><div class="bar" style="width:40px;"></div></div>
+            <div class="wf-step"><span class="dot"></span><div class="bar" style="width:40px;"></div></div>
+            <div class="wf-step"><span class="dot"></span><div class="bar" style="width:40px;"></div></div>
+          </div>
+          <div class="wf-main">
+            <div class="two-col">
+              <div class="stack">
+                <div class="row"><span class="badge">1</span><div class="circle" style="border-radius:6px;width:22px;height:22px;"></div><div class="bar dark" style="width:110px;"></div><div style="margin-left:auto;" class="bar" style="width:50px;"></div></div>
+                <div class="box solid" style="height:32px;"></div>
+                <div class="row"><span class="badge">2</span><div class="sq"></div><div class="bar" style="width:60%;"></div></div>
+                <div class="row" style="padding-left:22px;"><div class="sq"></div><div class="bar" style="width:55%;"></div></div>
+                <div class="row" style="padding-left:22px;"><div class="sq"></div><div class="bar" style="width:65%;"></div></div>
+                <div class="row" style="margin-top:10px;"><div class="circle" style="border-radius:6px;width:22px;height:22px;"></div><div class="bar dark" style="width:110px;"></div></div>
+                <div class="row"><div class="sq"></div><div class="bar" style="width:58%;"></div></div>
+              </div>
+              <div class="stack">
+                <div class="row"><span class="badge">3</span><div class="bar dark" style="width:110px;"></div></div>
+                <div class="box solid" style="height:210px;padding:10px;">
+                  <div class="row" style="margin-bottom:8px;"><div class="bar" style="width:40px;"></div><div class="bar" style="width:130px;"></div></div>
+                  <div class="row" style="margin-bottom:8px;"><div class="bar" style="width:40px;"></div><div class="bar dark" style="width:150px;"></div></div>
+                  <div class="row" style="margin-bottom:8px;"><div class="bar" style="width:40px;"></div><div class="bar" style="width:120px;"></div></div>
+                  <div class="row"><div class="bar" style="width:40px;"></div><div class="bar dark" style="width:140px;"></div></div>
+                </div>
+              </div>
+            </div>
+            <div class="row" style="justify-content:flex-end;margin-top:20px;gap:8px;">
+              <span class="badge">4</span>
+              <div class="box solid" style="width:170px;height:30px;background:var(--blue-soft);border-color:var(--blue);"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <ul class="annot">
+        <li><span class="badge-sm">1</span><span><b>Connection card</b> shows the system, space/project, and a live status pill — trust signal before anything is fetched.</span></li>
+        <li><span class="badge-sm">2</span><span><b>Checkable results</b> for Jira issues and Confluence pages, pre-selected by relevance so most users just confirm and go.</span></li>
+        <li><span class="badge-sm">3</span><span><b>Fetch console.</b> The one deliberate risk in this flow — turns an invisible MCP call into a visible, timestamped log. Builds confidence in what's being pulled.</span></li>
+        <li><span class="badge-sm">4</span><span>Action label changes from "Fetch" to "Generate test plan" once the log completes — same button, no extra click.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ===================== SCREEN 3 ===================== -->
+  <section id="s3">
+    <div class="sc-head">
+      <span class="sc-num">03</span>
+      <h2>Test plan</h2>
+      <span class="sc-sub">— the generated deliverable</span>
+    </div>
+    <div class="panel">
+      <div class="frame">
+        <div class="wf-body-flex">
+          <div class="wf-rail">
+            <div class="wf-step"><span class="dot"></span><div class="bar" style="width:40px;"></div></div>
+            <div class="wf-step"><span class="dot"></span><div class="bar" style="width:40px;"></div></div>
+            <div class="wf-step on"><span class="dot"></span><div class="bar" style="width:40px;"></div></div>
+            <div class="wf-step"><span class="dot"></span><div class="bar" style="width:40px;"></div></div>
+          </div>
+          <div class="wf-main">
+            <div class="box solid" style="padding:22px;">
+              <div class="row"><span class="badge">1</span><div class="bar" style="width:100px;"></div></div>
+              <div class="bar dark" style="width:260px;height:14px;margin-top:8px;"></div>
+              <div class="row" style="margin-top:8px;gap:16px;"><div class="bar" style="width:80px;"></div><div class="bar" style="width:80px;"></div><div class="bar" style="width:80px;"></div></div>
+              <div style="border-top:1.4px solid var(--line-soft);margin:16px 0;"></div>
+              <div class="row"><span class="badge">2</span><div class="bar" style="width:90px;"></div></div>
+              <div class="bar" style="width:95%;margin-top:8px;"></div>
+              <div class="bar" style="width:80%;margin-top:6px;"></div>
+              <div class="row" style="margin-top:16px;"><span class="badge">3</span><div class="bar" style="width:110px;"></div></div>
+              <div style="margin-top:8px;">
+                <div class="row" style="border-bottom:1.4px solid var(--line-soft);padding-bottom:6px;"><div class="bar dark" style="width:40px;"></div><div class="bar dark" style="width:180px;"></div><div class="bar dark" style="width:60px;"></div></div>
+                <div class="row" style="padding:6px 0;border-bottom:1px solid var(--line-soft);"><div class="bar" style="width:40px;"></div><div class="bar" style="width:190px;"></div><div class="bar" style="width:55px;"></div></div>
+                <div class="row" style="padding:6px 0;border-bottom:1px solid var(--line-soft);"><div class="bar" style="width:40px;"></div><div class="bar" style="width:170px;"></div><div class="bar" style="width:55px;"></div></div>
+                <div class="row" style="padding:6px 0;"><div class="bar" style="width:40px;"></div><div class="bar" style="width:200px;"></div><div class="bar" style="width:55px;"></div></div>
+              </div>
+            </div>
+            <div class="row" style="justify-content:flex-end;margin-top:18px;gap:8px;">
+              <span class="badge">4</span>
+              <div class="box solid" style="width:120px;height:28px;"></div>
+              <div class="box solid" style="width:160px;height:28px;background:var(--blue-soft);border-color:var(--blue);"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <ul class="annot">
+        <li><span class="badge-sm">1</span><span><b>Doc header</b> carries its own provenance line — which tickets and doc version it was built from — so it's traceable without leaving the page.</span></li>
+        <li><span class="badge-sm">2</span><span><b>Overview &amp; scope</b> in plain prose before the table, so a reviewer understands intent before checking coverage.</span></li>
+        <li><span class="badge-sm">3</span><span><b>Scenario table</b> is the core artifact — this is what step 4 reads from directly.</span></li>
+        <li><span class="badge-sm">4</span><span>Export sits next to "continue," not hidden in a menu — reviewers often want the file before touching test data.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- ===================== SCREEN 4 ===================== -->
+  <section id="s4">
+    <div class="sc-head">
+      <span class="sc-num">04</span>
+      <h2>Test data</h2>
+      <span class="sc-sub">— from scenario to sample rows</span>
+    </div>
+    <div class="panel">
+      <div class="frame">
+        <div class="wf-body-flex">
+          <div class="wf-rail">
+            <div class="wf-step"><span class="dot"></span><div class="bar" style="width:40px;"></div></div>
+            <div class="wf-step"><span class="dot"></span><div class="bar" style="width:40px;"></div></div>
+            <div class="wf-step"><span class="dot"></span><div class="bar" style="width:40px;"></div></div>
+            <div class="wf-step on"><span class="dot"></span><div class="bar" style="width:40px;"></div></div>
+          </div>
+          <div class="wf-main">
+            <div class="two-col">
+              <div class="stack">
+                <div class="row"><span class="badge">1</span><div class="bar dark" style="width:150px;"></div></div>
+                <div class="box solid" style="padding:8px;">
+                  <div class="row" style="padding:5px 0;"><div class="sq"></div><div class="bar" style="width:75%;"></div></div>
+                  <div class="row" style="padding:5px 0;"><div class="sq"></div><div class="bar" style="width:65%;"></div></div>
+                  <div class="row" style="padding:5px 0;"><div class="sq"></div><div class="bar" style="width:80%;"></div></div>
+                  <div class="row" style="padding:5px 0;"><div class="sq"></div><div class="bar" style="width:60%;"></div></div>
+                </div>
+              </div>
+              <div class="stack">
+                <div class="row"><span class="badge">2</span><div class="bar dark" style="width:140px;"></div></div>
+                <div class="box" style="height:70px;"></div>
+                <div class="row" style="margin-top:6px;"><span class="badge">3</span><div class="bar" style="width:110px;"></div></div>
+                <div class="row" style="gap:6px;flex-wrap:wrap;">
+                  <div class="box solid" style="width:70px;height:22px;background:var(--blue-soft);border-color:var(--blue);"></div>
+                  <div class="box solid" style="width:90px;height:22px;background:var(--blue-soft);border-color:var(--blue);"></div>
+                  <div class="box solid" style="width:80px;height:22px;"></div>
+                </div>
+              </div>
+            </div>
+            <div class="row" style="justify-content:flex-end;margin-top:16px;">
+              <span class="badge" style="margin-right:8px;">4</span>
+              <div class="box solid" style="width:160px;height:30px;background:var(--blue-soft);border-color:var(--blue);"></div>
+            </div>
+            <div class="box solid" style="margin-top:20px;padding:12px;">
+              <div class="row" style="gap:14px;border-bottom:1.4px solid var(--line-soft);padding-bottom:8px;">
+                <span class="badge">5</span>
+                <div class="bar dark" style="width:50px;"></div><div class="bar" style="width:50px;"></div><div class="bar" style="width:50px;"></div>
+              </div>
+              <div class="row" style="padding:6px 0;margin-top:6px;"><div class="bar" style="width:60px;"></div><div class="bar" style="width:60px;"></div><div class="bar" style="width:60px;"></div><div class="bar" style="width:60px;"></div><div class="bar" style="width:60px;"></div></div>
+              <div class="row" style="padding:6px 0;"><div class="bar" style="width:60px;"></div><div class="bar" style="width:60px;"></div><div class="bar" style="width:60px;"></div><div class="bar" style="width:60px;"></div><div class="bar" style="width:60px;"></div></div>
+              <div class="row" style="padding:6px 0;"><div class="bar" style="width:60px;"></div><div class="bar" style="width:60px;"></div><div class="bar" style="width:60px;"></div><div class="bar" style="width:60px;"></div><div class="bar" style="width:60px;"></div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <ul class="annot">
+        <li><span class="badge-sm">1</span><span><b>Scenario checklist</b> pulled straight from step 3 — no retyping, and unchecking one keeps the ask small and intentional.</span></li>
+        <li><span class="badge-sm">2</span><span><b>Example record</b> (optional) lets the tool match a real schema instead of guessing field names.</span></li>
+        <li><span class="badge-sm">3</span><span><b>Edge-case chips</b> — boundary, null, negative — make coverage decisions explicit and reviewable before generating.</span></li>
+        <li><span class="badge-sm">4</span><span>Single generate action; re-runs safely if config changes.</span></li>
+        <li><span class="badge-sm">5</span><span><b>Tabbed output</b>, one tab per scenario — keeps large datasets scannable instead of one long merged table.</span></li>
+      </ul>
+    </div>
+  </section>
+
+  <footer>test-plan-studio · wireframe pass v1 · grey = placeholder, not final copy</footer>
+</div>
+
+</body>
+</html>

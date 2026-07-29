@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Test Plan &amp; Data Studio</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Serif:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0A0E13;
+  --surface:#11161D;
+  --surface-2:#171E27;
+  --surface-3:#1E2733;
+  --border:#263141;
+  --border-strong:#34435688;
+  --text-1:#E7EDF4;
+  --text-2:#94A3B4;
+  --text-3:#5D6B7A;
+  --accent:#4FD1C5;
+  --accent-dim:#4FD1C522;
+  --warn:#E8A83C;
+  --warn-dim:#E8A83C22;
+  --success:#34D399;
+  --success-dim:#34D39922;
+  --error:#F1615B;
+  --error-dim:#F1615B22;
+  --sans:'IBM Plex Sans',sans-serif;
+  --mono:'IBM Plex Mono',monospace;
+  --serif:'IBM Plex Serif',serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  background:var(--bg);
+  color:var(--text-1);
+  font-family:var(--sans);
+  font-size:14px;
+  -webkit-font-smoothing:antialiased;
+  min-height:100vh;
+}
+.app{display:flex;min-height:100vh;}
+
+/* ---------- RAIL ---------- */
+.rail{
+  width:236px;
+  flex-shrink:0;
+  background:var(--surface);
+  border-right:1px solid var(--border);
+  padding:24px 18px;
+  display:flex;
+  flex-direction:column;
+}
+.rail-brand{
+  font-family:var(--mono);
+  font-size:11px;
+  letter-spacing:.14em;
+  color:var(--text-3);
+  text-transform:uppercase;
+  margin-bottom:28px;
+  padding-left:4px;
+}
+.rail-brand b{color:var(--accent);}
+.steps{position:relative;display:flex;flex-direction:column;gap:2px;}
+.steps::before{
+  content:"";
+  position:absolute;
+  left:15px;top:22px;bottom:22px;
+  width:1px;
+  background:var(--border);
+}
+.step{
+  display:flex;
+  align-items:flex-start;
+  gap:12px;
+  padding:12px 6px;
+  cursor:pointer;
+  border-radius:8px;
+  position:relative;
+  transition:background .15s;
+}
+.step:hover{background:var(--surface-2);}
+.step-num{
+  width:30px;height:30px;
+  border-radius:50%;
+  background:var(--surface-3);
+  border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  font-family:var(--mono);
+  font-size:12px;
+  color:var(--text-2);
+  flex-shrink:0;
+  z-index:1;
+  transition:all .2s;
+}
+.step.active .step-num{background:var(--accent);border-color:var(--accent);color:#04211E;font-weight:600;}
+.step.done .step-num{background:var(--success-dim);border-color:var(--success);color:var(--success);}
+.step-label{padding-top:5px;}
+.step-title{font-size:13px;font-weight:500;color:var(--text-1);}
+.step.active .step-title{color:var(--accent);}
+.step-sub{font-size:11.5px;color:var(--text-3);margin-top:2px;}
+.rail-foot{margin-top:auto;padding-top:20px;border-top:1px solid var(--border);}
+.env-pill{
+  display:inline-flex;align-items:center;gap:6px;
+  font-family:var(--mono);font-size:11px;color:var(--text-2);
+  padding:6px 10px;border:1px solid var(--border);border-radius:20px;
+}
+.env-dot{width:6px;height:6px;border-radius:50%;background:var(--success);box-shadow:0 0 6px var(--success);}
+
+/* ---------- MAIN ---------- */
+.main{flex:1;display:flex;flex-direction:column;min-width:0;}
+.topbar{
+  height:64px;flex-shrink:0;
+  border-bottom:1px solid var(--border);
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 28px;
+}
+.topbar h1{font-size:15px;font-weight:600;}
+.topbar .feature-tag{
+  font-family:var(--mono);font-size:12px;color:var(--accent);
+  background:var(--accent-dim);border:1px solid #4FD1C540;
+  padding:3px 9px;border-radius:6px;margin-left:10px;
+}
+.topbar-right{display:flex;gap:10px;align-items:center;}
+
+.stage{display:none;padding:32px 40px 60px;max-width:1180px;}
+.stage.active{display:block;}
+.stage-head{margin-bottom:26px;}
+.stage-eyebrow{font-family:var(--mono);font-size:11px;color:var(--text-3);letter-spacing:.1em;text-transform:uppercase;}
+.stage-head h2{font-size:22px;font-weight:600;margin-top:4px;}
+.stage-head p{color:var(--text-2);margin-top:6px;font-size:13.5px;max-width:640px;line-height:1.5;}
+
+/* ---------- shared bits ---------- */
+.grid-2{display:grid;grid-template-columns:1.15fr .85fr;gap:24px;align-items:start;}
+.card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:12px;
+  padding:20px;
+}
+.card h3{font-size:13px;font-weight:600;margin-bottom:4px;}
+.card .card-hint{font-size:12px;color:var(--text-3);margin-bottom:14px;}
+
+.dropzone{
+  border:1.5px dashed var(--border-strong);
+  border-radius:10px;
+  padding:24px 18px;
+  text-align:center;
+  cursor:pointer;
+  transition:.15s;
+}
+.dropzone:hover, .dropzone.drag{border-color:var(--accent);background:var(--accent-dim);}
+.dropzone .dz-icon{font-size:20px;margin-bottom:8px;}
+.dropzone .dz-main{font-size:13px;color:var(--text-1);}
+.dropzone .dz-sub{font-size:11.5px;color:var(--text-3);margin-top:3px;}
+input[type=file]{display:none;}
+
+.file-row{
+  display:flex;align-items:center;gap:10px;
+  padding:9px 10px;border:1px solid var(--border);border-radius:8px;
+  margin-top:8px;background:var(--surface-2);
+}
+.file-row .fi-icon{
+  width:26px;height:26px;border-radius:6px;background:var(--surface-3);
+  display:flex;align-items:center;justify-content:center;font-size:12px;flex-shrink:0;
+}
+.file-row .fi-name{font-size:12.5px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.file-row .fi-size{font-size:11px;color:var(--text-3);font-family:var(--mono);}
+.file-row .fi-remove{cursor:pointer;color:var(--text-3);font-size:14px;padding:2px 6px;}
+.file-row .fi-remove:hover{color:var(--error);}
+
+label.field-label{display:block;font-size:12px;color:var(--text-2);margin-bottom:6px;font-weight:500;}
+input[type=text], textarea, select{
+  width:100%;background:var(--surface-2);border:1px solid var(--border);
+  border-radius:8px;padding:10px 12px;color:var(--text-1);font-family:var(--sans);font-size:13px;
+  outline:none;transition:border-color .15s;
+}
+input[type=text]:focus, textarea:focus{border-color:var(--accent);}
+textarea{font-family:var(--mono);font-size:12.5px;resize:vertical;min-height:90px;}
+.hint{font-size:11.5px;color:var(--text-3);margin-top:6px;line-height:1.4;}
+
+.btn{
+  font-family:var(--sans);font-size:13px;font-weight:500;
+  padding:10px 18px;border-radius:8px;border:1px solid transparent;
+  cursor:pointer;display:inline-flex;align-items:center;gap:8px;transition:.15s;
+}
+.btn-primary{background:var(--accent);color:#04211E;}
+.btn-primary:hover{background:#65ddd2;}
+.btn-primary:disabled{opacity:.45;cursor:not-allowed;}
+.btn-ghost{background:transparent;border-color:var(--border);color:var(--text-1);}
+.btn-ghost:hover{border-color:var(--border-strong);background:var(--surface-2);}
+.btn-sm{padding:6px 12px;font-size:12px;}
+.actions-row{display:flex;justify-content:flex-end;gap:10px;margin-top:26px;}
+
+/* connect cards */
+.conn-card{display:flex;align-items:center;gap:12px;padding:14px;border:1px solid var(--border);border-radius:10px;margin-bottom:10px;background:var(--surface-2);}
+.conn-logo{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px;flex-shrink:0;}
+.conn-jira{background:#1868DB22;color:#4C9AFF;}
+.conn-conf{background:#1868DB22;color:#4C9AFF;}
+.conn-info{flex:1;}
+.conn-info .cn-name{font-size:13px;font-weight:500;}
+.conn-info .cn-sub{font-size:11.5px;color:var(--text-3);margin-top:2px;}
+.status-badge{font-family:var(--mono);font-size:10.5px;padding:3px 8px;border-radius:20px;display:inline-flex;align-items:center;gap:5px;}
+.status-connected{background:var(--success-dim);color:var(--success);}
+
+.result-item{display:flex;align-items:flex-start;gap:10px;padding:10px;border-radius:8px;border:1px solid var(--border);margin-top:8px;cursor:pointer;background:var(--surface-2);}
+.result-item:hover{border-color:var(--border-strong);}
+.result-item input{margin-top:3px;accent-color:var(--accent);}
+.result-item .ri-key{font-family:var(--mono);font-size:11px;color:var(--accent);}
+.result-item .ri-title{font-size:12.5px;margin-top:2px;}
+.result-item .ri-meta{font-size:11px;color:var(--text-3);margin-top:3px;}
+
+/* console */
+.console{
+  background:#080B0F;border:1px solid var(--border);border-radius:12px;
+  font-family:var(--mono);font-size:12px;padding:16px;height:420px;overflow-y:auto;
+}
+.console-line{display:flex;gap:10px;margin-bottom:9px;line-height:1.5;opacity:0;animation:fadeIn .35s forwards;}
+@keyframes fadeIn{to{opacity:1;}}
+.console-line .c-time{color:var(--text-3);flex-shrink:0;}
+.console-line .c-icon{flex-shrink:0;}
+.console-line.ok .c-icon{color:var(--success);}
+.console-line.pending .c-icon{color:var(--warn);}
+.console-line.info .c-icon{color:var(--accent);}
+.console-line .c-text{color:var(--text-2);}
+.console-line .c-text b{color:var(--text-1);}
+.console-empty{color:var(--text-3);text-align:center;padding-top:160px;font-size:12.5px;}
+
+/* plan document */
+.doc{
+  background:#F7F4EE;color:#20242A;border-radius:12px;padding:44px 52px;
+  font-family:var(--serif);line-height:1.65;box-shadow:0 0 0 1px var(--border);
+}
+.doc .doc-eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:#8A6A3F;}
+.doc h1{font-size:26px;margin-top:6px;font-weight:600;}
+.doc .doc-meta{font-family:var(--sans);font-size:12px;color:#6B6155;margin-top:8px;display:flex;gap:14px;}
+.doc hr{border:none;border-top:1px solid #DDD5C4;margin:22px 0;}
+.doc h2{font-family:var(--sans);font-size:14px;text-transform:uppercase;letter-spacing:.06em;color:#8A6A3F;margin:26px 0 10px;}
+.doc p{font-size:14.5px;margin-bottom:10px;}
+.doc table{width:100%;border-collapse:collapse;margin-top:8px;font-family:var(--sans);font-size:12.5px;}
+.doc th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;color:#8A6A3F;border-bottom:1.5px solid #20242A;padding:8px 10px;}
+.doc td{padding:9px 10px;border-bottom:1px solid #E4DDCB;vertical-align:top;}
+.doc .prio-high{color:#B33A2E;font-weight:600;}
+.doc .prio-med{color:#8A6A3F;font-weight:600;}
+.doc .prio-low{color:#4A7A5D;font-weight:600;}
+
+/* data stage */
+.scenario-list .sc-item{display:flex;align-items:center;gap:10px;padding:11px 12px;border:1px solid var(--border);border-radius:8px;margin-bottom:8px;background:var(--surface-2);}
+.sc-item input{accent-color:var(--accent);}
+.sc-item .sc-id{font-family:var(--mono);font-size:11px;color:var(--accent);}
+.sc-item .sc-title{font-size:12.5px;margin-top:1px;}
+.chip-row{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px;}
+.chip{font-size:11.5px;padding:6px 12px;border:1px solid var(--border);border-radius:20px;cursor:pointer;color:var(--text-2);}
+.chip.active{border-color:var(--accent);color:var(--accent);background:var(--accent-dim);}
+.data-table-wrap{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:18px;margin-top:20px;}
+.data-tabs{display:flex;gap:4px;border-bottom:1px solid var(--border);margin-bottom:14px;padding-bottom:0;}
+.data-tab{font-family:var(--mono);font-size:11.5px;padding:8px 14px;color:var(--text-3);cursor:pointer;border-bottom:2px solid transparent;}
+.data-tab.active{color:var(--accent);border-color:var(--accent);}
+table.gen{width:100%;border-collapse:collapse;font-family:var(--mono);font-size:12px;}
+table.gen th{text-align:left;color:var(--text-3);font-weight:500;padding:8px 10px;border-bottom:1px solid var(--border);text-transform:uppercase;font-size:10.5px;letter-spacing:.04em;}
+table.gen td{padding:8px 10px;border-bottom:1px solid var(--border);color:var(--text-2);}
+table.gen td.ok{color:var(--success);}
+table.gen td.fail{color:var(--error);}
+.spinner{width:14px;height:14px;border-radius:50%;border:2px solid #04211E44;border-top-color:#04211E;animation:spin .7s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+::-webkit-scrollbar{width:8px;height:8px;}
+::-webkit-scrollbar-thumb{background:var(--surface-3);border-radius:4px;}
+</style>
+</head>
+<body>
+
+<div class="app">
+
+  <!-- RAIL -->
+  <div class="rail">
+    <div class="rail-brand">Test&nbsp;Plan&nbsp;&amp;&nbsp;Data&nbsp;<b>Studio</b></div>
+    <div class="steps">
+      <div class="step active" data-stage="inputs" onclick="goTo('inputs')">
+        <div class="step-num">1</div>
+        <div class="step-label"><div class="step-title">Add inputs</div><div class="step-sub">Docs &amp; test cases</div></div>
+      </div>
+      <div class="step" data-stage="connect" onclick="goTo('connect')">
+        <div class="step-num">2</div>
+        <div class="step-label"><div class="step-title">Fetch context</div><div class="step-sub">Jira &amp; Confluence</div></div>
+      </div>
+      <div class="step" data-stage="plan" onclick="goTo('plan')">
+        <div class="step-num">3</div>
+        <div class="step-label"><div class="step-title">Test plan</div><div class="step-sub">Review &amp; export</div></div>
+      </div>
+      <div class="step" data-stage="data" onclick="goTo('data')">
+        <div class="step-num">4</div>
+        <div class="step-label"><div class="step-title">Test data</div><div class="step-sub">Generate datasets</div></div>
+      </div>
+    </div>
+    <div class="rail-foot">
+      <div class="env-pill"><span class="env-dot"></span> automation-run-4471</div>
+    </div>
+  </div>
+
+  <!-- MAIN -->
+  <div class="main">
+    <div class="topbar">
+      <div style="display:flex;align-items:center;">
+        <h1 id="topbarTitle">Add inputs</h1>
+        <span class="feature-tag">PAY-2481 · Payment Retry</span>
+      </div>
+      <div class="topbar-right">
+        <span style="font-size:12px;color:var(--text-3);">Signed in as <b style="color:var(--text-2);">m.alvarez</b></span>
+      </div>
+    </div>
+
+    <!-- STAGE 1 : INPUTS -->
+    <div class="stage active" id="stage-inputs">
+      <div class="stage-head">
+        <div class="stage-eyebrow">Step 1 of 4</div>
+        <h2>What should we base the test plan on?</h2>
+        <p>Upload the design doc or high-level test cases for this feature. We'll combine these with anything relevant we find in Jira and Confluence in the next step.</p>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <h3>Design &amp; requirement docs</h3>
+          <div class="card-hint">PDF, DOCX or Markdown · used to understand intended behavior</div>
+          <div class="dropzone" id="dz1" onclick="document.getElementById('f1').click()">
+            <div class="dz-icon">⇪</div>
+            <div class="dz-main">Drop files or click to browse</div>
+            <div class="dz-sub">Design specs, PRDs, architecture notes</div>
+          </div>
+          <input type="file" id="f1" multiple>
+          <div id="files1"></div>
+
+          <h3 style="margin-top:22px;">Existing test cases <span style="color:var(--text-3);font-weight:400;">(optional)</span></h3>
+          <div class="card-hint">Seeds scenario style and coverage expectations</div>
+          <div class="dropzone" id="dz2" onclick="document.getElementById('f2').click()">
+            <div class="dz-icon">⇪</div>
+            <div class="dz-main">Drop files or click to browse</div>
+            <div class="dz-sub">XLSX, CSV or plain text</div>
+          </div>
+          <input type="file" id="f2" multiple>
+          <div id="files2"></div>
+        </div>
+
+        <div class="card">
+          <h3>Feature reference</h3>
+          <div class="card-hint">Used to search Jira &amp; Confluence in the next step</div>
+          <label class="field-label">Jira epic / feature key</label>
+          <input type="text" id="featureKey" value="PAY-2481">
+          <div class="hint" style="margin-bottom:16px;">Leave the key as-is, or clear it and search by keyword instead.</div>
+
+          <label class="field-label">What are we testing?</label>
+          <textarea id="featureDesc" style="min-height:70px;font-family:var(--sans);font-size:13px;">Payment retry logic — automatic retries with backoff when a charge attempt fails, with idempotency guarantees.</textarea>
+          <div class="hint">A short description sharpens scenario relevance when we generate the plan.</div>
+        </div>
+      </div>
+
+      <div class="actions-row">
+        <button class="btn btn-ghost" onclick="goTo('connect')">Skip document upload</button>
+        <button class="btn btn-primary" onclick="goTo('connect')">Continue to Jira &amp; Confluence →</button>
+      </div>
+    </div>
+
+    <!-- STAGE 2 : CONNECT -->
+    <div class="stage" id="stage-connect">
+      <div class="stage-head">
+        <div class="stage-eyebrow">Step 2 of 4</div>
+        <h2>Pull in the relevant context</h2>
+        <p>We're connected to Jira and Confluence. Select the tickets and pages that describe this feature — we'll fold them into the test plan alongside your uploads.</p>
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <div class="conn-card">
+            <div class="conn-logo conn-jira">J</div>
+            <div class="conn-info">
+              <div class="cn-name">Jira — PAYMENTS project</div>
+              <div class="cn-sub">mcp://jira.internal · connected as m.alvarez</div>
+            </div>
+            <span class="status-badge status-connected">● connected</span>
+          </div>
+
+          <div class="card" style="margin-bottom:14px;">
+            <label class="field-label">Search issues</label>
+            <input type="text" value="retry" oninput="filterResults()" id="jiraSearch">
+            <div id="jiraResults">
+              <div class="result-item"><input type="checkbox" checked><div><div class="ri-key">PAY-2481</div><div class="ri-title">Payment retry logic — automatic backoff &amp; idempotency</div><div class="ri-meta">Epic · In Progress · updated 2d ago</div></div></div>
+              <div class="result-item"><input type="checkbox" checked><div><div class="ri-key">PAY-2502</div><div class="ri-title">Webhook reconciliation on retry timeout</div><div class="ri-meta">Story · To Do · updated 5d ago</div></div></div>
+              <div class="result-item"><input type="checkbox"><div><div class="ri-key">PAY-2390</div><div class="ri-title">Idempotency key storage — TTL cleanup</div><div class="ri-meta">Sub-task · Done · updated 3w ago</div></div></div>
+            </div>
+          </div>
+
+          <div class="conn-card">
+            <div class="conn-logo conn-conf">C</div>
+            <div class="conn-info">
+              <div class="cn-name">Confluence — PAY space</div>
+              <div class="cn-sub">mcp://confluence.internal · connected as m.alvarez</div>
+            </div>
+            <span class="status-badge status-connected">● connected</span>
+          </div>
+          <div class="card">
+            <label class="field-label">Matching pages</label>
+            <div class="result-item"><input type="checkbox" checked><div><div class="ri-key">PAY · Design Doc</div><div class="ri-title">Payment Retry — Design Doc v3</div><div class="ri-meta">Edited by R. Kessler · 4d ago</div></div></div>
+            <div class="result-item"><input type="checkbox"><div><div class="ri-key">PAY · RFC</div><div class="ri-title">RFC-014: Exponential backoff strategy</div><div class="ri-meta">Edited by A. Chen · 2mo ago</div></div></div>
+          </div>
+        </div>
+
+        <div>
+          <h3 style="font-size:13px;font-weight:600;margin-bottom:10px;">Fetch activity</h3>
+          <div class="console" id="console">
+            <div class="console-empty">Fetch log will appear here once you start pulling context.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions-row">
+        <button class="btn btn-ghost" onclick="goTo('inputs')">← Back</button>
+        <button class="btn btn-primary" id="fetchBtn" onclick="runFetch()">Fetch selected context</button>
+      </div>
+    </div>
+
+    <!-- STAGE 3 : PLAN -->
+    <div class="stage" id="stage-plan">
+      <div class="stage-head">
+        <div class="stage-eyebrow">Step 3 of 4</div>
+        <h2>Generated test plan</h2>
+        <p>Built from your uploaded docs plus PAY-2481, PAY-2502 and the linked Confluence design doc. Edit anything before it becomes the source for test data generation.</p>
+      </div>
+
+      <div class="doc" id="planDoc">
+        <div class="doc-eyebrow">Test Plan · Auto-generated</div>
+        <h1>Payment Retry Logic</h1>
+        <div class="doc-meta">
+          <span>Source: PAY-2481, PAY-2502</span>
+          <span>Design doc: v3</span>
+          <span>Generated Jul 28, 2026</span>
+        </div>
+        <hr>
+        <h2>Overview</h2>
+        <p>Validates automatic retry behavior for failed payment charge attempts, including exponential backoff timing, idempotency guarantees, and fallback to manual reconciliation when retries are exhausted.</p>
+        <h2>Scope</h2>
+        <p>Covers the retry orchestrator, idempotency key store, and webhook timeout handler described in the linked design doc. Excludes upstream fraud-check logic (tracked separately in PAY-2390).</p>
+        <h2>Test scenarios</h2>
+        <table>
+          <tr><th>ID</th><th>Scenario</th><th>Priority</th><th>Source</th></tr>
+          <tr><td>TC-01</td><td>Retry succeeds within max attempts</td><td class="prio-high">High</td><td>PAY-2481</td></tr>
+          <tr><td>TC-02</td><td>Retry exhausts max attempts and marks charge failed</td><td class="prio-high">High</td><td>PAY-2481</td></tr>
+          <tr><td>TC-03</td><td>Idempotency key prevents duplicate charge on retry</td><td class="prio-high">High</td><td>Design doc v3</td></tr>
+          <tr><td>TC-04</td><td>Retry respects exponential backoff window</td><td class="prio-med">Medium</td><td>RFC-014</td></tr>
+          <tr><td>TC-05</td><td>Webhook timeout triggers manual reconciliation</td><td class="prio-med">Medium</td><td>PAY-2502</td></tr>
+        </table>
+      </div>
+
+      <div class="actions-row">
+        <button class="btn btn-ghost" onclick="goTo('connect')">← Back</button>
+        <button class="btn btn-ghost" onclick="alert('Downloads the plan as test-plan-PAY-2481.html')">Download HTML</button>
+        <button class="btn btn-primary" onclick="goTo('data')">Continue to test data →</button>
+      </div>
+    </div>
+
+    <!-- STAGE 4 : DATA -->
+    <div class="stage" id="stage-data">
+      <div class="stage-head">
+        <div class="stage-eyebrow">Step 4 of 4</div>
+        <h2>Generate test data</h2>
+        <p>Pick which scenarios need data. If you have a sample record, drop it in and we'll match its shape — otherwise we'll infer a schema from the scenario itself.</p>
+      </div>
+
+      <div class="grid-2">
+        <div>
+          <div class="card">
+            <h3>Scenarios needing data</h3>
+            <div class="card-hint">Carried over from the test plan</div>
+            <div class="scenario-list">
+              <div class="sc-item"><input type="checkbox" checked><div><div class="sc-id">TC-01</div><div class="sc-title">Retry succeeds within max attempts</div></div></div>
+              <div class="sc-item"><input type="checkbox" checked><div><div class="sc-id">TC-02</div><div class="sc-title">Retry exhausts max attempts and marks failed</div></div></div>
+              <div class="sc-item"><input type="checkbox" checked><div><div class="sc-id">TC-03</div><div class="sc-title">Idempotency key prevents duplicate charge</div></div></div>
+              <div class="sc-item"><input type="checkbox"><div><div class="sc-id">TC-04</div><div class="sc-title">Retry respects exponential backoff window</div></div></div>
+              <div class="sc-item"><input type="checkbox"><div><div class="sc-id">TC-05</div><div class="sc-title">Webhook timeout triggers manual reconciliation</div></div></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card">
+          <h3>Example test data <span style="color:var(--text-3);font-weight:400;">(optional)</span></h3>
+          <div class="card-hint">Paste a sample record so generated rows match your shape</div>
+          <textarea id="exampleData">{
+  "transaction_id": "txn_8841",
+  "customer_id": "cus_2201",
+  "amount": 4899,
+  "currency": "USD",
+  "attempt_count": 2,
+  "expected_status": "succeeded"
+}</textarea>
+
+          <div style="margin-top:16px;">
+            <label class="field-label">Rows per scenario</label>
+            <input type="text" value="8" id="rowCount" style="width:90px;">
+          </div>
+          <div style="margin-top:14px;">
+            <label class="field-label">Include edge cases</label>
+            <div class="chip-row">
+              <div class="chip active" onclick="toggleChip(this)">Boundary values</div>
+              <div class="chip active" onclick="toggleChip(this)">Nulls / missing fields</div>
+              <div class="chip" onclick="toggleChip(this)">Negative amounts</div>
+              <div class="chip" onclick="toggleChip(this)">Malformed currency</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions-row">
+        <button class="btn btn-ghost" onclick="goTo('plan')">← Back</button>
+        <button class="btn btn-primary" id="genDataBtn" onclick="runDataGen()">Generate test data</button>
+      </div>
+
+      <div class="data-table-wrap" id="dataResults" style="display:none;">
+        <div class="data-tabs" id="dataTabs"></div>
+        <table class="gen" id="dataTable"></table>
+        <div class="actions-row" style="margin-top:16px;">
+          <button class="btn btn-ghost btn-sm" onclick="alert('Downloads test-data-PAY-2481.csv')">Download CSV</button>
+          <button class="btn btn-ghost btn-sm" onclick="alert('Downloads test-data-PAY-2481.json')">Download JSON</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+function goTo(stage){
+  document.querySelectorAll('.stage').forEach(s=>s.classList.remove('active'));
+  document.getElementById('stage-'+stage).classList.add('active');
+  document.querySelectorAll('.step').forEach(s=>{
+    s.classList.remove('active');
+    if(s.dataset.stage===stage) s.classList.add('active');
+  });
+  const order=['inputs','connect','plan','data'];
+  const idx=order.indexOf(stage);
+  order.forEach((o,i)=>{
+    const el=document.querySelector('.step[data-stage="'+o+'"]');
+    if(i<idx) el.classList.add('done'); else el.classList.remove('done');
+  });
+  const titles={inputs:'Add inputs',connect:'Fetch context',plan:'Test plan',data:'Test data'};
+  document.getElementById('topbarTitle').textContent=titles[stage];
+  window.scrollTo(0,0);
+}
+
+function handleFiles(input, containerId){
+  const container=document.getElementById(containerId);
+  container.innerHTML='';
+  Array.from(input.files).forEach(f=>{
+    const row=document.createElement('div');
+    row.className='file-row';
+    row.innerHTML='<div class="fi-icon">📄</div><div class="fi-name">'+f.name+'</div><div class="fi-size">'+Math.max(1,Math.round(f.size/1024))+' KB</div><div class="fi-remove" onclick="this.parentElement.remove()">✕</div>';
+    container.appendChild(row);
+  });
+}
+document.getElementById('f1').addEventListener('change', e=>handleFiles(e.target, 'files1'));
+document.getElementById('f2').addEventListener('change', e=>handleFiles(e.target, 'files2'));
+
+['dz1','dz2'].forEach((id,idx)=>{
+  const dz=document.getElementById(id);
+  const input=document.getElementById(idx===0?'f1':'f2');
+  const cont=idx===0?'files1':'files2';
+  dz.addEventListener('dragover', e=>{e.preventDefault();dz.classList.add('drag');});
+  dz.addEventListener('dragleave', ()=>dz.classList.remove('drag'));
+  dz.addEventListener('drop', e=>{
+    e.preventDefault();dz.classList.remove('drag');
+    input.files=e.dataTransfer.files;
+    handleFiles(input, cont);
+  });
+});
+
+const fetchLines=[
+  {t:'00:00.1', icon:'…', cls:'pending', text:'Connecting to <b>Jira</b> (mcp://jira.internal)'},
+  {t:'00:00.4', icon:'✓', cls:'ok', text:'Fetched <b>PAY-2481</b> — Payment retry logic'},
+  {t:'00:00.6', icon:'✓', cls:'ok', text:'Fetched <b>PAY-2502</b> — Webhook reconciliation on retry timeout'},
+  {t:'00:00.9', icon:'…', cls:'pending', text:'Connecting to <b>Confluence</b> (mcp://confluence.internal)'},
+  {t:'00:01.3', icon:'✓', cls:'ok', text:'Fetched page <b>Payment Retry — Design Doc v3</b>'},
+  {t:'00:01.5', icon:'ℹ', cls:'info', text:'Extracted 5 candidate scenarios from combined context'},
+  {t:'00:01.6', icon:'✓', cls:'ok', text:'Ready to generate test plan'},
+];
+function runFetch(){
+  const btn=document.getElementById('fetchBtn');
+  const consoleEl=document.getElementById('console');
+  consoleEl.innerHTML='';
+  btn.disabled=true;
+  btn.innerHTML='<span class="spinner"></span> Fetching…';
+  fetchLines.forEach((l,i)=>{
+    setTimeout(()=>{
+      const div=document.createElement('div');
+      div.className='console-line '+l.cls;
+      div.innerHTML='<span class="c-time">'+l.t+'</span><span class="c-icon">'+l.icon+'</span><span class="c-text">'+l.text+'</span>';
+      consoleEl.appendChild(div);
+      consoleEl.scrollTop=consoleEl.scrollHeight;
+      if(i===fetchLines.length-1){
+        btn.disabled=false;
+        btn.innerHTML='Generate test plan →';
+        btn.onclick=()=>goTo('plan');
+      }
+    }, i*450);
+  });
+}
+
+function filterResults(){
+  const q=document.getElementById('jiraSearch').value.toLowerCase();
+  document.querySelectorAll('#jiraResults .result-item').forEach(r=>{
+    r.style.display = r.textContent.toLowerCase().includes(q) ? 'flex' : 'none';
+  });
+}
+
+function toggleChip(el){ el.classList.toggle('active'); }
+
+const scenarios={
+  'TC-01':{name:'Retry succeeds within max attempts', status:'ok'},
+  'TC-02':{name:'Retry exhausts max attempts', status:'fail'},
+  'TC-03':{name:'Idempotency key prevents duplicate charge', status:'ok'},
+};
+function rand(a,b){return Math.floor(Math.random()*(b-a+1))+a;}
+function genRows(id, n){
+  const rows=[];
+  for(let i=0;i<n;i++){
+    const status = scenarios[id].status==='fail' && i%3===0 ? 'failed' : (Math.random()>0.15?'succeeded':'failed');
+    rows.push({
+      txn: 'txn_'+rand(1000,9999),
+      cust: 'cus_'+rand(1000,9999),
+      amount: (rand(199,49999)/100).toFixed(2),
+      currency: ['USD','EUR','GBP'][rand(0,2)],
+      attempts: rand(1,5),
+      backoff: rand(200,8000)+'ms',
+      status: status
+    });
+  }
+  return rows;
+}
+let activeTab=null;
+function runDataGen(){
+  const selected=[];
+  document.querySelectorAll('.scenario-list .sc-item').forEach(item=>{
+    const cb=item.querySelector('input');
+    const id=item.querySelector('.sc-id').textContent;
+    if(cb.checked && scenarios[id]) selected.push(id);
+  });
+  if(selected.length===0){ selected.push('TC-01'); }
+  const btn=document.getElementById('genDataBtn');
+  btn.disabled=true; btn.innerHTML='<span class="spinner"></span> Generating…';
+  setTimeout(()=>{
+    btn.disabled=false; btn.innerHTML='Regenerate test data';
+    document.getElementById('dataResults').style.display='block';
+    const tabs=document.getElementById('dataTabs');
+    tabs.innerHTML='';
+    selected.forEach((id,i)=>{
+      const tab=document.createElement('div');
+      tab.className='data-tab'+(i===0?' active':'');
+      tab.textContent=id;
+      tab.onclick=()=>{ activeTab=id; renderTable(id, tabs); };
+      tabs.appendChild(tab);
+    });
+    activeTab=selected[0];
+    renderTable(activeTab, tabs);
+    document.getElementById('dataResults').scrollIntoView({behavior:'smooth', block:'nearest'});
+  }, 900);
+}
+function renderTable(id, tabsEl){
+  Array.from(tabsEl.children).forEach(t=>t.classList.toggle('active', t.textContent===id));
+  const n = parseInt(document.getElementById('rowCount').value)||8;
+  const rows=genRows(id, n);
+  const table=document.getElementById('dataTable');
+  let html='<tr><th>transaction_id</th><th>customer_id</th><th>amount</th><th>currency</th><th>attempts</th><th>backoff</th><th>expected_status</th></tr>';
+  rows.forEach(r=>{
+    html+='<tr><td>'+r.txn+'</td><td>'+r.cust+'</td><td>'+r.amount+'</td><td>'+r.currency+'</td><td>'+r.attempts+'</td><td>'+r.backoff+'</td><td class="'+(r.status==='succeeded'?'ok':'fail')+'">'+r.status+'</td></tr>';
+  });
+  table.innerHTML=html;
+}
+</script>
+</body>
+</html>
