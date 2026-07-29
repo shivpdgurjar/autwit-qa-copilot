@@ -15,11 +15,12 @@ export function AppShell() {
 
   return (
     <div className="flex h-full">
-      <nav className="flex w-14 shrink-0 flex-col items-center gap-1 border-r border-ink-700 bg-ink-900 py-3">
-        {/* The rail is narrow, so we clip the wide wordmark to just its radial icon
-            (object-cover in a square box shows the left ~square region). */}
-        <div className="mb-3 size-9 shrink-0 overflow-hidden rounded" title="AutWit — Automate. Ace. Accelerate.">
-          <img src="/AutwitLogo.png" alt="AutWit" className="h-9 w-auto max-w-none" />
+      <nav className="flex w-16 shrink-0 flex-col items-center gap-1 border-r border-ink-700 bg-ink-900 py-3">
+        {/* The wordmark is ~5:1, so the rail shows just its radial icon. The icon occupies
+            the logo's leftmost ~171px (of 614); this box crops to exactly that, so the
+            whole icon shows un-clipped rather than being cut by a tight square. */}
+        <div className="mb-4 h-10 w-14 shrink-0 overflow-hidden" title="AutWit — Automate. Ace. Accelerate.">
+          <img src="/AutwitLogo.png" alt="AutWit" className="h-10 w-auto max-w-none" />
         </div>
         <FlavorLink to="/sessions" active={flavor === 'execute'} label="Execute" glyph="▶" />
         <FlavorLink to="/plan" active={flavor === 'plan'} label="Plan" glyph="✎" />
