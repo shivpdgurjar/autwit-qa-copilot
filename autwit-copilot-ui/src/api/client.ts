@@ -40,6 +40,18 @@ export type Severity = Schemas['Severity'];
 export type Verdict = Schemas['Verdict'];
 export type Problem = Schemas['Problem'];
 
+// Planning Copilot ("Test Plan & Data Studio")
+export type PlanningProject = Schemas['PlanningProject'];
+export type SourceDocumentView = Schemas['SourceDocumentView'];
+export type PlanningCandidate = Schemas['PlanningCandidate'];
+export type FetchResponse = Schemas['FetchResponse'];
+export type FetchLogLine = Schemas['FetchLogLine'];
+export type GenerationView = Schemas['GenerationView'];
+export type TestPlanView = Schemas['TestPlanView'];
+export type TestScenarioView = Schemas['TestScenarioView'];
+export type TestDatasetView = Schemas['TestDatasetView'];
+export type GenerateDataRequest = Schemas['GenerateDataRequest'];
+
 /** SSE event types the stream can emit (documentation-only schema in the spec). */
 export type StreamEventType = NonNullable<Schemas['StreamEvent']['type']>;
 

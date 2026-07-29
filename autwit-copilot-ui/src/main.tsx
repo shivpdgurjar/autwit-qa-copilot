@@ -4,6 +4,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import SessionRoute from './routes/sessions/SessionRoute';
 import SessionListRoute from './routes/sessions/SessionListRoute';
+import { AppShell } from './components/AppShell';
+import PlanListRoute from './routes/plan/PlanListRoute';
+import PlanRoute from './routes/plan/PlanRoute';
 import './index.css';
 
 const queryClient = new QueryClient({
@@ -21,9 +24,13 @@ createRoot(document.getElementById('root')!).render(
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<Navigate to="/sessions" replace />} />
-          <Route path="/sessions" element={<SessionListRoute />} />
-          <Route path="/sessions/:sessionId" element={<SessionRoute />} />
+          <Route element={<AppShell />}>
+            <Route path="/" element={<Navigate to="/sessions" replace />} />
+            <Route path="/sessions" element={<SessionListRoute />} />
+            <Route path="/sessions/:sessionId" element={<SessionRoute />} />
+            <Route path="/plan" element={<PlanListRoute />} />
+            <Route path="/plan/:projectId" element={<PlanRoute />} />
+          </Route>
         </Routes>
       </BrowserRouter>
     </QueryClientProvider>

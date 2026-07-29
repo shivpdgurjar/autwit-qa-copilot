@@ -26,6 +26,7 @@ tags:
   - name: analysis
   - name: skills
   - name: stream
+  - name: planning
 
 paths:
 
@@ -679,11 +680,326 @@ paths:
             text/event-stream:
               schema: { type: string }
 
+  # ---------------------------------------------------------------- planning (Test Plan & Data Studio)
+
+  /planning/projects:
+    get:
+      tags: [planning]
+      summary: List planning projects
+      operationId: listPlanningProjects
+      parameters:
+        - name: limit
+          in: query
+          schema: { type: integer, default: 50 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/PlanningProject' }
+    post:
+      tags: [planning]
+      summary: Create a planning project (Step 1 — feature reference)
+      operationId: createPlanningProject
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreatePlanningProjectRequest' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PlanningProject' }
+
+  /planning/projects/{projectId}:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      tags: [planning]
+      summary: Get a planning project
+      operationId: getPlanningProject
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PlanningProject' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /planning/projects/{projectId}/documents:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      tags: [planning]
+      summary: List a project's source documents
+      operationId: listPlanningDocuments
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/SourceDocumentView' }
+    post:
+      tags: [planning]
+      summary: Add an uploaded or pasted document (Step 1)
+      description: |
+        Pass 1 is text-native: the UI reads text files client-side and posts their
+        content. PDF/DOCX parsing is pass 2 and is rejected here.
+      operationId: addPlanningDocument
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AddDocumentRequest' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SourceDocumentView' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /planning/projects/{projectId}/documents/{documentId}:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: documentId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    patch:
+      tags: [planning]
+      summary: Select or deselect a document for generation
+      operationId: selectPlanningDocument
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [selected]
+              properties:
+                selected: { type: boolean }
+      responses:
+        '204': { description: Updated }
+        '404': { $ref: '#/components/responses/NotFound' }
+    delete:
+      tags: [planning]
+      summary: Remove a document from the corpus
+      operationId: deletePlanningDocument
+      responses:
+        '204': { description: Deleted }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /planning/projects/{projectId}/jira-search:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: query
+        in: query
+        schema: { type: string }
+      - name: project
+        in: query
+        schema: { type: string }
+      - name: max
+        in: query
+        schema: { type: integer }
+    get:
+      tags: [planning]
+      summary: Search Jira over MCP for candidate issues (Step 2)
+      operationId: jiraSearch
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/PlanningCandidate' }
+
+  /planning/projects/{projectId}/confluence-search:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - name: query
+        in: query
+        schema: { type: string }
+      - name: space
+        in: query
+        schema: { type: string }
+      - name: max
+        in: query
+        schema: { type: integer }
+    get:
+      tags: [planning]
+      summary: Search Confluence over MCP for candidate pages (Step 2)
+      operationId: confluenceSearch
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/PlanningCandidate' }
+
+  /planning/projects/{projectId}/fetch:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    post:
+      tags: [planning]
+      summary: Fetch selected Jira/Confluence context over MCP (Step 2)
+      description: |
+        Pulls the selected items' full bodies, persists each as a source document,
+        and returns a timestamped console log for the fetch activity view.
+      operationId: fetchPlanningContext
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/FetchRequest' }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/FetchResponse' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /planning/projects/{projectId}/test-plan:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      tags: [planning]
+      summary: The latest generated test plan (Step 3)
+      operationId: getLatestTestPlan
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TestPlanView' }
+        '204': { description: No plan generated yet }
+    post:
+      tags: [planning]
+      summary: Generate a test plan from the selected corpus (Step 3)
+      description: Async — returns 202 with a generation id to poll.
+      operationId: generateTestPlan
+      responses:
+        '202':
+          description: Enqueued
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GenerationView' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /planning/projects/{projectId}/test-data:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    post:
+      tags: [planning]
+      summary: Generate per-scenario test data (Step 4)
+      description: Async — returns 202 with a generation id to poll.
+      operationId: generateTestData
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/GenerateDataRequest' }
+      responses:
+        '202':
+          description: Enqueued
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GenerationView' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /planning/projects/{projectId}/generations:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      tags: [planning]
+      summary: List a project's generations
+      operationId: listGenerations
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/GenerationView' }
+
+  /planning/projects/{projectId}/generations/{generationId}:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/GenerationId'
+    get:
+      tags: [planning]
+      summary: Get a generation's status (poll for completion)
+      operationId: getGeneration
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GenerationView' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /planning/projects/{projectId}/generations/{generationId}/test-plan:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/GenerationId'
+    get:
+      tags: [planning]
+      summary: The test plan produced by a generation
+      operationId: getTestPlanByGeneration
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/TestPlanView' }
+        '204': { description: Not ready or not a test-plan generation }
+
+  /planning/projects/{projectId}/generations/{generationId}/test-data:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+      - $ref: '#/components/parameters/GenerationId'
+    get:
+      tags: [planning]
+      summary: The datasets produced by a generation (one per scenario)
+      operationId: getTestData
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/TestDatasetView' }
+
 components:
 
   parameters:
     SessionId:
       name: sessionId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    ProjectId:
+      name: projectId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    GenerationId:
+      name: generationId
       in: path
       required: true
       schema: { type: string, format: uuid }
@@ -1509,6 +1825,176 @@ components:
           type: string
           description: For analysis.note and run.progress — renders in chat
         severity: { $ref: '#/components/schemas/Severity' }
+
+    # ---- planning (Test Plan & Data Studio) ----
+
+    CreatePlanningProjectRequest:
+      type: object
+      properties:
+        feature_key: { type: string, description: Jira epic / feature key (e.g. PAY-2481). }
+        feature_description: { type: string, description: What we are testing; sharpens generation relevance. }
+        title: { type: string }
+        created_by: { type: string }
+        env: { type: string }
+
+    PlanningProject:
+      type: object
+      required: [project_id, status, chainable]
+      properties:
+        project_id: { type: string, format: uuid }
+        feature_key: { type: string, nullable: true }
+        feature_description: { type: string, nullable: true }
+        title: { type: string, nullable: true }
+        status: { type: string, enum: [active, archived] }
+        created_by: { type: string, nullable: true }
+        env: { type: string, nullable: true }
+        chainable:
+          type: boolean
+          description: True once a generation has produced a response to continue from.
+        created_at: { type: string, format: date-time }
+
+    AddDocumentRequest:
+      type: object
+      required: [source_type, text]
+      properties:
+        source_type: { type: string, enum: [upload, paste] }
+        title: { type: string }
+        filename: { type: string }
+        mime: { type: string }
+        text: { type: string, description: The document's text content (read client-side for uploads). }
+
+    SourceDocumentView:
+      type: object
+      required: [document_id, source_type, title, selected, text_length]
+      properties:
+        document_id: { type: string, format: uuid }
+        source_type: { type: string, enum: [upload, paste, jira, confluence] }
+        external_ref: { type: string, nullable: true }
+        title: { type: string }
+        mime: { type: string, nullable: true }
+        selected: { type: boolean }
+        text_length: { type: integer }
+        created_at: { type: string, format: date-time }
+
+    PlanningCandidate:
+      type: object
+      required: [ref, title, kind]
+      description: A candidate Jira issue or Confluence page for the Step-2 checklist.
+      properties:
+        ref: { type: string, description: Jira key or Confluence page id. }
+        title: { type: string }
+        kind: { type: string, enum: [jira, confluence] }
+        status: { type: string, nullable: true }
+        meta: { type: string, description: Display line, e.g. "Epic · In Progress · 2d ago". }
+        url: { type: string, nullable: true }
+
+    FetchRequest:
+      type: object
+      properties:
+        jira_keys:
+          type: array
+          items: { type: string }
+        confluence_page_ids:
+          type: array
+          items: { type: string }
+
+    FetchResponse:
+      type: object
+      required: [documents, log]
+      properties:
+        documents:
+          type: array
+          items: { $ref: '#/components/schemas/SourceDocumentView' }
+        log:
+          type: array
+          items: { $ref: '#/components/schemas/FetchLogLine' }
+
+    FetchLogLine:
+      type: object
+      properties:
+        ts: { type: string }
+        level: { type: string, enum: [ok, pending, info], description: Drives the console icon. }
+        source: { type: string, nullable: true }
+        ref: { type: string, nullable: true }
+        message: { type: string }
+
+    GenerationView:
+      type: object
+      required: [generation_id, project_id, generation_type, status]
+      properties:
+        generation_id: { type: string, format: uuid }
+        project_id: { type: string, format: uuid }
+        generation_type: { type: string, enum: [test_plan, test_data] }
+        status: { type: string, enum: [pending, running, succeeded, failed, cancelled] }
+        response_id: { type: string, nullable: true }
+        error:
+          type: object
+          nullable: true
+          additionalProperties: true
+        created_at: { type: string, format: date-time }
+        updated_at: { type: string, format: date-time }
+
+    GenerateDataRequest:
+      type: object
+      required: [scenarios]
+      properties:
+        scenarios:
+          type: array
+          description: The scenarios to generate data for, carried from the plan.
+          items:
+            type: object
+            properties:
+              id: { type: string }
+              title: { type: string }
+        edge_cases:
+          type: array
+          items: { type: string, enum: [boundary, "null", negative, malformed] }
+        rows_per_scenario: { type: integer, default: 8 }
+        example_record:
+          type: object
+          nullable: true
+          additionalProperties: true
+          description: Optional sample record so generated rows match your shape.
+
+    TestPlanView:
+      type: object
+      required: [test_plan_id, generation_id, scenarios]
+      properties:
+        test_plan_id: { type: string, format: uuid }
+        generation_id: { type: string, format: uuid }
+        overview: { type: string, nullable: true }
+        scope: { type: string, nullable: true }
+        provenance:
+          type: object
+          additionalProperties: true
+        scenarios:
+          type: array
+          items: { $ref: '#/components/schemas/TestScenarioView' }
+        created_at: { type: string, format: date-time }
+
+    TestScenarioView:
+      type: object
+      required: [scenario_key, seq, title]
+      properties:
+        scenario_key: { type: string, description: TC-01, TC-02, … }
+        seq: { type: integer }
+        title: { type: string }
+        priority: { type: string, nullable: true, enum: [High, Medium, Low] }
+        source: { type: string, nullable: true }
+
+    TestDatasetView:
+      type: object
+      required: [scenario_key, columns, rows]
+      properties:
+        scenario_key: { type: string }
+        columns:
+          type: array
+          items: { type: string }
+        rows:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
 
   securitySchemes:
     bearerAuth:
