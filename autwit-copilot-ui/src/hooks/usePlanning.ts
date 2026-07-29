@@ -146,6 +146,10 @@ export function useGeneration(projectId: string, generationId: string | undefine
     enabled: !!generationId,
     refetchInterval: (query) =>
       GEN_TERMINAL.includes(query.state.data?.status ?? '') ? false : 1200,
+    // Keep polling even when the tab is backgrounded — a generation is a ~60s wait and
+    // testers routinely switch tabs during it; without this the poll pauses on a hidden
+    // tab and they return to a stuck "Generating…".
+    refetchIntervalInBackground: true,
   });
 }
 

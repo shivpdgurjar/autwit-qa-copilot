@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   useDatasets,
   useGenerateTestData,
@@ -6,7 +6,7 @@ import {
   useLatestTestPlan,
 } from '../../hooks/usePlanning';
 import type { GenerateDataRequest } from '../../api/client';
-import { Card } from '../../components/ui';
+import { Card, Spinner } from '../../components/ui';
 
 const EDGE_CASES = ['boundary', 'null', 'negative', 'malformed'];
 
@@ -24,18 +24,16 @@ export function DataStage({
 }) {
   const { data: plan } = useLatestTestPlan(projectId);
   const generate = useGenerateTestData(projectId);
-  const gen = useGeneration(projectId, dataGenId);
-  const { data: datasets } = useDatasets(
-    projectId,
-    gen.data?.status === 'succeeded' ? dataGenId : undefined,
-  );
 
   const scenarioKeys = useMemo(() => plan?.scenarios.map((s) => s.scenario_key) ?? [], [plan]);
   const [checked, setChecked] = useState<Set<string>>(() => new Set());
   const [edges, setEdges] = useState<Set<string>>(() => new Set(['boundary', 'null']));
   const [rows, setRows] = useState(8);
   const [example, setExample] = useState('');
-  const [activeTab, setActiveTab] = useState<string>();
+  // Busy from the click until the result child reports the generation settled — drives the
+  // button. The poll itself lives in GenerationResult so it mounts with a generation id
+  // already set (enabled-from-mount), which is what makes react-query's refetchInterval run.
+  const [busy, setBusy] = useState(false);
 
   // Default-select all scenarios once the plan loads.
   const selected = checked.size === 0 && scenarioKeys.length > 0 ? new Set(scenarioKeys) : checked;
@@ -59,6 +57,7 @@ export function DataStage({
         exampleRecord = null;
       }
     }
+    setBusy(true);
     generate.mutate(
       {
         scenarios,
@@ -66,12 +65,12 @@ export function DataStage({
         rows_per_scenario: rows,
         example_record: exampleRecord,
       },
-      { onSuccess: (g) => { onGenerated(g.generation_id); setActiveTab(scenarios[0]?.id); } },
+      {
+        onSuccess: (g) => onGenerated(g.generation_id),
+        onError: () => setBusy(false),
+      },
     );
   }
-
-  const generating = dataGenId && gen.data && gen.data.status !== 'succeeded' && gen.data.status !== 'failed';
-  const shown = datasets?.find((d) => d.scenario_key === activeTab) ?? datasets?.[0];
 
   return (
     <div className="mx-auto max-w-4xl">
@@ -153,62 +152,122 @@ export function DataStage({
         </button>
         <button
           onClick={run}
-          disabled={!plan || selected.size === 0 || generate.isPending || !!generating}
+          disabled={!plan || selected.size === 0 || busy}
           className="ml-auto rounded bg-sky-700 px-4 py-2 text-[13px] font-medium text-white hover:bg-sky-600 disabled:opacity-40"
         >
-          {generate.isPending || generating ? 'Generating…' : datasets ? 'Regenerate test data' : 'Generate test data'}
+          {busy ? 'Generating…' : dataGenId ? 'Regenerate test data' : 'Generate test data'}
         </button>
       </div>
-
-      {datasets && datasets.length > 0 && shown && (
-        <div className="mt-6 rounded-xl border border-ink-700 bg-ink-900 p-4">
-          <div className="mb-3 flex gap-1 border-b border-ink-700">
-            {datasets.map((d) => (
-              <button
-                key={d.scenario_key}
-                onClick={() => setActiveTab(d.scenario_key)}
-                className={`border-b-2 px-3 py-2 font-mono text-[11.5px] ${
-                  (activeTab ?? shown.scenario_key) === d.scenario_key
-                    ? 'border-sky-500 text-sky-400'
-                    : 'border-transparent text-ink-400 hover:text-ink-100'
-                }`}
-              >
-                {d.scenario_key}
-              </button>
-            ))}
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse font-mono text-[12px]">
-              <thead>
-                <tr className="text-left text-[10.5px] uppercase text-ink-400">
-                  {shown.columns.map((c) => (
-                    <th key={c} className="border-b border-ink-700 px-2.5 py-2">{c}</th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {shown.rows.map((r, i) => (
-                  <tr key={i}>
-                    {shown.columns.map((c) => (
-                      <td key={c} className="border-b border-ink-800 px-2.5 py-1.5 text-ink-300">
-                        {formatCell((r as Record<string, unknown>)[c])}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <div className="mt-3 flex justify-end gap-2">
-            <button
-              onClick={() => downloadCsv(shown.columns, shown.rows as Record<string, unknown>[], shown.scenario_key)}
-              className="rounded border border-ink-700 px-2.5 py-1 text-[11px] hover:border-ink-600"
-            >
-              Download CSV
-            </button>
-          </div>
-        </div>
+      {generate.error != null && (
+        <p className="mt-2 text-right text-[11px] text-red-300">
+          {(generate.error as { detail?: string }).detail ?? 'Could not start generation.'}
+        </p>
       )}
+
+      {dataGenId && (
+        <GenerationResult
+          key={dataGenId}
+          projectId={projectId}
+          generationId={dataGenId}
+          onSettled={() => setBusy(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+/**
+ * Polls one test-data generation and renders the tabbed datasets. It is only rendered once a
+ * generation id exists, so its poll query is enabled from its first render — the condition
+ * under which react-query's refetchInterval reliably runs (a query enabled only *after* mount
+ * fires once and stops, which stranded the old inline version on "Generating…").
+ */
+function GenerationResult({
+  projectId,
+  generationId,
+  onSettled,
+}: {
+  projectId: string;
+  generationId: string;
+  onSettled: () => void;
+}) {
+  const gen = useGeneration(projectId, generationId);
+  const done = gen.data?.status === 'succeeded';
+  const failed = gen.data?.status === 'failed';
+  const { data: datasets } = useDatasets(projectId, done ? generationId : undefined);
+  const [activeTab, setActiveTab] = useState<string>();
+
+  useEffect(() => {
+    if (done || failed) onSettled();
+  }, [done, failed, onSettled]);
+
+  if (failed) {
+    return (
+      <p className="mt-6 text-[13px] text-red-300">
+        Generation failed: {String(gen.data?.error?.detail ?? 'unknown error')}
+      </p>
+    );
+  }
+  if (!datasets) {
+    return (
+      <p className="mt-6 flex items-center gap-2 text-[13px] text-ink-400">
+        <Spinner /> Generating datasets…
+      </p>
+    );
+  }
+  if (datasets.length === 0) {
+    return <p className="mt-6 text-[13px] text-ink-400">No datasets were produced.</p>;
+  }
+
+  const shown = datasets.find((d) => d.scenario_key === activeTab) ?? datasets[0]!;
+
+  return (
+    <div className="mt-6 rounded-xl border border-ink-700 bg-ink-900 p-4">
+      <div className="mb-3 flex gap-1 border-b border-ink-700">
+        {datasets.map((d) => (
+          <button
+            key={d.scenario_key}
+            onClick={() => setActiveTab(d.scenario_key)}
+            className={`border-b-2 px-3 py-2 font-mono text-[11.5px] ${
+              shown.scenario_key === d.scenario_key
+                ? 'border-sky-500 text-sky-400'
+                : 'border-transparent text-ink-400 hover:text-ink-100'
+            }`}
+          >
+            {d.scenario_key}
+          </button>
+        ))}
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full border-collapse font-mono text-[12px]">
+          <thead>
+            <tr className="text-left text-[10.5px] uppercase text-ink-400">
+              {shown.columns.map((c) => (
+                <th key={c} className="border-b border-ink-700 px-2.5 py-2">{c}</th>
+              ))}
+            </tr>
+          </thead>
+          <tbody>
+            {shown.rows.map((r, i) => (
+              <tr key={i}>
+                {shown.columns.map((c) => (
+                  <td key={c} className="border-b border-ink-800 px-2.5 py-1.5 text-ink-300">
+                    {formatCell((r as Record<string, unknown>)[c])}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+      <div className="mt-3 flex justify-end gap-2">
+        <button
+          onClick={() => downloadCsv(shown.columns, shown.rows as Record<string, unknown>[], shown.scenario_key)}
+          className="rounded border border-ink-700 px-2.5 py-1 text-[11px] hover:border-ink-600"
+        >
+          Download CSV
+        </button>
+      </div>
     </div>
   );
 }

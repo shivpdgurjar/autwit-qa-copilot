@@ -107,7 +107,9 @@ public class FakePlanningClient implements PlanningClient {
             for (int i = 0; i < n; i++) {
                 var row = new LinkedHashMap<String, Object>();
                 // Deterministic, seeded by the scenario id + row index — no randomness.
-                int seed = (Math.abs(s.id().hashCode()) + i * 7);
+                // floorMod + bound keeps seed small and positive so the products below never
+                // overflow int (which produced negative amounts/backoff before).
+                int seed = Math.floorMod(s.id().hashCode() + i * 7, 100_000);
                 row.put("transaction_id", "txn_" + (1000 + seed % 9000));
                 row.put("customer_id", "cus_" + (1000 + (seed * 3) % 9000));
                 row.put("amount", String.format("%.2f", (199 + (seed * 13) % 49800) / 100.0));
