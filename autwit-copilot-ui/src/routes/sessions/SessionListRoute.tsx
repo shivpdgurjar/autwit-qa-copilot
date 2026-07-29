@@ -22,6 +22,7 @@ export default function SessionListRoute() {
 
   return (
     <div className="mx-auto max-w-3xl p-6">
+      <img src="/AutwitLogo.png" alt="AutWit" className="mb-5 h-8 w-auto" />
       <div className="mb-4 flex items-center">
         <h1 className="text-lg font-semibold">Sessions</h1>
         <button

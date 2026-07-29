@@ -16,7 +16,11 @@ export function AppShell() {
   return (
     <div className="flex h-full">
       <nav className="flex w-14 shrink-0 flex-col items-center gap-1 border-r border-ink-700 bg-ink-900 py-3">
-        <div className="mb-3 text-[10px] font-semibold uppercase tracking-wider text-sky-500">AW</div>
+        {/* The rail is narrow, so we clip the wide wordmark to just its radial icon
+            (object-cover in a square box shows the left ~square region). */}
+        <div className="mb-3 size-9 shrink-0 overflow-hidden rounded" title="AutWit — Automate. Ace. Accelerate.">
+          <img src="/AutwitLogo.png" alt="AutWit" className="h-9 w-auto max-w-none" />
+        </div>
         <FlavorLink to="/sessions" active={flavor === 'execute'} label="Execute" glyph="▶" />
         <FlavorLink to="/plan" active={flavor === 'plan'} label="Plan" glyph="✎" />
       </nav>

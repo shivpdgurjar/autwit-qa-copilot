@@ -12,6 +12,7 @@ export default function PlanListRoute() {
 
   return (
     <div className="mx-auto max-w-3xl p-6">
+      <img src="/AutwitLogo.png" alt="AutWit" className="mb-5 h-8 w-auto" />
       <div className="mb-1 flex items-center">
         <h1 className="text-lg font-semibold">Test Plan &amp; Data Studio</h1>
         <button
