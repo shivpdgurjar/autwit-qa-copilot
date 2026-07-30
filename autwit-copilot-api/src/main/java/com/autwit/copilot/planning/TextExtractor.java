@@ -39,8 +39,19 @@ public class TextExtractor {
             throw new ApiException.PayloadTooLarge(
                     "Document is %d chars; the limit is %d.".formatted(rawText.length(), MAX_CHARS));
         }
-        // Normalise newlines so the same doc pasted from different OSes hashes the same.
-        return rawText.replace("\r\n", "\n").replace("\r", "\n").strip();
+        return normalize(rawText);
+    }
+
+    /**
+     * Normalises already-fetched text (Jira/Confluence bodies pulled over MCP) — newlines
+     * folded so the same content hashes the same, no upload-time guards. Unlike {@link #extract},
+     * <b>empty is allowed</b>: the aashari Jira server truncates very large issue bodies and
+     * {@code fetch_context} then returns that document with empty text (KNOWN_ISSUES PLAN-1) —
+     * the document still lands, it just contributes nothing to generation, rather than failing
+     * the whole fetch.
+     */
+    public String normalize(String rawText) {
+        return rawText == null ? "" : rawText.replace("\r\n", "\n").replace("\r", "\n").strip();
     }
 
     /** True for formats pass 1 cannot read as text. */

@@ -118,7 +118,9 @@ public class PlanningService {
         requireProject(projectId);
         var result = client.fetchContext(jiraKeys, confluencePageIds);
         var persisted = result.documents().stream().map(d -> {
-            var text = extractor.extract(d.title(), null, d.text());
+            // Fetched text is already extracted; normalise without the upload guards so an
+            // empty body (truncated Jira, PLAN-1) still lands rather than failing the fetch.
+            var text = extractor.normalize(d.text());
             var hash = hasher.hash(ArtifactFormat.TEXT, text);
             return repo.upsertDocument(projectId, SourceType.fromWire(d.sourceType()),
                     d.externalRef(), d.title(), null, text, hash);

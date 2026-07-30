@@ -1,91 +1,56 @@
 package com.autwit.copilot.planning;
 
-import java.nio.charset.StandardCharsets;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.UUID;
 
-import com.autwit.copilot.config.AutwitProperties;
+import com.autwit.copilot.orchestrator.OrchestratorClient;
 import com.autwit.copilot.orchestrator.OrchestratorException;
-import com.fasterxml.jackson.annotation.JsonInclude;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.DeserializationFeature;
-import com.fasterxml.jackson.databind.json.JsonMapper;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.autwit.copilot.orchestrator.dto.ArtifactDescriptor;
+import com.autwit.copilot.orchestrator.dto.Envelope;
+import com.autwit.copilot.orchestrator.dto.InvokeRequest;
 import org.springframework.context.annotation.Profile;
-import org.springframework.http.MediaType;
-import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.ResourceAccessException;
-import org.springframework.web.client.RestClient;
 
 /**
- * The real planning client, calling the orchestrator's planning surface.
+ * The real planning client. The orchestrator ships the five planning skills as ordinary
+ * catalog skills (v1.0.30, catalog v1/693ede402294), so this drives them through the standard
+ * skill-execute surface ({@link OrchestratorClient#execute}) and reads the result out of the
+ * returned {@link Envelope}: the data rides back in a json <b>artifact body</b> (the
+ * {@code planning_*} artifacts the orchestrator's executor emits), and {@code fetch_context}'s
+ * per-item console log rides in {@code output_inline.log}. Reusing {@code OrchestratorClient}
+ * means the auth, wire log, timeout and error handling are the ones the rest of the app
+ * already uses — no second HTTP client, no hand-rolled JSON traversal.
  *
- * <p><b>Proposed contract — pending orchestrator confirmation (our v1.0.26, their reply will
- * be v1.0.27).</b> Built against the shapes in message-from-qa-copilot/v1.0.26 §4 so the wiring
- * is ready the moment they land; the routes and field names below are reconciled when they
- * confirm. This mirrors {@code HttpFinancialAnalysisClient}: a dedicated non-session HTTP
- * surface (planning has no session), snake_case I/O, a null-retaining mapper, and one PII-safe
- * wire line per call.
+ * <p>Planning has no session, so each call carries a synthetic execute envelope (a fresh
+ * id, an empty session context). The planning skills read only {@code input}; if the
+ * orchestrator ever requires a real session_context field here, the live run will surface it.
  */
 @Component
 @Profile("!fake")
 public class HttpPlanningClient implements PlanningClient {
 
-    private static final Logger log = LoggerFactory.getLogger(HttpPlanningClient.class);
-    private static final Logger wire = LoggerFactory.getLogger("com.autwit.copilot.planning.wire");
-    private static final Duration CONNECT_TIMEOUT = Duration.ofSeconds(10);
-    private static final TypeReference<Map<String, Object>> MAP = new TypeReference<>() {
-    };
+    private final OrchestratorClient orchestrator;
 
-    private final RestClient client;
-    private final JsonMapper mapper;
-    private final AutwitProperties props;
-
-    public HttpPlanningClient(AutwitProperties props) {
-        this.props = props;
-        this.mapper = JsonMapper.builder()
-                .addModule(new JavaTimeModule())
-                .disable(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES)
-                // Retain nulls on the way out — a null field in evidence is a distinct claim
-                // from an absent one, the same lesson as ContentHasher / the financial client.
-                .serializationInclusion(JsonInclude.Include.ALWAYS)
-                .build();
-
-        var orchestrator = props.orchestrator();
-        var factory = new SimpleClientHttpRequestFactory();
-        factory.setConnectTimeout((int) CONNECT_TIMEOUT.toMillis());
-        factory.setReadTimeout((int) orchestrator.timeout().toMillis());
-
-        this.client = RestClient.builder()
-                .baseUrl(orchestrator.baseUrl())
-                .requestFactory(factory)
-                .defaultHeader("Authorization", "Bearer " + orchestrator.token())
-                .defaultHeader("Content-Type", MediaType.APPLICATION_JSON_VALUE)
-                .build();
-
-        log.info("HttpPlanningClient targeting {} with a {} deadline (proposed contract, pending v1.0.27)",
-                orchestrator.baseUrl(), orchestrator.timeout());
+    public HttpPlanningClient(OrchestratorClient orchestrator) {
+        this.orchestrator = orchestrator;
     }
 
     @Override
     public List<Candidate> jiraSearch(String featureKey, String query, String project, Integer maxResults) {
-        var body = new LinkedHashMap<String, Object>();
-        body.put("feature_key", featureKey);
-        body.put("query", query);
-        body.put("project", project);
-        body.put("max_results", maxResults);
-        var res = post("/v1/planning/jira-search", body);
+        var input = new LinkedHashMap<String, Object>();
+        input.put("query", query);
+        input.put("feature_key", featureKey);
+        input.put("project", project);
+        input.put("max_results", maxResults);
+        var body = artifactBody(execute("planning.jira_search", input), "planning_jira_search");
         var out = new ArrayList<Candidate>();
-        for (var issue : list(res.get("issues"))) {
-            out.add(new Candidate(str(issue, "key"), str(issue, "title"), "jira",
-                    str(issue, "status"),
+        for (var issue : listOfMaps(body.get("issues"))) {
+            out.add(new Candidate(str(issue, "key"), str(issue, "title"), "jira", str(issue, "status"),
                     join(str(issue, "issue_type"), str(issue, "status"), str(issue, "updated_at")),
                     str(issue, "url")));
         }
@@ -94,33 +59,35 @@ public class HttpPlanningClient implements PlanningClient {
 
     @Override
     public List<Candidate> confluenceSearch(String space, String query, Integer maxResults) {
-        var body = new LinkedHashMap<String, Object>();
-        body.put("space", space);
-        body.put("query", query);
-        body.put("max_results", maxResults);
-        var res = post("/v1/planning/confluence-search", body);
+        var input = new LinkedHashMap<String, Object>();
+        input.put("query", query);
+        input.put("space", space);
+        input.put("max_results", maxResults);
+        var body = artifactBody(execute("planning.confluence_search", input), "planning_confluence_search");
         var out = new ArrayList<Candidate>();
-        for (var page : list(res.get("pages"))) {
+        for (var page : listOfMaps(body.get("pages"))) {
             out.add(new Candidate(str(page, "page_id"), str(page, "title"), "confluence", null,
-                    join("Edited by " + str(page, "edited_by"), str(page, "edited_at")),
-                    str(page, "url")));
+                    join("Edited by " + str(page, "edited_by"), str(page, "edited_at")), str(page, "url")));
         }
         return out;
     }
 
     @Override
     public FetchResult fetchContext(List<String> jiraKeys, List<String> confluencePageIds) {
-        var body = new LinkedHashMap<String, Object>();
-        body.put("jira_keys", jiraKeys);
-        body.put("confluence_page_ids", confluencePageIds);
-        var res = post("/v1/planning/fetch-context", body);
+        var input = new LinkedHashMap<String, Object>();
+        input.put("jira_keys", jiraKeys == null ? List.of() : jiraKeys);
+        input.put("confluence_page_ids", confluencePageIds == null ? List.of() : confluencePageIds);
+        var env = execute("planning.fetch_context", input);
+
         var docs = new ArrayList<FetchedDocument>();
-        for (var d : list(res.get("documents"))) {
+        for (var d : listOfMaps(artifactBody(env, "planning_context").get("documents"))) {
+            // text may be empty for a truncated Jira body (KNOWN_ISSUES PLAN-1) — carried through.
             docs.add(new FetchedDocument(str(d, "source_type"), str(d, "external_ref"),
                     str(d, "title"), str(d, "text"), Instant.EPOCH));
         }
+        // The fetch console rides in output_inline.log (there is no streaming), per v1.0.27 §4.
         var logLines = new ArrayList<LogLine>();
-        for (var l : list(res.get("log"))) {
+        for (var l : listOfMaps(outputInline(env).get("log"))) {
             logLines.add(new LogLine(str(l, "ts"), str(l, "level"), str(l, "source"),
                     str(l, "ref"), str(l, "message")));
         }
@@ -129,37 +96,39 @@ public class HttpPlanningClient implements PlanningClient {
 
     @Override
     public TestPlanResult generateTestPlan(TestPlanRequest request) {
-        var body = new LinkedHashMap<String, Object>();
-        body.put("feature_key", request.featureKey());
-        body.put("feature_description", request.featureDescription());
-        body.put("source_documents", docs(request.sourceDocuments()));
-        body.put("existing_test_cases", docs(request.existingTestCases()));
-        body.put("previous_response_id", request.previousResponseId());
-        var res = post("/v1/planning/test-plan", body);
+        var input = new LinkedHashMap<String, Object>();
+        input.put("feature_key", request.featureKey());
+        input.put("feature_description", request.featureDescription());
+        input.put("source_documents", docs(request.sourceDocuments()));
+        input.put("existing_test_cases", docs(request.existingTestCases()));
+        input.put("previous_response_id", request.previousResponseId());
+        var body = artifactBody(execute("planning.generate_test_plan", input), "planning_test_plan");
+
         var scenarios = new ArrayList<Scenario>();
-        for (var s : list(res.get("scenarios"))) {
+        for (var s : listOfMaps(body.get("scenarios"))) {
             scenarios.add(new Scenario(str(s, "id"), str(s, "title"), str(s, "priority"), str(s, "source")));
         }
-        return new TestPlanResult(str(res, "overview"), str(res, "scope"), scenarios,
-                obj(res.get("provenance")), str(res, "response_id"));
+        return new TestPlanResult(str(body, "overview"), str(body, "scope"), scenarios,
+                obj(body.get("provenance")), str(body, "response_id"));
     }
 
     @Override
     @SuppressWarnings("unchecked")
     public TestDataResult generateTestData(TestDataRequest request) {
-        var body = new LinkedHashMap<String, Object>();
         var scenarios = new ArrayList<Map<String, Object>>();
         for (var s : request.scenarios()) {
             scenarios.add(Map.of("id", s.id(), "title", s.title()));
         }
-        body.put("scenarios", scenarios);
-        body.put("example_record", request.exampleRecord());
-        body.put("edge_cases", request.edgeCases());
-        body.put("rows_per_scenario", request.rowsPerScenario());
-        body.put("previous_response_id", request.previousResponseId());
-        var res = post("/v1/planning/test-data", body);
+        var input = new LinkedHashMap<String, Object>();
+        input.put("scenarios", scenarios);
+        input.put("edge_cases", request.edgeCases());
+        input.put("rows_per_scenario", request.rowsPerScenario());
+        input.put("example_record", request.exampleRecord());
+        input.put("previous_response_id", request.previousResponseId());
+        var body = artifactBody(execute("planning.generate_test_data", input), "planning_test_data");
+
         var datasets = new ArrayList<Dataset>();
-        for (var d : list(res.get("datasets"))) {
+        for (var d : listOfMaps(body.get("datasets"))) {
             var columns = new ArrayList<String>();
             if (d.get("columns") instanceof List<?> cols) {
                 for (var c : cols) {
@@ -167,52 +136,52 @@ public class HttpPlanningClient implements PlanningClient {
                 }
             }
             var rows = new ArrayList<Map<String, Object>>();
-            for (var r : list(d.get("rows"))) {
+            for (var r : listOfMaps(d.get("rows"))) {
                 rows.add((Map<String, Object>) r);
             }
             datasets.add(new Dataset(str(d, "scenario_id"), columns, rows));
         }
-        return new TestDataResult(datasets, str(res, "response_id"));
+        return new TestDataResult(datasets, str(body, "response_id"));
     }
 
     // ---- transport -------------------------------------------------------------------
 
-    private Map<String, Object> post(String path, Map<String, Object> body) {
-        String json;
-        try {
-            json = mapper.writeValueAsString(body);
-        } catch (Exception e) {
-            throw new IllegalArgumentException("Could not serialise the planning request: " + e.getMessage(), e);
-        }
-        // Metadata only — never the corpus body (requirement docs can carry sensitive content).
-        wire.info("--> POST {}{} keys={}", props.orchestrator().baseUrl(), path, body.keySet());
-        try {
-            var out = client.post()
-                    .uri(path)
-                    .body(json)
-                    .exchange((req, response) -> {
-                        var raw = new String(response.getBody().readAllBytes(), StandardCharsets.UTF_8);
-                        if (response.getStatusCode().isError()) {
-                            wire.warn("<-- {} FAILED: HTTP {} {}", path, response.getStatusCode().value(), truncate(raw));
-                            throw new OrchestratorException.Failed(
-                                    "Planning call %s returned %s: %s"
-                                            .formatted(path, response.getStatusCode().value(), truncate(raw)),
-                                    null, null);
-                        }
-                        return mapper.readValue(raw, MAP);
-                    });
-            wire.info("<-- 200 {}", path);
-            return out == null ? Map.of() : out;
-        } catch (OrchestratorException e) {
-            throw e;
-        } catch (ResourceAccessException e) {
-            wire.warn("<-- {} TIMEOUT after {}", path, props.orchestrator().timeout());
+    /**
+     * Runs one planning skill through the standard execute surface with a synthetic,
+     * session-less envelope, and returns the result envelope (failed → thrown).
+     */
+    private Envelope execute(String skillName, Map<String, Object> input) {
+        input.values().removeIf(Objects::isNull); // omit unset optionals (project, max_results, …)
+        var id = UUID.randomUUID().toString();
+        var ctx = new InvokeRequest.SessionContext(null, null, Map.of(), List.of(), null, Map.of(), List.of());
+        var env = orchestrator.execute(skillName, new InvokeRequest.Execute("planning-" + id, id, id, input, ctx));
+        if (env.isFailed()) {
             throw new OrchestratorException.Failed(
-                    "Planning call did not respond within %s".formatted(props.orchestrator().timeout()), null, e);
-        } catch (Exception e) {
-            wire.warn("<-- {} ERROR: {}", path, e.getMessage());
-            throw new OrchestratorException.Failed("Planning call failed: " + e.getMessage(), null, e);
+                    "planning skill %s failed: %s".formatted(skillName,
+                            env.error() != null ? env.error().detail() : "unknown"),
+                    env.error(), null);
         }
+        return env;
+    }
+
+    /** The body of the first artifact of the given type, as a map (data rides in the artifact). */
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> artifactBody(Envelope env, String artifactType) {
+        return env.artifactsOrEmpty().stream()
+                .filter(a -> artifactType.equals(a.artifactType()))
+                .map(ArtifactDescriptor::body)
+                .filter(b -> b instanceof Map)
+                .map(b -> (Map<String, Object>) b)
+                .findFirst()
+                .orElse(Map.of());
+    }
+
+    private static Map<String, Object> outputInline(Envelope env) {
+        return env.invocationsOrEmpty().stream()
+                .map(Envelope.Invocation::outputInline)
+                .filter(Objects::nonNull)
+                .findFirst()
+                .orElse(Map.of());
     }
 
     private static List<Map<String, Object>> docs(List<Doc> docs) {
@@ -228,7 +197,7 @@ public class HttpPlanningClient implements PlanningClient {
     }
 
     @SuppressWarnings("unchecked")
-    private static List<Map<String, Object>> list(Object o) {
+    private static List<Map<String, Object>> listOfMaps(Object o) {
         if (!(o instanceof List<?> l)) {
             return List.of();
         }
@@ -259,9 +228,5 @@ public class HttpPlanningClient implements PlanningClient {
             }
         }
         return String.join(" · ", kept);
-    }
-
-    private static String truncate(String s) {
-        return s.length() <= 500 ? s : s.substring(0, 500) + "…";
     }
 }
