@@ -67,11 +67,16 @@ class MigrationSmokeTest extends AbstractPostgresIT {
         var applied = jdbc.queryForList(
                 "select version, description, success from flyway_schema_history order by installed_rank");
 
-        assertThat(applied).hasSize(4);
+        assertThat(applied).hasSize(6);
         assertThat(applied.get(0)).containsEntry("version", "1").containsEntry("success", true);
         assertThat(applied.get(1)).containsEntry("version", "2").containsEntry("success", true);
         assertThat(applied.get(2)).containsEntry("version", "3").containsEntry("success", true);
         assertThat(applied.get(3)).containsEntry("version", "4").containsEntry("success", true);
+        // V5/V6 widen the artifact_type CHECK for real-skill deliverables (order_fulfilment,
+        // order_placement, comparison(+report/db_snapshot), financial_analysis) — added on the
+        // other laptop after the first real joint run failed to persist them (orch v1.0.32).
+        assertThat(applied.get(4)).containsEntry("version", "5").containsEntry("success", true);
+        assertThat(applied.get(5)).containsEntry("version", "6").containsEntry("success", true);
     }
 
     @Test
