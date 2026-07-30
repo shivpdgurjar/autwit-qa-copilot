@@ -64,12 +64,21 @@ export function PendingRunCard({ run, onCancel }: { run: Run; onCancel?: (runId:
 export function FailedRunCard({ run }: { run: Run }) {
   const timedOut = run.status === 'timed_out';
   const problem = run.error as { code?: string; detail?: string; retryable?: boolean } | undefined;
+  // The skill ran (its side effects took effect) but its evidence failed to persist — must not
+  // read like a plain failure; re-running a mutation could double it. Amber, not red, and the
+  // detail (server-supplied) says to verify before retrying.
+  const persistFailed = problem?.code === 'evidence_persist_failed';
+  const warnTone = timedOut || persistFailed;
 
   return (
-    <Card className={timedOut ? 'border-amber-900/60 bg-amber-950/20' : 'border-red-900/60 bg-red-950/20'}>
+    <Card className={warnTone ? 'border-amber-900/60 bg-amber-950/20' : 'border-red-900/60 bg-red-950/20'}>
       <div className="flex items-center gap-2">
-        <span className={`text-sm font-semibold ${timedOut ? 'text-amber-300' : 'text-red-300'}`}>
-          {timedOut ? 'Timed out — outcome unknown' : 'Failed'}
+        <span className={`text-sm font-semibold ${warnTone ? 'text-amber-300' : 'text-red-300'}`}>
+          {timedOut
+            ? 'Timed out — outcome unknown'
+            : persistFailed
+              ? 'Skill succeeded — evidence not stored'
+              : 'Failed'}
         </span>
         {problem?.code && (
           <Mono className="ml-auto rounded bg-ink-800 px-1.5 py-0.5 text-ink-300">{problem.code}</Mono>
@@ -81,11 +90,15 @@ export function FailedRunCard({ run }: { run: Run }) {
           This run may have partially completed. Verify the system state before retrying — retrying
           blindly could repeat work that already happened.
         </p>
+      ) : persistFailed ? (
+        <p className="mt-1.5 text-[12px] text-amber-200/80">
+          {problem?.detail ?? 'The skill completed but its result could not be stored.'}
+        </p>
       ) : (
         problem?.detail && <p className="mt-1.5 text-[12px] text-red-200/80">{problem.detail}</p>
       )}
 
-      {problem?.retryable && !timedOut && (
+      {problem?.retryable && !warnTone && (
         <p className="mt-1.5 text-[11px] text-ink-400">
           The orchestrator reported this as retryable.
         </p>

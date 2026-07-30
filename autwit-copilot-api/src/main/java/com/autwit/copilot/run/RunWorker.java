@@ -207,11 +207,20 @@ public class RunWorker {
             }
 
             var milestoneId = milestoneOf(run);
-            var result = persister.persist(run, envelope, milestoneId);
-
-            log.info("Run {} succeeded: {} artifacts, {} new events{}", run.runId(), result.artifacts(),
-                    result.newEvents(), result.snapshotId() != null ? ", snapshot " + result.snapshotId() : "");
-            runs.notifyRun(run.sessionId(), run.runId(), run.stepId(), "succeeded", "run.succeeded");
+            try {
+                var result = persister.persist(run, envelope, milestoneId);
+                log.info("Run {} succeeded: {} artifacts, {} new events{}", run.runId(), result.artifacts(),
+                        result.newEvents(), result.snapshotId() != null ? ", snapshot " + result.snapshotId() : "");
+                runs.notifyRun(run.sessionId(), run.runId(), run.stepId(), "succeeded", "run.succeeded");
+            } catch (EnvelopePersister.LateResultException late) {
+                throw late; // the run went terminal while working — handled below, not a persist failure
+            } catch (Exception persistError) {
+                // The skill SUCCEEDED (its envelope was not failed) but persisting its evidence
+                // failed. Surfaced distinctly from "the skill failed": a mutating skill's side
+                // effects have already happened, so a blind re-run could double a real mutation
+                // (orchestrator v1.0.32 §3).
+                persistFailedAfterSuccess(run, persistError);
+            }
 
         } catch (EnvelopePersister.LateResultException e) {
             // The run went terminal while the orchestrator was working. Nothing was
@@ -275,6 +284,26 @@ public class RunWorker {
             steps.updateStatus(run.stepId(), "failed");
             runs.notifyRun(run.sessionId(), run.runId(), run.stepId(), "failed", "run.failed");
         }
+    }
+
+    /**
+     * A skill ran (its envelope was not failed) but persisting its evidence failed — e.g. an
+     * artifact_type outside the schema's vocabulary, or any other write error. The run is still
+     * terminal-failed, but the error carries {@code skill_succeeded: true} and code
+     * {@code evidence_persist_failed} so the UI can say "skill succeeded, evidence not stored"
+     * rather than "skill failed": for a mutating skill the side effects already took effect and a
+     * blind re-run could double a real mutation (orchestrator v1.0.32 §3).
+     */
+    private void persistFailedAfterSuccess(Run run, Exception e) {
+        log.error("Run {} — skill succeeded but persisting its evidence failed", run.runId(), e);
+        var error = new LinkedHashMap<String, Object>();
+        error.put("code", "evidence_persist_failed");
+        error.put("title", "Skill succeeded — evidence not stored");
+        error.put("detail", "The skill completed, but its result could not be stored: " + e.getMessage()
+                + ". If this was a mutating skill its side effects have already taken effect — verify "
+                + "state before re-running; do not blindly retry.");
+        error.put("skill_succeeded", true);
+        failRun(run, error);
     }
 
     private boolean isCancelled(Run run) {

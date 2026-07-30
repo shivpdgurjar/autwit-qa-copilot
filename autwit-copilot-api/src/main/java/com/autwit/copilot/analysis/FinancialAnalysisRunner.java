@@ -72,6 +72,7 @@ public class FinancialAnalysisRunner {
         // dilute the feed). expected/actual/difference fold into the message so nothing is
         // lost, while the raw fields stay in the run summary.
         int failCount = 0;
+        int actionable = 0;
         if (result.findings() != null) {
             for (var f : result.findings()) {
                 if ("PASS".equals(f.status())) {
@@ -80,6 +81,7 @@ public class FinancialAnalysisRunner {
                 if ("FAIL".equals(f.status())) {
                     failCount++;
                 }
+                actionable++; // non-PASS — the ones that actually reach the feed
                 findings.insert(run.sessionId(), null, run.stepId(),
                         mapSeverity(f.severity()), f.category(), null,
                         entityKey(f), f.ruleId(), null, null, message(f));
@@ -99,7 +101,13 @@ public class FinancialAnalysisRunner {
         if (result.aiUnavailableReason() != null) {
             summary.put("ai_unavailable_reason", result.aiUnavailableReason());
         }
+        // findings_total counts EVERY rule×state evaluation, PASS included (23 for a clean
+        // order = 22 PASS + 1 note); findings_actionable is the non-PASS count that reaches the
+        // feed. The UI must show the actionable count, not the total, or "23" reads as "23
+        // warnings" next to a one-item feed (orchestrator v1.0.32 §5).
         summary.put("findings_total", result.findings() == null ? 0 : result.findings().size());
+        summary.put("findings_actionable", actionable);
+        summary.put("findings_pass", (result.findings() == null ? 0 : result.findings().size()) - actionable);
         summary.put("findings_fail", failCount);
         summary.put("model", result.model());
 

@@ -89,7 +89,9 @@ class FinancialAnalysisRunTest extends AbstractPostgresIT {
         assertThat(summary)
                 .contains("\"overall_status\": \"FAIL\"")
                 .contains("\"ai_analysis_status\": \"UNAVAILABLE\"")
-                .contains("\"findings_fail\": 1");
+                .contains("\"findings_fail\": 1")
+                // The non-PASS count the feed shows (orch v1.0.32 §5) — the fake emits one FAIL.
+                .contains("\"findings_actionable\": 1");
 
         // The FAIL finding reached the findings feed, severity-mapped ERROR → high.
         var feed = findings.listBySession(sessionId, null, null);

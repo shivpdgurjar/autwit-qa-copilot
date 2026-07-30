@@ -1059,6 +1059,11 @@ function RunVerdict({ runId }: { runId: string }) {
   const aiReason = summaryText(summary, 'ai_unavailable_reason');
   const findingsTotal = summaryNum(summary, 'findings_total');
   const findingsFail = summaryNum(summary, 'findings_fail');
+  // The actionable (non-PASS) count is what the feed shows; findings_total counts every
+  // rule×state incl. PASS, so surfacing it as "findings" reads as "23 warnings" next to a
+  // one-item feed (orch v1.0.32 §5). Prefer actionable; fall back to total for older runs.
+  const findingsActionable = summaryNum(summary, 'findings_actionable') ?? findingsTotal;
+  const findingsPass = summaryNum(summary, 'findings_pass');
   const model = summaryText(summary, 'model');
 
   return (
@@ -1091,12 +1096,12 @@ function RunVerdict({ runId }: { runId: string }) {
         </p>
       )}
 
-      {(findingsTotal !== undefined || findingsFail !== undefined) && (
+      {(findingsActionable !== undefined || findingsFail !== undefined) && (
         <div className="mt-2.5 flex flex-wrap items-center gap-3 text-[11px]">
-          {findingsTotal !== undefined && (
+          {findingsActionable !== undefined && (
             <span>
               <Muted>findings</Muted>{' '}
-              <Mono className="text-ink-200 tabular-nums">{findingsTotal}</Mono>
+              <Mono className="text-ink-200 tabular-nums">{findingsActionable}</Mono>
             </span>
           )}
           {findingsFail !== undefined && (
@@ -1107,6 +1112,12 @@ function RunVerdict({ runId }: { runId: string }) {
               >
                 {findingsFail}
               </Mono>
+            </span>
+          )}
+          {findingsPass !== undefined && findingsPass > 0 && (
+            <span>
+              <Muted>checks passed</Muted>{' '}
+              <Mono className="text-emerald-300 tabular-nums">{findingsPass}</Mono>
             </span>
           )}
           {model && (
