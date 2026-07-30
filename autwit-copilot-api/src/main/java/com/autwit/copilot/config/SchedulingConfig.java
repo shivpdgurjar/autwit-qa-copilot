@@ -3,6 +3,7 @@ package com.autwit.copilot.config;
 import java.time.Duration;
 import java.util.Optional;
 
+import com.autwit.copilot.planning.PlanningRepository;
 import com.autwit.copilot.registry.SkillCatalogSync;
 import com.autwit.copilot.run.RunReaper;
 import com.autwit.copilot.stream.SseHub;
@@ -37,13 +38,15 @@ public class SchedulingConfig implements SchedulingConfigurer {
 
     private final AutwitProperties props;
     private final Optional<RunReaper> reaper;
+    private final PlanningRepository planning;
     private final SkillCatalogSync catalogSync;
     private final SseHub sseHub;
 
-    public SchedulingConfig(AutwitProperties props, Optional<RunReaper> reaper, SkillCatalogSync catalogSync,
-            SseHub sseHub) {
+    public SchedulingConfig(AutwitProperties props, Optional<RunReaper> reaper, PlanningRepository planning,
+            SkillCatalogSync catalogSync, SseHub sseHub) {
         this.props = props;
         this.reaper = reaper;
+        this.planning = planning;
         this.catalogSync = catalogSync;
         this.sseHub = sseHub;
     }
@@ -55,9 +58,26 @@ public class SchedulingConfig implements SchedulingConfigurer {
             log.info("Reaper scheduled every {}", props.run().reaperInterval());
         });
 
+        // Planning generations are their own job queue (autwit.generation), so they need their
+        // own reaper — the run reaper only sweeps autwit.run. Same interval and posture.
+        registrar.addFixedDelayTask(this::reapGenerations, props.run().reaperInterval());
+        log.info("Generation reaper scheduled every {}", props.run().reaperInterval());
+
         registrar.addFixedDelayTask(catalogSync::sync, props.orchestrator().catalogSyncInterval());
         log.info("Skill catalog sync scheduled every {}", props.orchestrator().catalogSyncInterval());
 
         registrar.addFixedDelayTask(sseHub::heartbeat, SSE_HEARTBEAT);
+    }
+
+    private void reapGenerations() {
+        try {
+            int reaped = planning.reapExpiredGenerations();
+            if (reaped > 0) {
+                log.warn("Reaped {} generation(s) whose worker lease expired; each is failed and "
+                        + "will not be retried", reaped);
+            }
+        } catch (Exception e) {
+            log.error("Generation reaper sweep failed; will retry on the next tick", e);
+        }
     }
 }

@@ -1,5 +1,4 @@
-import { useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { useProject } from '../../hooks/usePlanning';
 import { Mono, Spinner } from '../../components/ui';
 import { InputsStage } from '../../components/plan/InputsStage';
@@ -20,10 +19,29 @@ const STEPS: { id: Stage; title: string; sub: string }[] = [
 export default function PlanRoute() {
   const { projectId = '' } = useParams();
   const { data: project, isLoading, error } = useProject(projectId);
-  const [stage, setStage] = useState<Stage>('inputs');
-  // The generation ids the later stages poll. Set when a generate action fires.
-  const [planGenId, setPlanGenId] = useState<string>();
-  const [dataGenId, setDataGenId] = useState<string>();
+
+  // Wizard state lives in the URL, not React state, so a reload or a shared/deep link
+  // restores exactly where the tester was — including the in-flight generation ids the
+  // later stages poll (a reload on Step 3/4 then re-renders the plan/datasets rather than
+  // dumping the tester back at Step 1). replace:true keeps the wizard one history entry.
+  const [params, setParams] = useSearchParams();
+  const rawStage = params.get('stage');
+  const stage: Stage = STEPS.some((s) => s.id === rawStage) ? (rawStage as Stage) : 'inputs';
+  const planGenId = params.get('planGen') ?? undefined;
+  const dataGenId = params.get('dataGen') ?? undefined;
+
+  const patch = (next: { stage?: Stage; planGen?: string; dataGen?: string }) =>
+    setParams(
+      (prev) => {
+        const p = new URLSearchParams(prev);
+        if (next.stage) p.set('stage', next.stage);
+        if (next.planGen) p.set('planGen', next.planGen);
+        if (next.dataGen) p.set('dataGen', next.dataGen);
+        return p;
+      },
+      { replace: true },
+    );
+  const setStage = (s: Stage) => patch({ stage: s });
 
   if (isLoading) {
     return (
@@ -105,10 +123,7 @@ export default function PlanRoute() {
             <FetchStage
               projectId={projectId}
               onBack={() => setStage('inputs')}
-              onGenerated={(genId) => {
-                setPlanGenId(genId);
-                setStage('plan');
-              }}
+              onGenerated={(genId) => patch({ planGen: genId, stage: 'plan' })}
             />
           )}
           {stage === 'plan' && (
@@ -123,7 +138,7 @@ export default function PlanRoute() {
             <DataStage
               projectId={projectId}
               dataGenId={dataGenId}
-              onGenerated={setDataGenId}
+              onGenerated={(genId) => patch({ dataGen: genId })}
               onBack={() => setStage('plan')}
             />
           )}

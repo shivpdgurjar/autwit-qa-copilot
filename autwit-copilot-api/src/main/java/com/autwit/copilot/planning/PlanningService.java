@@ -92,17 +92,21 @@ public class PlanningService {
     public List<PlanningClient.Candidate> searchJira(UUID projectId, String query, String project,
             Integer maxResults) {
         var p = requireProject(projectId);
-        var effectiveQuery = query != null && !query.isBlank() ? query
-                : p.featureDescription() != null ? p.featureDescription() : "";
-        return client.jiraSearch(p.featureKey(), effectiveQuery, project, maxResults);
+        return client.jiraSearch(p.featureKey(), effectiveQuery(p, query), project, maxResults);
     }
 
     public List<PlanningClient.Candidate> searchConfluence(UUID projectId, String space, String query,
             Integer maxResults) {
         var p = requireProject(projectId);
-        var effectiveQuery = query != null && !query.isBlank() ? query
-                : p.featureDescription() != null ? p.featureDescription() : "";
-        return client.confluenceSearch(space, effectiveQuery, maxResults);
+        return client.confluenceSearch(space, effectiveQuery(p, query), maxResults);
+    }
+
+    /** The tester's query, or the project's feature description as a fallback, or empty. */
+    private static String effectiveQuery(PlanningProject p, String query) {
+        if (query != null && !query.isBlank()) {
+            return query;
+        }
+        return p.featureDescription() != null ? p.featureDescription() : "";
     }
 
     /**
@@ -138,10 +142,17 @@ public class PlanningService {
         return repo.createGeneration(projectId, GenerationType.TEST_PLAN, Map.of());
     }
 
+    /**
+     * The rows-per-scenario default, applied once here (the domain authority). The controller
+     * passes the request value through unchanged and the runner trusts the persisted config, so
+     * this is the single source of the policy.
+     */
+    public static final int DEFAULT_ROWS_PER_SCENARIO = 8;
+
     /** Enqueue a test-data generation for the chosen scenarios. */
     @Transactional
     public Generation generateTestData(UUID projectId, List<Map<String, Object>> scenarios,
-            List<String> edgeCases, int rowsPerScenario, Map<String, Object> exampleRecord) {
+            List<String> edgeCases, Integer rowsPerScenario, Map<String, Object> exampleRecord) {
         requireProject(projectId);
         if (scenarios == null || scenarios.isEmpty()) {
             throw new ApiException.BadRequest("no_scenarios",
@@ -150,7 +161,8 @@ public class PlanningService {
         var config = new java.util.LinkedHashMap<String, Object>();
         config.put("scenarios", scenarios);
         config.put("edge_cases", edgeCases == null ? List.of() : edgeCases);
-        config.put("rows_per_scenario", rowsPerScenario <= 0 ? 8 : rowsPerScenario);
+        config.put("rows_per_scenario",
+                rowsPerScenario == null || rowsPerScenario <= 0 ? DEFAULT_ROWS_PER_SCENARIO : rowsPerScenario);
         if (exampleRecord != null) {
             config.put("example_record", exampleRecord);
         }

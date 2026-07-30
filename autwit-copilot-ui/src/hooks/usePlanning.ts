@@ -98,6 +98,36 @@ export function useDeleteDocument(projectId: string) {
   });
 }
 
+/**
+ * Step-2 searches. Cached by query (staleTime), so leaving and re-entering the fetch stage
+ * reuses the results instead of re-hitting the MCP connector on every visit.
+ */
+export function useJiraSearch(projectId: string, query: string) {
+  return useQuery({
+    queryKey: ['planning', 'jira-search', projectId, query],
+    queryFn: async ({ signal }) =>
+      unwrap(await api.GET('/planning/projects/{projectId}/jira-search', {
+        params: { path: { projectId }, query: { query } },
+        signal,
+      })),
+    enabled: !!projectId,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
+export function useConfluenceSearch(projectId: string, query: string) {
+  return useQuery({
+    queryKey: ['planning', 'confluence-search', projectId, query],
+    queryFn: async ({ signal }) =>
+      unwrap(await api.GET('/planning/projects/{projectId}/confluence-search', {
+        params: { path: { projectId }, query: { query } },
+        signal,
+      })),
+    enabled: !!projectId,
+    staleTime: 5 * 60 * 1000,
+  });
+}
+
 /** Fetch is a mutation (it persists documents + returns the console log). */
 export function useFetchContext(projectId: string) {
   const qc = useQueryClient();

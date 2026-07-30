@@ -122,9 +122,14 @@ public class PlanningGenerationWorker {
         return true;
     }
 
-    /** Lease outlives the ~60s generation call so it is not reclaimed mid-flight. */
+    /**
+     * The same lease the run queue uses — {@code ConfigAssertions} guarantees it exceeds
+     * {@code orchestrator.timeout}, which is exactly the invariant a generation's ~60s call
+     * needs so it is not reclaimed mid-flight. Reusing it keeps that one validated property
+     * covering both queues instead of hand-approximating it here.
+     */
     private Duration lease() {
-        return props.orchestrator().timeout().plusSeconds(30);
+        return props.run().lease();
     }
 
     private static void sleepQuietly() {

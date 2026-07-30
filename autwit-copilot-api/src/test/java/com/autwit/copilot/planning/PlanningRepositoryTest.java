@@ -100,4 +100,33 @@ class PlanningRepositoryTest extends AbstractPostgresIT {
         assertThat(datasets.get(0).columns()).containsExactly("a", "b");
         assertThat(datasets.get(0).rows()).hasSize(1);
     }
+
+    @Test
+    void reapsAGenerationWhoseWorkerLeaseExpired() {
+        var p = repo.createProject("PAY-6", null, null, null, "qa2");
+        var gen = repo.createGeneration(p.projectId(), GenerationType.TEST_PLAN, Map.of());
+        // Claim it with an already-expired lease — a worker that died before renewing. attempts
+        // becomes 1 (= max_attempts), so the dequeue can never reclaim it; only the reaper can.
+        repo.dequeueGeneration("dead-worker", Duration.ofSeconds(-1));
+        assertThat(repo.findGeneration(gen.generationId())).get()
+                .extracting(Generation::status).isEqualTo("running");
+
+        repo.reapExpiredGenerations();
+
+        // Asserted on this generation specifically — reap is a global sweep on a shared DB.
+        assertThat(repo.findGeneration(gen.generationId())).get()
+                .extracting(Generation::status).isEqualTo("failed");
+    }
+
+    @Test
+    void doesNotReapAHealthyRunningGeneration() {
+        var p = repo.createProject("PAY-7", null, null, null, "qa2");
+        var gen = repo.createGeneration(p.projectId(), GenerationType.TEST_PLAN, Map.of());
+        repo.dequeueGeneration("live-worker", Duration.ofMinutes(5)); // lease well in the future
+
+        repo.reapExpiredGenerations();
+
+        assertThat(repo.findGeneration(gen.generationId())).get()
+                .extracting(Generation::status).isEqualTo("running");
+    }
 }

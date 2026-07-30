@@ -177,8 +177,9 @@ public class PlanningController {
     @PostMapping("/projects/{projectId}/test-data")
     ResponseEntity<GenerationView> generateTestData(@PathVariable UUID projectId,
             @RequestBody GenerateDataRequest req) {
+        // rows_per_scenario default is owned by the service (single source); pass through as-is.
         var gen = planning.generateTestData(projectId, req.scenarios(), req.edgeCases(),
-                req.rowsPerScenario() == null ? 8 : req.rowsPerScenario(), req.exampleRecord());
+                req.rowsPerScenario(), req.exampleRecord());
         return ResponseEntity.accepted().body(generation(gen));
     }
 

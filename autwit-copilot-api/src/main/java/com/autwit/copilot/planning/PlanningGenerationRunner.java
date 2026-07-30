@@ -76,7 +76,8 @@ public class PlanningGenerationRunner {
         for (var e : (List<Object>) config.getOrDefault("edge_cases", List.of())) {
             edgeCases.add(String.valueOf(e));
         }
-        int rows = config.get("rows_per_scenario") instanceof Number nr ? nr.intValue() : 8;
+        int rows = config.get("rows_per_scenario") instanceof Number nr
+                ? nr.intValue() : PlanningService.DEFAULT_ROWS_PER_SCENARIO;
         var exampleRecord = config.get("example_record") instanceof Map<?, ?> em
                 ? (Map<String, Object>) em : null;
 

@@ -1,6 +1,6 @@
 import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import type { TestScenarioView } from '../../api/client';
+import type { TestPlanView, TestScenarioView } from '../../api/client';
 import { useGeneration, useLatestTestPlan } from '../../hooks/usePlanning';
 import { Spinner } from '../../components/ui';
 
@@ -124,7 +124,7 @@ function priorityClass(p?: string | null) {
   return p === 'High' ? 'text-red-400' : p === 'Medium' ? 'text-amber-400' : 'text-emerald-400';
 }
 
-function downloadHtml(plan: NonNullable<ReturnType<typeof useLatestTestPlan>['data']>) {
+function downloadHtml(plan: TestPlanView) {
   const rows = plan.scenarios
     .map(
       (s) =>

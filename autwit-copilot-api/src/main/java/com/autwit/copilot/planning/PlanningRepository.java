@@ -1,6 +1,7 @@
 package com.autwit.copilot.planning;
 
 import java.time.Duration;
+import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -230,6 +231,32 @@ public class PlanningRepository {
                 json.write(error), generationId, workerId) == 1;
     }
 
+    /**
+     * Buries generations whose worker died mid-flight. The exact mirror of
+     * {@link #dequeueGeneration}'s guard (ADR-001): dequeue reclaims expired leases with
+     * {@code attempts < max_attempts}; this takes the rest — a lease expired with no attempts
+     * left, which {@code max_attempts = 1} makes every dead-worker job — and marks it
+     * {@code failed} so the UI stops polling it forever. Without it, such a job would sit in
+     * {@code running} indefinitely (there is no auto-retry, by design — same posture as
+     * {@code RunReaper} for {@code autwit.run}).
+     *
+     * @return how many were reaped
+     */
+    public int reapExpiredGenerations() {
+        return jdbc.update(
+                """
+                update autwit.generation
+                   set status = 'failed',
+                       lease_expires_at = null,
+                       error = jsonb_build_object('code', 'lease_expired', 'worker_id', worker_id,
+                                                  'title', 'Worker lease expired',
+                                                  'detail', 'The worker running this generation stopped '
+                                                            || 'renewing its lease; it will not be retried.'),
+                       updated_at = now()
+                 where status = 'running' and lease_expires_at < now() and attempts >= max_attempts
+                """);
+    }
+
     // ---- test plan -------------------------------------------------------------------
 
     public TestPlan insertPlan(UUID projectId, UUID generationId, String overview, String scope,
@@ -253,14 +280,18 @@ public class PlanningRepository {
     }
 
     public Optional<TestPlan> findPlan(UUID testPlanId) {
-        var plan = jdbc.query("select * from autwit.test_plan where test_plan_id = ?",
-                (rs, n) -> new Object[] {
+        return jdbc.query(
+                "select * from autwit.test_plan where test_plan_id = ?",
+                (rs, n) -> new PlanHeader(
                         Columns.uuid(rs, "test_plan_id"), Columns.uuid(rs, "project_id"),
                         Columns.uuid(rs, "generation_id"), rs.getString("overview"), rs.getString("scope"),
-                        json.readObject(rs.getString("provenance")), Columns.instant(rs, "created_at")},
-                testPlanId).stream().findFirst();
-        return plan.map(p -> buildPlan((UUID) p[0], (UUID) p[1], (UUID) p[2], (String) p[3], (String) p[4],
-                asMap(p[5]), (java.time.Instant) p[6]));
+                        json.readObject(rs.getString("provenance")), Columns.instant(rs, "created_at")),
+                testPlanId).stream().findFirst().map(this::buildPlan);
+    }
+
+    /** The {@code test_plan} row on its own; scenarios are fetched separately in {@link #buildPlan}. */
+    private record PlanHeader(UUID planId, UUID projectId, UUID generationId, String overview,
+            String scope, Map<String, Object> provenance, Instant createdAt) {
     }
 
     public Optional<TestPlan> findPlanByGeneration(UUID generationId) {
@@ -277,15 +308,15 @@ public class PlanningRepository {
         return id.flatMap(this::findPlan);
     }
 
-    private TestPlan buildPlan(UUID planId, UUID projectId, UUID generationId, String overview,
-            String scope, Map<String, Object> provenance, java.time.Instant createdAt) {
+    private TestPlan buildPlan(PlanHeader h) {
         var scenarios = jdbc.query(
                 "select scenario_key, seq, title, priority, source from autwit.test_scenario "
                         + "where test_plan_id = ? order by seq",
                 (rs, n) -> new TestPlan.TestScenario(rs.getString("scenario_key"), rs.getInt("seq"),
                         rs.getString("title"), rs.getString("priority"), rs.getString("source")),
-                planId);
-        return new TestPlan(planId, projectId, generationId, overview, scope, provenance, scenarios, createdAt);
+                h.planId());
+        return new TestPlan(h.planId(), h.projectId(), h.generationId(), h.overview(), h.scope(),
+                h.provenance(), scenarios, h.createdAt());
     }
 
     // ---- test data -------------------------------------------------------------------
@@ -316,10 +347,5 @@ public class PlanningRepository {
                         }),
                         Columns.instant(rs, "created_at")),
                 generationId);
-    }
-
-    @SuppressWarnings("unchecked")
-    private static Map<String, Object> asMap(Object o) {
-        return o instanceof Map<?, ?> m ? (Map<String, Object>) m : Map.of();
     }
 }

@@ -1,6 +1,11 @@
 import { useEffect, useState } from 'react';
-import { api, type FetchLogLine, type PlanningCandidate } from '../../api/client';
-import { useFetchContext, useGenerateTestPlan } from '../../hooks/usePlanning';
+import { type PlanningCandidate } from '../../api/client';
+import {
+  useConfluenceSearch,
+  useFetchContext,
+  useGenerateTestPlan,
+  useJiraSearch,
+} from '../../hooks/usePlanning';
 import { Card, Mono, Spinner } from '../../components/ui';
 
 /** Step 2 — search Jira & Confluence over MCP, select context, fetch it. */
@@ -14,40 +19,34 @@ export function FetchStage({
   onGenerated: (generationId: string) => void;
 }) {
   const [query, setQuery] = useState('');
-  const [jira, setJira] = useState<PlanningCandidate[]>([]);
-  const [confluence, setConfluence] = useState<PlanningCandidate[]>([]);
+  const [submitted, setSubmitted] = useState(''); // '' → auto-searches on open
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [log, setLog] = useState<FetchLogLine[]>([]);
-  const [searching, setSearching] = useState(false);
-  const [fetched, setFetched] = useState(false);
+  const [selInit, setSelInit] = useState<string | null>(null);
+
+  const jiraQ = useJiraSearch(projectId, submitted);
+  const confQ = useConfluenceSearch(projectId, submitted);
+  const jira = jiraQ.data ?? [];
+  const confluence = confQ.data ?? [];
+  const searching = jiraQ.isFetching || confQ.isFetching;
 
   const fetchContext = useFetchContext(projectId);
   const generate = useGenerateTestPlan(projectId);
 
-  async function search() {
-    setSearching(true);
-    const [j, c] = await Promise.all([
-      api.GET('/planning/projects/{projectId}/jira-search', {
-        params: { path: { projectId }, query: { query } },
-      }),
-      api.GET('/planning/projects/{projectId}/confluence-search', {
-        params: { path: { projectId }, query: { query } },
-      }),
-    ]);
-    const ji = j.data ?? [];
-    const co = c.data ?? [];
-    setJira(ji);
-    setConfluence(co);
-    // Pre-select everything found, mirroring the wireframe's "confirm and go".
-    setSelected(new Set([...ji, ...co].map((x) => `${x.kind}:${x.ref}`)));
-    setSearching(false);
-  }
+  // The fetch mutation already holds its result — derive the console + the fetched flag from
+  // it rather than mirroring them into extra state.
+  const log = fetchContext.data?.log ?? [];
+  const fetched = fetchContext.isSuccess;
 
-  // Auto-search once when the stage opens.
+  const search = () => setSubmitted(query);
+
+  // Pre-select everything found, once per completed search ("confirm and go"). The searches
+  // are cached by query, so re-entering this stage reuses them without re-hitting MCP.
   useEffect(() => {
-    void search();
+    if (!jiraQ.isSuccess || !confQ.isSuccess || selInit === submitted) return;
+    setSelected(new Set([...jira, ...confluence].map((x) => `${x.kind}:${x.ref}`)));
+    setSelInit(submitted);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [jiraQ.isSuccess, confQ.isSuccess, submitted]);
 
   function toggle(c: PlanningCandidate) {
     const key = `${c.kind}:${c.ref}`;
@@ -59,12 +58,10 @@ export function FetchStage({
     });
   }
 
-  async function runFetch() {
+  function runFetch() {
     const jiraKeys = jira.filter((c) => selected.has(`jira:${c.ref}`)).map((c) => c.ref);
     const pageIds = confluence.filter((c) => selected.has(`confluence:${c.ref}`)).map((c) => c.ref);
-    const res = await fetchContext.mutateAsync({ jira_keys: jiraKeys, confluence_page_ids: pageIds });
-    setLog(res.log);
-    setFetched(true);
+    fetchContext.mutate({ jira_keys: jiraKeys, confluence_page_ids: pageIds });
   }
 
   return (
