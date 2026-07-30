@@ -16,6 +16,9 @@ Flows exercised:
   First real lifecycle run (the joint validation agreed since v1.0.23).
 - **E — Follow-up chaining:** a chained analysis (`previous_response_id`) — exercises real-mode
   `responseId` population + stale-token degrade (our v1.0.24 confirm).
+- **F — Planning Copilot:** the second flavor (`/plan` wizard) — Jira/Confluence search + fetch
+  over the real aashari MCP, then `generate_test_plan` / `generate_test_data` on real OpenAI.
+  New in v1.0.30; **never run live — the joint validation.**
 
 All flows are proven here against the **fake** orchestrator; this is the real-upstream pass.
 
@@ -232,11 +235,76 @@ curl -s -XPOST $API/sessions/$SID/analyses -H 'Content-Type: application/json' \
   error. Cross-session / not-yet-run references are rejected at our boundary
   (`unknown_previous_analysis` / `not_chainable`) before any call.
 
-## 8. Capture the log and hand it back
+## 8. Flow F — Planning Copilot (Test Plan & Data Studio) — the second flavor
+
+This is a **separate flavor** from the session flows above — its own `/plan` wizard and
+`/planning/*` API, **no session** (planning has no order-under-test). New in v1.0.30 and
+**never run live before — this is the joint validation.**
+
+**Extra prerequisites (on top of §2):** the orchestrator build must have `planning.*`
+registered (catalog `v1/693ede402294`, 13 skills) and be configured with:
+- **aashari Atlassian MCP creds** — site/email/API-token as env for the child processes
+  (`@aashari/mcp-server-atlassian-*`, launched via `npx.cmd`); read-only Jira/Confluence.
+- **`OPENAI_API_KEY` + `OPENAI_STORE_RESPONSES=true`** — the two generators run on the real
+  OpenAI planning client (no deterministic fallback; no key → `upstream_unavailable`).
+
+Drive it from the UI (**⇦ the real test**): switch to **Plan** in the left rail →
+http://localhost:5173/plan. Or by API:
+
+```bash
+API=http://localhost:8080/api/v1
+# 1) Create a project
+PID=$(curl -s -XPOST $API/planning/projects -H 'Content-Type: application/json' \
+  -d '{"feature_key":"<REAL-JIRA-KEY>","feature_description":"<what we are testing>","created_by":"you","env":"<env>"}' | jq -r .project_id)
+
+# 2) Add a source doc (Markdown/text/paste)
+curl -s -XPOST $API/planning/projects/$PID/documents -H 'Content-Type: application/json' \
+  -d '{"source_type":"paste","title":"spec","text":"<requirement text>"}'
+
+# 3) Search Jira + Confluence over the REAL aashari MCP
+curl -s "$API/planning/projects/$PID/jira-search?query=<term>"        | jq '.[] | {ref, title, status}'
+curl -s "$API/planning/projects/$PID/confluence-search?query=<term>"  | jq '.[] | {ref, title}'
+
+# 4) Fetch selected context (persists each as a source_document; returns the console log)
+curl -s -XPOST $API/planning/projects/$PID/fetch -H 'Content-Type: application/json' \
+  -d '{"jira_keys":["<REAL-KEY>"],"confluence_page_ids":["<REAL-PAGE-ID>"]}' | jq '{docs: (.documents|length), log: .log}'
+
+# 5) Generate the test plan (async → 202 with a generation_id; poll it)
+GEN=$(curl -s -XPOST $API/planning/projects/$PID/test-plan | jq -r .generation_id)
+curl -s "$API/planning/projects/$PID/generations/$GEN" | jq '{status}'      # poll until succeeded/failed
+curl -s "$API/planning/projects/$PID/test-plan" | jq '{overview, scenarios: [.scenarios[].scenario_key]}'
+
+# 6) Generate test data for the plan's scenarios (async → 202; poll)
+GEN2=$(curl -s -XPOST $API/planning/projects/$PID/test-data -H 'Content-Type: application/json' \
+  -d '{"scenarios":[{"id":"TC-01","title":"…"}],"edge_cases":["boundary","null"],"rows_per_scenario":8}' | jq -r .generation_id)
+curl -s "$API/planning/projects/$PID/generations/$GEN2" | jq '{status}'
+curl -s "$API/planning/projects/$PID/generations/$GEN2/test-data" | jq '.[] | {scenario_key, rows: (.rows|length)}'
+```
+
+**Check:**
+- **Step 2/3 (MCP, read-only):** `jira_search`/`confluence_search` return **real** issues/pages;
+  `fetch_context` returns real bodies + a per-item `log`. In the wire log these are
+  `POST /skills/planning.*/execute → succeeded`, data in the `planning_*` artifact body.
+- **Step 5/6 (generators, real OpenAI):** each generation settles to `succeeded`; the plan has
+  an overview/scope + scenario table; test data has per-scenario rows. A missing key → the
+  generation is `failed` with `upstream_unavailable` (honest, never a fabricated plan).
+- **Regenerate chains:** a second generate carries `previous_response_id` (needs
+  `OPENAI_STORE_RESPONSES=true`); a stale token degrades to a fresh generation, never errors.
+
+**Watch for two things (first live run):**
+1. **Session-less envelope.** copilot drives these skills with a synthetic, empty
+   `session_context` (planning has no session). If the orchestrator's `execute` route rejects a
+   planning call for a missing `session_context` field, that's the mismatch we flagged in
+   v1.0.31 §1 — capture the request/response and send it.
+2. **PLAN-1.** A truncated Jira body comes back with **empty `text`** — expected. copilot
+   persists it as an empty source document (still listed), never a failure. A blank Jira body
+   reads as this, not a bug.
+
+## 9. Capture the log and hand it back
 
 ```bash
 git -C autwit-copilot add autwit-copilot-api/logs/copilot-api.log
-git -C autwit-copilot commit -m "Live integration log: A/B/C/D/E, order <REAL_ORDER>"
+git -C autwit-copilot commit -m "Live integration log: A–F, order <REAL_ORDER>"
 git -C autwit-copilot push
 ```
 
@@ -250,8 +318,13 @@ The log carries, PII-safely:
 Also send: the `run_id`s + verdicts (go/no-go), and for anything that misbehaved, the exact
 request/response (the orchestrator side does the same from its end).
 
-## 9. Known caveats going in
+## 10. Known caveats going in
 
+- **Planning (Flow F) is unproven live + copilot's client is unexercised.** `HttpPlanningClient`
+  is now wired to the real skill-execute surface but has only ever run against the fake — this is
+  its first real exercise. Two likely first surprises: the **session-less execute envelope** (if
+  the orchestrator's route needs a `session_context` field for planning) and **PLAN-1** (empty
+  Jira body — expected). Both are in Flow F's watch-list.
 - **Mutating skills (Flow C) WRITE, and are not live-verified.** `order.fulfil` performs real
   `pick_pack` DynamoDB writes + PickPack/invoice POSTs **only under `fulfilMode=command`**
   (offline sim otherwise); `confirm:true` is mandatory. First real run is the joint validation
