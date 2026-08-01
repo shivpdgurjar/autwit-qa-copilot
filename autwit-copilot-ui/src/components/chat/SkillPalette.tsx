@@ -6,6 +6,17 @@ import { Mono, Muted, Spinner } from '../ui';
 import { missingRequired, pruneEmpty, SchemaForm, type JsonSchema } from './SchemaForm';
 
 /**
+ * Skill families that are surfaced by their own dedicated flavor, not pickable from the
+ * execution-mode palette:
+ *  - financial.* — driven from the evidence-picker (input is a StateEnvelope assembled from
+ *    captured evidence, which a SchemaForm cannot hand-key; agreed in v1.0.20 §4.3).
+ *  - planning.*  — the Planning Copilot ("Test Plan & Data Studio") flavor orchestrates these
+ *    internally via its own wizard; a tester in an execution session never invokes them directly.
+ * They remain in the catalog and available to their own flavor and to direct execute calls.
+ */
+const HIDDEN_SKILL_PREFIXES = ['financial.', 'planning.'];
+
+/**
  * The ⌘K palette.
  *
  * Skills come from GET /skills, a cached projection of the orchestrator's registry
@@ -65,13 +76,9 @@ export function SkillPalette({
   if (!open) return null;
 
   const skills = (data?.skills ?? [])
-    // financial.* skills are driven from the evidence-picker, not a raw form: their
-    // input is a StateEnvelope assembled from captured evidence, which a SchemaForm
-    // cannot hand-key. Hiding them here routes the tester to the right surface rather
-    // than offering a form that can't produce a valid call (agreed in v1.0.20 §4.3).
-    // Other skills — including compare.cross_system, whose whole input is one order_id —
-    // render normally.
-    .filter((s) => !s.skill_name.startsWith('financial.'))
+    // Hide the flavor-owned families (see HIDDEN_SKILL_PREFIXES). Other skills — including
+    // compare.cross_system, whose whole input is one order_id — render normally.
+    .filter((s) => !HIDDEN_SKILL_PREFIXES.some((p) => s.skill_name.startsWith(p)))
     .filter((s) =>
       `${s.skill_name} ${s.title ?? ''} ${s.description ?? ''}`
         .toLowerCase()
