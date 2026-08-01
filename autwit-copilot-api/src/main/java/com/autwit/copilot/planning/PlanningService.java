@@ -72,6 +72,21 @@ public class PlanningService {
         return repo.upsertDocument(projectId, sourceType, externalRef, docTitle, mime, text, hash);
     }
 
+    /**
+     * Adds an uploaded document from its raw bytes — parsed server-side by Tika (PDF/DOCX/XLSX
+     * and text alike). This is the file-upload path; {@link #addTextDocument} stays for paste.
+     * Uploads dedupe on filename within the project (re-uploading refreshes in place).
+     */
+    @Transactional
+    public SourceDocument addUploadedFile(UUID projectId, String filename, String mime, byte[] bytes, String title) {
+        requireProject(projectId);
+        var text = extractor.extractFile(filename, mime, bytes);
+        var hash = hasher.hash(ArtifactFormat.TEXT, text);
+        var docTitle = title != null && !title.isBlank() ? title.trim()
+                : filename != null && !filename.isBlank() ? filename.trim() : "Uploaded document";
+        return repo.upsertDocument(projectId, SourceType.UPLOAD, filename, docTitle, mime, text, hash);
+    }
+
     public List<SourceDocument> listDocuments(UUID projectId) {
         requireProject(projectId);
         return repo.listDocuments(projectId);

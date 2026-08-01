@@ -49,6 +49,12 @@ autwit:
 spring:
   application:
     name: autwit-copilot-api
+  servlet:
+    multipart:
+      # Planning-doc uploads (PDF/DOCX/XLSX) are parsed server-side by Tika; allow a real
+      # design doc through. The extracted TEXT is still capped at ~1MB in TextExtractor.
+      max-file-size: 25MB
+      max-request-size: 25MB
   profiles:
     # BUILD_BRIEF §5: --mode=api|worker|all, default all.
     #

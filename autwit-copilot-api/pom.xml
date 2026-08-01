@@ -71,6 +71,20 @@
       <optional>true</optional>
     </dependency>
 
+    <!-- Server-side text extraction for uploaded planning docs (PDF via PDFBox, DOCX/XLSX via
+         POI, plus text/html/csv). The standard package pulls the parsers Tika needs so any
+         upload extracts uniformly rather than us branching per format. -->
+    <dependency>
+      <groupId>org.apache.tika</groupId>
+      <artifactId>tika-core</artifactId>
+      <version>2.9.2</version>
+    </dependency>
+    <dependency>
+      <groupId>org.apache.tika</groupId>
+      <artifactId>tika-parsers-standard-package</artifactId>
+      <version>2.9.2</version>
+    </dependency>
+
     <!-- test -->
     <dependency>
       <groupId>org.springframework.boot</groupId>

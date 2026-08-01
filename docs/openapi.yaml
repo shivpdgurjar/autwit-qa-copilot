@@ -747,10 +747,10 @@ paths:
                 items: { $ref: '#/components/schemas/SourceDocumentView' }
     post:
       tags: [planning]
-      summary: Add an uploaded or pasted document (Step 1)
+      summary: Add a pasted (or client-supplied text) document (Step 1)
       description: |
-        Pass 1 is text-native: the UI reads text files client-side and posts their
-        content. PDF/DOCX parsing is pass 2 and is rejected here.
+        JSON path for pasted text (source_type=paste). File uploads — including PDF/DOCX/XLSX,
+        which are parsed server-side — go to POST .../documents/upload as multipart.
       operationId: addPlanningDocument
       requestBody:
         required: true
@@ -765,6 +765,37 @@ paths:
               schema: { $ref: '#/components/schemas/SourceDocumentView' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '404': { $ref: '#/components/responses/NotFound' }
+
+  /planning/projects/{projectId}/documents/upload:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    post:
+      tags: [planning]
+      summary: Upload a document file, parsed server-side (Step 1)
+      description: |
+        Multipart file upload. The bytes are parsed by Tika — PDF (PDFBox), DOCX/XLSX (POI),
+        and text/markdown/csv/html — into the corpus text. A scanned/image-only PDF or an
+        empty/encrypted file is a 400 (we do not OCR).
+      operationId: uploadPlanningDocument
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file: { type: string, format: binary }
+                title: { type: string }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/SourceDocumentView' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '413': { $ref: '#/components/responses/BadRequest' }
 
   /planning/projects/{projectId}/documents/{documentId}:
     parameters:

@@ -1,17 +1,23 @@
 package com.autwit.copilot.planning;
 
+import java.io.ByteArrayInputStream;
+
 import com.autwit.copilot.common.ApiException;
+import org.apache.tika.metadata.Metadata;
+import org.apache.tika.metadata.TikaCoreProperties;
+import org.apache.tika.parser.AutoDetectParser;
+import org.apache.tika.parser.ParseContext;
+import org.apache.tika.sax.BodyContentHandler;
 import org.springframework.stereotype.Component;
 
 /**
  * Turns an uploaded/pasted source into the plain text a generation reads.
  *
- * <p><b>Pass 1 is text-native:</b> Markdown, plain text, CSV, HTML and raw paste arrive as
- * text (the UI reads text files client-side and posts their content), so extraction is
- * validation + normalisation, not parsing. Binary formats (PDF, DOCX) are <b>deferred to pass
- * 2</b> — they need server-side parsing (Tika) and are rejected here with a clear message
- * rather than stored as mojibake. The {@code text_content} column is already the right shape
- * for pass 2, so that widening lives entirely in this class.
+ * <p>Two paths: {@link #extract} is for text that arrives already as text (a paste, or a
+ * text file read client-side) — validation + normalisation only. {@link #extractFile} is for
+ * uploaded <b>binary</b> documents (PDF, DOCX, XLSX, …) — the bytes reach the server and Tika
+ * extracts their text (PDFBox for PDF, POI for the Office formats). Both land in the same
+ * {@code text_content} column.
  */
 @Component
 public class TextExtractor {
@@ -40,6 +46,51 @@ public class TextExtractor {
                     "Document is %d chars; the limit is %d.".formatted(rawText.length(), MAX_CHARS));
         }
         return normalize(rawText);
+    }
+
+    /**
+     * Extracts text from an uploaded document's raw bytes with Tika — PDF (PDFBox), DOCX/XLSX
+     * and other Office formats (POI), plus text/HTML/CSV. Any upload flows through here, so the
+     * UI no longer has to read files client-side or know which formats are text vs binary.
+     *
+     * @param filename the original name — a detection hint and the error label
+     * @param mime     the declared content type, or null — also a detection hint
+     * @param bytes    the raw file
+     * @return the extracted, normalised text (capped at {@link #MAX_CHARS})
+     */
+    public String extractFile(String filename, String mime, byte[] bytes) {
+        if (bytes == null || bytes.length == 0) {
+            throw new ApiException.BadRequest("empty_document",
+                    "The uploaded file '%s' is empty.".formatted(filename == null ? "(unnamed)" : filename));
+        }
+        var handler = new BodyContentHandler(-1); // no Tika-side limit; we cap the result below
+        var metadata = new Metadata();
+        if (filename != null && !filename.isBlank()) {
+            metadata.set(TikaCoreProperties.RESOURCE_NAME_KEY, filename);
+        }
+        if (mime != null && !mime.isBlank()) {
+            metadata.set(Metadata.CONTENT_TYPE, mime);
+        }
+        String raw;
+        try (var in = new ByteArrayInputStream(bytes)) {
+            new AutoDetectParser().parse(in, handler, metadata, new ParseContext());
+            raw = handler.toString();
+        } catch (Exception e) {
+            // Encrypted PDF, corrupt file, unsupported format, etc. — a clear 400, not a 500.
+            throw new ApiException.BadRequest("unreadable_document",
+                    "Could not extract text from '%s': %s".formatted(filename, e.getMessage()));
+        }
+        if (raw.length() > MAX_CHARS) {
+            raw = raw.substring(0, MAX_CHARS);
+        }
+        var text = normalize(raw);
+        if (text.isBlank()) {
+            // A scanned/image-only PDF or an empty sheet extracts to nothing — we don't OCR.
+            throw new ApiException.BadRequest("no_text_extracted",
+                    "No text could be extracted from '%s' — it may be a scanned image or empty. "
+                            .formatted(filename) + "Paste the text instead.");
+        }
+        return text;
     }
 
     /**

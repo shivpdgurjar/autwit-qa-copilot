@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api, unwrap, type GenerateDataRequest } from '../api/client';
+import { api, unwrap, type GenerateDataRequest, type SourceDocumentView } from '../api/client';
 
 /**
  * Data hooks for the Planning Copilot wizard. Generation is async (the backend returns
@@ -71,6 +71,30 @@ export function useAddDocument(projectId: string) {
         params: { path: { projectId } },
         body,
       })),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['planning', 'documents', projectId] }),
+  });
+}
+
+/**
+ * Upload a file (PDF/DOCX/XLSX or text). Multipart, so it goes via a direct fetch rather than
+ * the typed client (openapi-fetch's multipart handling is awkward); the server parses the bytes
+ * with Tika. Throws the RFC-7807 problem body on failure so the caller can show `.detail`.
+ */
+export function useUploadDocument(projectId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (file: File) => {
+      const form = new FormData();
+      form.append('file', file);
+      const res = await fetch(`/api/v1/planning/projects/${projectId}/documents/upload`, {
+        method: 'POST',
+        body: form,
+      });
+      if (!res.ok) {
+        throw await res.json().catch(() => ({ detail: `Upload failed (${res.status}).` }));
+      }
+      return (await res.json()) as SourceDocumentView;
+    },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['planning', 'documents', projectId] }),
   });
 }

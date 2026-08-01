@@ -5,6 +5,7 @@ import {
   useDeleteDocument,
   useDocuments,
   useSetSelected,
+  useUploadDocument,
 } from '../../hooks/usePlanning';
 import { Card, EmptyState, Mono, Spinner } from '../../components/ui';
 
@@ -12,6 +13,7 @@ import { Card, EmptyState, Mono, Spinner } from '../../components/ui';
 export function InputsStage({ projectId, onNext }: { projectId: string; onNext: () => void }) {
   const { data: docs, isLoading } = useDocuments(projectId);
   const add = useAddDocument(projectId);
+  const upload = useUploadDocument(projectId);
   const setSelected = useSetSelected(projectId);
   const remove = useDeleteDocument(projectId);
   const fileRef = useRef<HTMLInputElement>(null);
@@ -21,10 +23,10 @@ export function InputsStage({ projectId, onNext }: { projectId: string; onNext: 
   async function onFiles(files: FileList | null) {
     if (!files) return;
     setError(undefined);
+    // Every file is uploaded as-is and parsed server-side (Tika) — PDF/DOCX/XLSX and text alike.
     for (const f of Array.from(files)) {
       try {
-        const text = await f.text();
-        await add.mutateAsync({ source_type: 'upload', title: f.name, filename: f.name, mime: f.type, text });
+        await upload.mutateAsync(f);
       } catch (e) {
         setError((e as { detail?: string }).detail ?? `Could not add ${f.name}.`);
       }
@@ -47,23 +49,31 @@ export function InputsStage({ projectId, onNext }: { projectId: string; onNext: 
     <div className="mx-auto max-w-3xl">
       <h2 className="text-lg font-semibold">What should we base the test plan on?</h2>
       <p className="mt-1 mb-5 text-[13px] text-ink-400">
-        Upload design/requirement docs (Markdown or plain text) or paste content. We'll combine
-        these with anything relevant we find in Jira and Confluence next.
+        Upload design/requirement docs or paste content. We'll combine these with anything
+        relevant we find in Jira and Confluence next.
       </p>
 
       <Card className="mb-4">
         <h3 className="text-[13px] font-semibold">Design &amp; requirement docs</h3>
         <p className="mb-3 text-[11px] text-ink-400">
-          Markdown / plain text · read in your browser (PDF/DOCX coming in a later pass)
+          PDF, Word, Excel, Markdown or plain text · parsed on the server
         </p>
         <button
           onClick={() => fileRef.current?.click()}
-          className="w-full rounded-lg border border-dashed border-ink-600 py-6 text-center text-[13px] text-ink-300 hover:border-sky-700 hover:bg-sky-700/5"
+          disabled={upload.isPending}
+          className="w-full rounded-lg border border-dashed border-ink-600 py-6 text-center text-[13px] text-ink-300 hover:border-sky-700 hover:bg-sky-700/5 disabled:opacity-50"
         >
           <div className="text-lg">⇪</div>
-          Drop files or click to browse
+          {upload.isPending ? 'Uploading…' : 'Drop files or click to browse'}
         </button>
-        <input ref={fileRef} type="file" multiple className="hidden" onChange={(e) => onFiles(e.target.files)} />
+        <input
+          ref={fileRef}
+          type="file"
+          multiple
+          accept=".pdf,.doc,.docx,.xls,.xlsx,.md,.markdown,.txt,.csv,.html,.htm,.json,.xml,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/*"
+          className="hidden"
+          onChange={(e) => onFiles(e.target.files)}
+        />
 
         <div className="mt-4">
           <textarea

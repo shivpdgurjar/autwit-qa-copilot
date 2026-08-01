@@ -1,17 +1,22 @@
 package com.autwit.copilot.web;
 
+import java.io.ByteArrayOutputStream;
+
 import com.autwit.copilot.support.AbstractPostgresIT;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.poi.xwpf.usermodel.XWPFDocument;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.http.MediaType;
+import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
 
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -37,6 +42,25 @@ class PlanningControllerTest extends AbstractPostgresIT {
                 .andExpect(jsonPath("$.feature_key", is("PAY-2481")))
                 .andReturn().getResponse().getContentAsString();
         return json.readTree(body).get("project_id").asText();
+    }
+
+    @Test
+    void uploadsADocxParsedServerSide() throws Exception {
+        var id = createProject();
+        var out = new ByteArrayOutputStream();
+        try (var doc = new XWPFDocument()) {
+            doc.createParagraph().createRun().setText("retry orchestrator design DOCX");
+            doc.write(out);
+        }
+        var file = new MockMultipartFile("file", "design.docx",
+                "application/vnd.openxmlformats-officedocument.wordprocessingml.document", out.toByteArray());
+
+        mvc.perform(multipart("/planning/projects/{id}/documents/upload", id).file(file))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.source_type", is("upload")))
+                .andExpect(jsonPath("$.external_ref", is("design.docx")))
+                // Tika extracted the paragraph text server-side → non-zero length.
+                .andExpect(jsonPath("$.text_length", notNullValue()));
     }
 
     @Test

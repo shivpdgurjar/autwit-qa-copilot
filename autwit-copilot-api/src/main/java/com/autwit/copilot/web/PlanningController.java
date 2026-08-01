@@ -1,10 +1,12 @@
 package com.autwit.copilot.web;
 
+import java.io.IOException;
 import java.time.Instant;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
+import com.autwit.copilot.common.ApiException;
 import com.autwit.copilot.planning.Generation;
 import com.autwit.copilot.planning.PlanningClient;
 import com.autwit.copilot.planning.PlanningService;
@@ -14,6 +16,7 @@ import com.autwit.copilot.planning.TestDataset;
 import com.autwit.copilot.planning.TestPlan;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -24,6 +27,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * The Planning Copilot ("Test Plan & Data Studio") surface — the second flavor of the app,
@@ -89,6 +93,27 @@ public class PlanningController {
             @Valid @RequestBody AddDocumentRequest req) {
         var doc = planning.addTextDocument(projectId, SourceType.fromWire(req.sourceType()),
                 req.title(), req.filename(), req.mime(), req.text());
+        return ResponseEntity.status(201).body(document(doc));
+    }
+
+    /**
+     * Upload a file (PDF/DOCX/XLSX or text) — the bytes are parsed server-side by Tika. The JSON
+     * endpoint above stays for paste; the wizard's file picker posts here as multipart.
+     */
+    @PostMapping(value = "/projects/{projectId}/documents/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    ResponseEntity<DocumentView> uploadDocument(@PathVariable UUID projectId,
+            @RequestParam("file") MultipartFile file,
+            @RequestParam(value = "title", required = false) String title) {
+        if (file == null || file.isEmpty()) {
+            throw new ApiException.BadRequest("empty_document", "No file was uploaded.");
+        }
+        byte[] bytes;
+        try {
+            bytes = file.getBytes();
+        } catch (IOException e) {
+            throw new ApiException.BadRequest("upload_failed", "Could not read the uploaded file: " + e.getMessage());
+        }
+        var doc = planning.addUploadedFile(projectId, file.getOriginalFilename(), file.getContentType(), bytes, title);
         return ResponseEntity.status(201).body(document(doc));
     }
 
