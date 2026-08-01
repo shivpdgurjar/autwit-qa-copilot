@@ -16,10 +16,85 @@ export function Card({
   return (
     <Tag
       onClick={onClick}
-      className={`rounded-lg border border-ink-700 bg-ink-900 p-3 transition-colors ${interactive} ${className}`}
+      className={`rounded-xl border border-ink-700 bg-ink-900 p-3 shadow-sm transition-colors ${interactive} ${className}`}
     >
       {children}
     </Tag>
+  );
+}
+
+/**
+ * The one button in the app. Variants: primary (Acuver blue, solid), ghost (bordered, on
+ * white), warn (amber-bordered, for "proceed anyway"-style overrides). Replaces the
+ * hand-rolled `<button className="rounded bg-sky-700…">` that used to differ per screen.
+ */
+type ButtonProps = React.ComponentPropsWithoutRef<'button'> & {
+  variant?: 'primary' | 'ghost' | 'warn';
+  size?: 'sm' | 'md';
+};
+
+export function Button({ variant = 'primary', size = 'md', className = '', ...rest }: ButtonProps) {
+  const base =
+    'inline-flex items-center justify-center gap-2 rounded-lg font-semibold transition-colors ' +
+    'active:translate-y-px disabled:pointer-events-none disabled:opacity-40';
+  const sizes = { sm: 'px-3 py-1.5 text-[12px]', md: 'px-4 py-2 text-[13px]' };
+  const variants = {
+    primary: 'bg-sky-600 text-white shadow-sm hover:bg-sky-500',
+    ghost: 'border border-ink-600 bg-ink-900 text-ink-100 hover:border-ink-400 hover:bg-ink-850',
+    warn: 'border border-amber-900 bg-ink-900 text-amber-300 hover:bg-amber-950',
+  };
+  return <button className={`${base} ${sizes[size]} ${variants[variant]} ${className}`} {...rest} />;
+}
+
+/** A small status/label chip. `tone` carries semantic meaning (severity, state), not just color. */
+type BadgeTone = 'neutral' | 'sky' | 'red' | 'amber' | 'emerald';
+
+export function Badge({
+  tone = 'neutral',
+  children,
+  className = '',
+}: {
+  tone?: BadgeTone;
+  children: ReactNode;
+  className?: string;
+}) {
+  const tones: Record<BadgeTone, string> = {
+    neutral: 'bg-ink-850 text-ink-400 border-ink-700',
+    sky: 'bg-sky-950 text-sky-200 border-sky-900',
+    red: 'bg-red-950 text-red-300 border-red-900',
+    amber: 'bg-amber-950 text-amber-300 border-amber-900',
+    emerald: 'bg-emerald-950 text-emerald-300 border-emerald-900',
+  };
+  return (
+    <span
+      className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10.5px] font-semibold uppercase tracking-wide ${tones[tone]} ${className}`}
+    >
+      {children}
+    </span>
+  );
+}
+
+/** The one text input. Focus ring in Acuver blue; consistent border/placeholder treatment. */
+type InputProps = React.ComponentPropsWithoutRef<'input'>;
+
+export function Input({ className = '', ...rest }: InputProps) {
+  return (
+    <input
+      className={`rounded-lg border border-ink-600 bg-ink-900 px-3 py-2 text-[13px] text-ink-100 outline-none transition-colors placeholder:text-ink-400 focus:border-sky-600 focus:ring-2 focus:ring-sky-600/20 ${className}`}
+      {...rest}
+    />
+  );
+}
+
+/** The multi-line counterpart of {@link Input}, same field treatment. */
+type TextareaProps = React.ComponentPropsWithoutRef<'textarea'>;
+
+export function Textarea({ className = '', ...rest }: TextareaProps) {
+  return (
+    <textarea
+      className={`rounded-lg border border-ink-600 bg-ink-900 px-3 py-2 text-[13px] text-ink-100 outline-none transition-colors placeholder:text-ink-400 focus:border-sky-600 focus:ring-2 focus:ring-sky-600/20 ${className}`}
+      {...rest}
+    />
   );
 }
 

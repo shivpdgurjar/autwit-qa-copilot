@@ -1,5 +1,5 @@
 import type { Snapshot } from '../../api/client';
-import { Card, Mono, Muted } from '../ui';
+import { Badge, Card, Mono, Muted } from '../ui';
 
 /**
  * A captured snapshot and its parts.
@@ -26,9 +26,7 @@ export function SnapshotCard({
         <span className="text-xs">📦</span>
         <span className="text-sm font-medium">{snapshot.label}</span>
         <Mono className="rounded bg-ink-800 px-1.5 py-0.5 text-ink-300">{snapshot.scope}</Mono>
-        {snapshot.status !== 'complete' && (
-          <span className="text-[11px] font-medium text-amber-300">{snapshot.status}</span>
-        )}
+        {snapshot.status !== 'complete' && <Badge tone="amber">{snapshot.status}</Badge>}
         <span className="ml-auto text-[11px]">
           <Muted>
             {parts.length} part{parts.length === 1 ? '' : 's'} · {rows} row{rows === 1 ? '' : 's'}

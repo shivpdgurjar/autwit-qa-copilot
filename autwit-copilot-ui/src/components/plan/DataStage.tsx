@@ -6,7 +6,7 @@ import {
   useLatestTestPlan,
 } from '../../hooks/usePlanning';
 import type { GenerateDataRequest } from '../../api/client';
-import { Card, Spinner } from '../../components/ui';
+import { Button, Card, Input, Spinner, Textarea } from '../../components/ui';
 
 const EDGE_CASES = ['boundary', 'null', 'negative', 'malformed'];
 
@@ -108,21 +108,21 @@ export function DataStage({
             Example record <span className="font-normal text-ink-400">(optional)</span>
           </h3>
           <p className="mb-2 text-[11px] text-ink-400">Paste a sample so generated rows match your shape</p>
-          <textarea
+          <Textarea
             value={example}
             onChange={(e) => setExample(e.target.value)}
             rows={5}
             placeholder={'{\n  "transaction_id": "txn_8841",\n  "amount": 4899\n}'}
-            className="w-full rounded border border-ink-700 bg-ink-950 px-2 py-1.5 font-mono text-[12px] outline-none focus:border-sky-700"
+            className="w-full font-mono"
           />
           <div className="mt-3">
             <label className="mb-1 block text-[11px] text-ink-400">Rows per scenario</label>
-            <input
+            <Input
               type="number"
               value={rows}
               min={1}
               onChange={(e) => setRows(Number(e.target.value) || 1)}
-              className="w-24 rounded border border-ink-700 bg-ink-950 px-2 py-1 text-[12px] outline-none focus:border-sky-700"
+              className="w-24"
             />
           </div>
           <div className="mt-3">
@@ -147,16 +147,10 @@ export function DataStage({
       </div>
 
       <div className="mt-6 flex items-center gap-2">
-        <button onClick={onBack} className="rounded border border-ink-700 px-3 py-2 text-[13px] hover:border-ink-600">
-          ← Back
-        </button>
-        <button
-          onClick={run}
-          disabled={!plan || selected.size === 0 || busy}
-          className="ml-auto rounded bg-sky-700 px-4 py-2 text-[13px] font-medium text-white hover:bg-sky-600 disabled:opacity-40"
-        >
+        <Button variant="ghost" onClick={onBack}>← Back</Button>
+        <Button className="ml-auto" onClick={run} disabled={!plan || selected.size === 0 || busy}>
           {busy ? 'Generating…' : dataGenId ? 'Regenerate test data' : 'Generate test data'}
-        </button>
+        </Button>
       </div>
       {generate.error != null && (
         <p className="mt-2 text-right text-[11px] text-red-300">
@@ -261,12 +255,13 @@ function GenerationResult({
         </table>
       </div>
       <div className="mt-3 flex justify-end gap-2">
-        <button
+        <Button
+          variant="ghost"
+          size="sm"
           onClick={() => downloadCsv(shown.columns, shown.rows as Record<string, unknown>[], shown.scenario_key)}
-          className="rounded border border-ink-700 px-2.5 py-1 text-[11px] hover:border-ink-600"
         >
           Download CSV
-        </button>
+        </Button>
       </div>
     </div>
   );

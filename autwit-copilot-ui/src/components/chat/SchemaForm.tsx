@@ -83,7 +83,7 @@ export function SchemaForm({
 }
 
 const INPUT_CLASS =
-  'w-full rounded border border-ink-700 bg-ink-950 px-2 py-1 font-mono text-[12px] text-ink-100 outline-none focus:border-sky-700';
+  'w-full rounded-lg border border-ink-600 bg-ink-900 px-3 py-2 font-mono text-[12px] text-ink-100 outline-none transition-colors focus:border-sky-600 focus:ring-2 focus:ring-sky-600/20';
 
 function Field({
   name,

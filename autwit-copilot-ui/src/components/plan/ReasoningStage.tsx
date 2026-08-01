@@ -10,7 +10,7 @@ import {
   useOverrideReasoning,
   useReasoning,
 } from '../../hooks/usePlanning';
-import { Card, Mono, Spinner } from '../../components/ui';
+import { Badge, Button, Input, Mono, Spinner } from '../../components/ui';
 
 /**
  * Reasoning — the opt-in pass BEFORE a test plan. Analyze the selected documents for conflicts
@@ -67,8 +67,8 @@ export function ReasoningStage({
 
   return (
     <div className="mx-auto max-w-3xl">
-      <h2 className="text-lg font-semibold">Reason over the documents</h2>
-      <p className="mt-1 mb-5 text-[13px] text-ink-400">
+      <h2 className="text-lg font-semibold tracking-tight">Reason over the documents</h2>
+      <p className="mt-1 mb-5 max-w-[70ch] text-[13px] text-ink-400">
         Before we draft a plan, check the selected documents for contradictions and gaps. Resolve
         what comes back, then re-analyze — the plan is only as sound as the inputs it's built on.
         This step is optional; you can generate directly.
@@ -76,25 +76,21 @@ export function ReasoningStage({
 
       {/* Not started yet, and nothing running → the invitation to analyze. */}
       {!reasoning && !analyzing && (
-        <Card>
-          <p className="text-[13px] text-ink-200">No analysis yet.</p>
-          <p className="mt-1 text-[12px] text-ink-400">
+        <div className="rounded-xl border border-ink-700 bg-ink-900 p-5 shadow-sm">
+          <p className="text-[13px] font-medium text-ink-100">No analysis yet.</p>
+          <p className="mt-1 text-[12.5px] text-ink-400">
             Run a reasoning pass to surface conflicts between your documents and information the
             plan will need but the material doesn't settle.
           </p>
-          <button
-            onClick={startAnalyze}
-            disabled={analyze.isPending}
-            className="mt-3 rounded bg-sky-700 px-4 py-2 text-[13px] font-medium text-white hover:bg-sky-600 disabled:opacity-40"
-          >
-            Analyze documents for conflicts &amp; gaps
-          </button>
+          <Button className="mt-4" onClick={startAnalyze} disabled={analyze.isPending}>
+            <ScanIcon /> Analyze documents for conflicts &amp; gaps
+          </Button>
           {analyze.error != null && (
             <p className="mt-2 text-[11px] text-red-300">
               {(analyze.error as { detail?: string }).detail ?? 'Could not start the analysis.'}
             </p>
           )}
-        </Card>
+        </div>
       )}
 
       {analyzing && (
@@ -111,7 +107,7 @@ export function ReasoningStage({
 
       {/* A completed round. */}
       {reasoning && !analyzing && (
-        <div className="space-y-4">
+        <div className="space-y-5">
           <StatusBanner
             status={status}
             conflicts={conflicts.length}
@@ -123,7 +119,7 @@ export function ReasoningStage({
           {conflicts.length > 0 && (
             <FindingGroup
               title="Conflicts to confirm"
-              accent="text-red-400"
+              tone="red"
               findings={conflicts}
               answered={answered}
               answerFor={answerFor}
@@ -137,7 +133,7 @@ export function ReasoningStage({
           {clarifications.length > 0 && (
             <FindingGroup
               title="Clarifications needed"
-              accent="text-amber-400"
+              tone="amber"
               findings={clarifications}
               answered={answered}
               answerFor={answerFor}
@@ -149,12 +145,9 @@ export function ReasoningStage({
           )}
 
           <div className="flex flex-wrap items-center gap-2">
-            <button
-              onClick={startAnalyze}
-              className="rounded border border-ink-700 px-3 py-2 text-[13px] hover:border-ink-600"
-            >
-              Re-analyze with answers
-            </button>
+            <Button variant="ghost" onClick={startAnalyze}>
+              <RefreshIcon /> Re-analyze with answers
+            </Button>
             {gateOpen && (
               <ProceedAnyway
                 onConfirm={(reason) => override.mutate({ reason })}
@@ -165,21 +158,20 @@ export function ReasoningStage({
         </div>
       )}
 
-      <div className="mt-6 flex items-center gap-2 border-t border-ink-800 pt-4">
-        <button onClick={onBack} className="rounded border border-ink-700 px-3 py-2 text-[13px] hover:border-ink-600">
-          ← Back
-        </button>
+      <div className="mt-6 flex items-center gap-2 border-t border-ink-700 pt-4">
+        <Button variant="ghost" onClick={onBack}>
+          <ChevronLeft /> Back
+        </Button>
         <div className="ml-auto flex flex-col items-end gap-1">
-          <button
+          <Button
             onClick={() => generate.mutate(undefined, { onSuccess: (g) => onGenerated(g.generation_id) })}
             disabled={gateOpen || generate.isPending}
             title={gateOpen ? 'Resolve the open findings or choose “proceed anyway” first' : undefined}
-            className="rounded bg-sky-700 px-4 py-2 text-[13px] font-medium text-white hover:bg-sky-600 disabled:opacity-40"
           >
-            {generate.isPending ? 'Starting…' : 'Generate test plan →'}
-          </button>
+            {generate.isPending ? 'Starting…' : 'Generate test plan'} <ArrowRight />
+          </Button>
           {gateOpen && (
-            <span className="text-[11px] text-ink-500">Resolve findings or proceed anyway to continue</span>
+            <span className="text-[11px] text-ink-400">Resolve findings or proceed anyway to continue</span>
           )}
           {generate.error != null && (
             <span className="text-[11px] text-red-300">
@@ -205,34 +197,38 @@ function StatusBanner({
   round: number;
   overrideReason?: string | null;
 }) {
-  const base = 'rounded-lg border px-3 py-2 text-[12.5px]';
+  const base = 'flex items-center gap-2.5 rounded-lg border px-4 py-2.5 text-[13px] font-medium';
   if (status === 'clean') {
     return (
-      <div className={`${base} border-emerald-700/40 bg-emerald-700/10 text-emerald-300`}>
-        ✓ No conflicts or gaps found (round {round}) — ready to generate.
+      <div className={`${base} border-emerald-900 bg-emerald-950 text-emerald-300`}>
+        <CheckIcon /> No conflicts or gaps found (round {round}) — ready to generate.
       </div>
     );
   }
   if (status === 'overridden') {
     return (
-      <div className={`${base} border-amber-700/40 bg-amber-700/10 text-amber-300`}>
-        Proceeding despite unresolved items.
-        {overrideReason ? <span className="text-amber-200/80"> — {overrideReason}</span> : null}
+      <div className={`${base} border-amber-900 bg-amber-950 text-amber-300`}>
+        <AlertIcon /> Proceeding despite unresolved items.
+        {overrideReason ? <span className="font-normal opacity-80"> — {overrideReason}</span> : null}
       </div>
     );
   }
   const total = conflicts + clarifications;
   return (
-    <div className={`${base} border-sky-700/40 bg-sky-700/10 text-sky-300`}>
-      {total} item{total === 1 ? '' : 's'} to resolve (round {round}): {conflicts} conflict
-      {conflicts === 1 ? '' : 's'}, {clarifications} clarification{clarifications === 1 ? '' : 's'}.
+    <div className={`${base} border-sky-900 bg-sky-950 text-sky-200`}>
+      <SearchIcon />
+      <span>
+        <span className="tabular-nums">{total}</span> item{total === 1 ? '' : 's'} to resolve (round{' '}
+        {round}): <span className="tabular-nums">{conflicts}</span> conflict{conflicts === 1 ? '' : 's'},{' '}
+        <span className="tabular-nums">{clarifications}</span> clarification{clarifications === 1 ? '' : 's'}.
+      </span>
     </div>
   );
 }
 
 function FindingGroup({
   title,
-  accent,
+  tone,
   findings,
   answered,
   answerFor,
@@ -240,21 +236,29 @@ function FindingGroup({
   saving,
 }: {
   title: string;
-  accent: string;
+  tone: 'red' | 'amber';
   findings: FindingView[];
   answered: Set<string>;
   answerFor: (findingId: string) => string | undefined;
   onSave: (f: FindingView, answer: string) => void;
   saving: boolean;
 }) {
+  const headTone = tone === 'red' ? 'text-red-300' : 'text-amber-300';
   return (
     <div>
-      <h3 className={`mb-2 text-[12px] font-semibold uppercase tracking-wide ${accent}`}>{title}</h3>
-      <div className="space-y-2.5">
+      <h3 className={`mb-2.5 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider ${headTone}`}>
+        {tone === 'red' ? <AlertIcon /> : <HelpIcon />}
+        {title}
+        <span className="rounded-full border border-ink-700 bg-ink-900 px-2 text-[11px] font-medium normal-case tracking-normal text-ink-400 tabular-nums">
+          {findings.length}
+        </span>
+      </h3>
+      <div className="space-y-3">
         {findings.map((f) => (
           <FindingCard
             key={f.finding_id}
             finding={f}
+            tone={tone}
             isAnswered={answered.has(f.finding_id)}
             existingAnswer={answerFor(f.finding_id)}
             onSave={(answer) => onSave(f, answer)}
@@ -268,12 +272,14 @@ function FindingGroup({
 
 function FindingCard({
   finding,
+  tone,
   isAnswered,
   existingAnswer,
   onSave,
   saving,
 }: {
   finding: FindingView;
+  tone: 'red' | 'amber';
   isAnswered: boolean;
   existingAnswer?: string;
   onSave: (answer: string) => void;
@@ -282,43 +288,49 @@ function FindingCard({
   const [answer, setAnswer] = useState('');
   const sources = (finding.sources ?? []) as Array<{ doc_title?: string; quote?: string }>;
   const options = finding.options ?? [];
+  const stripe = tone === 'red' ? 'bg-red-400' : 'bg-amber-400';
 
   return (
-    <Card>
-      <div className="flex items-start justify-between gap-2">
-        <p className="text-[13px] font-medium text-ink-100">{finding.title}</p>
-        {isAnswered && <span className="shrink-0 text-[11px] text-emerald-400">✓ answered</span>}
+    <div className="relative rounded-xl border border-ink-700 bg-ink-900 p-4 pl-5 shadow-sm transition-shadow hover:shadow-md">
+      <span className={`absolute top-4 bottom-4 left-0 w-[3px] rounded ${stripe}`} />
+      <div className="flex items-start justify-between gap-3">
+        <p className="text-[14px] font-semibold tracking-tight text-ink-100">{finding.title}</p>
+        {isAnswered ? (
+          <Badge tone="emerald">✓ Answered</Badge>
+        ) : (
+          <Badge tone={tone}>{tone === 'red' ? 'Conflict' : 'Clarification'}</Badge>
+        )}
       </div>
-      {finding.detail && <p className="mt-1 text-[12px] text-ink-400">{finding.detail}</p>}
+      {finding.detail && <p className="mt-1 text-[13px] text-ink-400">{finding.detail}</p>}
 
       {sources.length > 0 && (
-        <ul className="mt-2 space-y-1">
+        <ul className="mt-3 flex flex-col gap-1.5 border-t border-dashed border-ink-600 pt-3">
           {sources.map((s, i) => (
-            <li key={i} className="text-[11px] text-ink-500">
-              <Mono className="text-ink-400">{s.doc_title}</Mono>
-              {s.quote ? <span className="italic text-ink-400"> — “{s.quote}”</span> : null}
+            <li key={i} className="flex items-baseline gap-2 text-[12px]">
+              <Mono className="shrink-0 text-sky-200">{s.doc_title}</Mono>
+              {s.quote ? <span className="text-ink-100 italic">“{s.quote}”</span> : null}
             </li>
           ))}
         </ul>
       )}
 
       {isAnswered ? (
-        <p className="mt-2 rounded bg-ink-850 px-2 py-1.5 text-[12px] text-ink-200">
-          <span className="text-ink-500">Your answer: </span>
+        <p className="mt-3 rounded-lg border border-emerald-900 bg-emerald-950 px-3 py-2 text-[12.5px] text-emerald-300">
+          <span className="text-ink-400">Your answer: </span>
           {existingAnswer}
         </p>
       ) : (
-        <div className="mt-2.5">
+        <div className="mt-3.5 flex flex-col gap-2">
           {options.length > 0 && (
-            <div className="mb-1.5 flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-1.5">
               {options.map((o, i) => (
                 <button
                   key={i}
                   onClick={() => setAnswer(o)}
-                  className={`rounded border px-2 py-0.5 text-[11.5px] ${
+                  className={`rounded-lg border px-3 py-1.5 font-mono text-[12.5px] transition-colors ${
                     answer === o
-                      ? 'border-sky-600 bg-sky-700/20 text-sky-300'
-                      : 'border-ink-700 text-ink-300 hover:border-ink-600'
+                      ? 'border-sky-600 bg-sky-950 font-semibold text-sky-200 ring-2 ring-sky-600/15'
+                      : 'border-ink-600 bg-ink-900 text-ink-100 hover:border-sky-900 hover:bg-sky-950'
                   }`}
                 >
                   {o}
@@ -327,24 +339,20 @@ function FindingCard({
             </div>
           )}
           <div className="flex gap-2">
-            <input
+            <Input
               value={answer}
               onChange={(e) => setAnswer(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && answer.trim() && onSave(answer.trim())}
               placeholder={options.length > 0 ? 'Confirm the correct value…' : 'Answer this…'}
-              className="flex-1 rounded border border-ink-700 bg-ink-950 px-2 py-1.5 text-[12px] outline-none focus:border-sky-700"
+              className="flex-1"
             />
-            <button
-              onClick={() => answer.trim() && onSave(answer.trim())}
-              disabled={!answer.trim() || saving}
-              className="rounded border border-ink-700 px-3 text-[12px] hover:border-ink-600 disabled:opacity-40"
-            >
+            <Button variant="ghost" size="sm" onClick={() => answer.trim() && onSave(answer.trim())} disabled={!answer.trim() || saving}>
               Save
-            </button>
+            </Button>
           </div>
         </div>
       )}
-    </Card>
+    </div>
   );
 }
 
@@ -353,29 +361,65 @@ function ProceedAnyway({ onConfirm, pending }: { onConfirm: (reason: string) => 
   const [reason, setReason] = useState('');
   if (!open) {
     return (
-      <button
-        onClick={() => setOpen(true)}
-        className="rounded border border-amber-700/50 px-3 py-2 text-[13px] text-amber-300 hover:border-amber-600"
-      >
+      <Button variant="warn" onClick={() => setOpen(true)}>
         Proceed anyway
-      </button>
+      </Button>
     );
   }
   return (
     <div className="flex items-center gap-2">
-      <input
+      <Input
         value={reason}
         onChange={(e) => setReason(e.target.value)}
         placeholder="Why proceed with open items? (recorded)"
-        className="w-72 rounded border border-ink-700 bg-ink-950 px-2 py-1.5 text-[12px] outline-none focus:border-amber-700"
+        className="w-72"
       />
-      <button
-        onClick={() => onConfirm(reason.trim())}
-        disabled={pending}
-        className="rounded bg-amber-700 px-3 py-1.5 text-[12px] font-medium text-white hover:bg-amber-600 disabled:opacity-40"
-      >
+      <Button variant="warn" size="sm" onClick={() => onConfirm(reason.trim())} disabled={pending}>
         Confirm
-      </button>
+      </Button>
     </div>
+  );
+}
+
+/* --- inline lucide-style icons (currentColor, no font/CDN) --- */
+const ic = 'inline-block align-[-2px]';
+function ScanIcon() {
+  return (
+    <svg className={ic} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 7V5a2 2 0 0 1 2-2h2" /><path d="M17 3h2a2 2 0 0 1 2 2v2" /><path d="M21 17v2a2 2 0 0 1-2 2h-2" /><path d="M7 21H5a2 2 0 0 1-2-2v-2" /><path d="M7 12h10" /></svg>
+  );
+}
+function RefreshIcon() {
+  return (
+    <svg className={ic} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 12a9 9 0 1 0 9-9 9 9 0 0 0-6.4 2.6L3 8" /><path d="M3 3v5h5" /></svg>
+  );
+}
+function SearchIcon() {
+  return (
+    <svg className={`${ic} shrink-0`} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7" /><path d="m21 21-4.3-4.3" /></svg>
+  );
+}
+function AlertIcon() {
+  return (
+    <svg className={ic} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="m10.3 3.9-8 13.9A2 2 0 0 0 4 21h16a2 2 0 0 0 1.7-3.2l-8-13.9a2 2 0 0 0-3.4 0Z" /><path d="M12 9v4" /><path d="M12 17h.01" /></svg>
+  );
+}
+function HelpIcon() {
+  return (
+    <svg className={ic} width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9" /><path d="M9.1 9a3 3 0 0 1 5.8 1c0 2-3 3-3 3" /><path d="M12 17h.01" /></svg>
+  );
+}
+function CheckIcon() {
+  return (
+    <svg className={`${ic} shrink-0`} width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
+  );
+}
+function ChevronLeft() {
+  return (
+    <svg className={ic} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6" /></svg>
+  );
+}
+function ArrowRight() {
+  return (
+    <svg className={ic} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M5 12h14" /><path d="m12 5 7 7-7 7" /></svg>
   );
 }

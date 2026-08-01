@@ -2,7 +2,7 @@ import { useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import type { TestPlanView, TestScenarioView } from '../../api/client';
 import { useGeneration, useLatestTestPlan } from '../../hooks/usePlanning';
-import { Spinner } from '../../components/ui';
+import { Button, Spinner } from '../../components/ui';
 
 /** Step 3 — the generated test plan, once its generation settles. */
 export function PlanStage({
@@ -95,25 +95,12 @@ export function PlanStage({
       )}
 
       <div className="mt-6 flex items-center gap-2">
-        <button onClick={onBack} className="rounded border border-ink-700 px-3 py-2 text-[13px] hover:border-ink-600">
-          ← Back
-        </button>
+        <Button variant="ghost" onClick={onBack}>← Back</Button>
         <div className="ml-auto flex gap-2">
           {plan && (
-            <button
-              onClick={() => downloadHtml(plan)}
-              className="rounded border border-ink-700 px-3 py-2 text-[13px] hover:border-ink-600"
-            >
-              Download HTML
-            </button>
+            <Button variant="ghost" onClick={() => downloadHtml(plan)}>Download HTML</Button>
           )}
-          <button
-            onClick={onNext}
-            disabled={!plan}
-            className="rounded bg-sky-700 px-4 py-2 text-[13px] font-medium text-white hover:bg-sky-600 disabled:opacity-40"
-          >
-            Continue to test data →
-          </button>
+          <Button onClick={onNext} disabled={!plan}>Continue to test data →</Button>
         </div>
       </div>
     </div>

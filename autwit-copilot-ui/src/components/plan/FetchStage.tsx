@@ -5,7 +5,7 @@ import {
   useFetchContext,
   useJiraSearch,
 } from '../../hooks/usePlanning';
-import { Card, Mono, Spinner } from '../../components/ui';
+import { Button, Card, Input, Mono, Spinner } from '../../components/ui';
 
 /** Step 2 — search Jira & Confluence over MCP, select context, fetch it. */
 export function FetchStage({
@@ -73,19 +73,14 @@ export function FetchStage({
       <div className="grid grid-cols-2 gap-5">
         <div className="space-y-4">
           <div className="flex gap-2">
-            <input
+            <Input
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && search()}
               placeholder="Search issues & pages"
-              className="flex-1 rounded border border-ink-700 bg-ink-950 px-2 py-1.5 text-[12px] outline-none focus:border-sky-700"
+              className="flex-1"
             />
-            <button
-              onClick={search}
-              className="rounded border border-ink-700 px-3 text-[12px] hover:border-ink-600"
-            >
-              Search
-            </button>
+            <Button variant="ghost" onClick={search}>Search</Button>
           </div>
 
           {searching && (
@@ -131,34 +126,18 @@ export function FetchStage({
       </div>
 
       <div className="mt-6 flex items-center gap-2">
-        <button onClick={onBack} className="rounded border border-ink-700 px-3 py-2 text-[13px] hover:border-ink-600">
-          ← Back
-        </button>
+        <Button variant="ghost" onClick={onBack}>← Back</Button>
         <div className="ml-auto flex gap-2">
           {!fetched ? (
-            <button
-              onClick={runFetch}
-              disabled={selected.size === 0 || fetchContext.isPending}
-              className="rounded bg-sky-700 px-4 py-2 text-[13px] font-medium text-white hover:bg-sky-600 disabled:opacity-40"
-            >
+            <Button onClick={runFetch} disabled={selected.size === 0 || fetchContext.isPending}>
               {fetchContext.isPending ? 'Fetching…' : `Fetch selected context (${selected.size})`}
-            </button>
+            </Button>
           ) : (
-            <button
-              onClick={onNext}
-              className="rounded bg-sky-700 px-4 py-2 text-[13px] font-medium text-white hover:bg-sky-600"
-            >
-              Continue to reasoning →
-            </button>
+            <Button onClick={onNext}>Continue to reasoning →</Button>
           )}
           {/* Reasoning is optional — let the tester skip straight to it without fetching. */}
           {!fetched && (
-            <button
-              onClick={onNext}
-              className="rounded border border-ink-700 px-3 py-2 text-[13px] text-ink-300 hover:border-ink-600"
-            >
-              Skip →
-            </button>
+            <Button variant="ghost" onClick={onNext}>Skip →</Button>
           )}
         </div>
       </div>

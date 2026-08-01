@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
 import { api, unwrap, type Session } from '../../api/client';
-import { Ago, Card, EmptyState, Mono, Muted, Spinner } from '../../components/ui';
+import { Ago, Button, Card, EmptyState, Input, Mono, Muted, Spinner } from '../../components/ui';
 
 /**
  * Session list. Not in the brief's step 5 scope, but the session route needs somewhere
@@ -25,12 +25,9 @@ export default function SessionListRoute() {
       <img src="/AutwitLogo.png" alt="AutWit" className="mb-5 h-8 w-auto" />
       <div className="mb-4 flex items-center">
         <h1 className="text-lg font-semibold">Sessions</h1>
-        <button
-          onClick={() => setCreating(true)}
-          className="ml-auto rounded bg-sky-700 px-3 py-1.5 text-[12px] font-medium text-white hover:bg-sky-600"
-        >
+        <Button size="sm" className="ml-auto" onClick={() => setCreating(true)}>
           New session
-        </button>
+        </Button>
       </div>
 
       {creating && (
@@ -129,23 +126,21 @@ function NewSessionForm({
     onSuccess: onCreated,
   });
 
-  const field = 'w-full rounded border border-ink-700 bg-ink-950 px-2 py-1 text-[12px] outline-none focus:border-sky-700';
-
   return (
     <Card className="mb-4">
       <div className="grid grid-cols-2 gap-2">
         <label className="block">
           <span className="mb-1 block text-[11px] text-ink-400">tester_id</span>
-          <input className={field} value={testerId} onChange={(e) => setTesterId(e.target.value)} />
+          <Input className="w-full" value={testerId} onChange={(e) => setTesterId(e.target.value)} />
         </label>
         <label className="block">
           <span className="mb-1 block text-[11px] text-ink-400">env</span>
-          <input className={field} value={env} onChange={(e) => setEnv(e.target.value)} />
+          <Input className="w-full" value={env} onChange={(e) => setEnv(e.target.value)} />
         </label>
         <label className="block">
           <span className="mb-1 block text-[11px] text-ink-400">title</span>
-          <input
-            className={field}
+          <Input
+            className="w-full"
             value={title}
             placeholder="Order flow"
             onChange={(e) => setTitle(e.target.value)}
@@ -153,8 +148,8 @@ function NewSessionForm({
         </label>
         <label className="block">
           <span className="mb-1 block text-[11px] text-ink-400">order_id (subject)</span>
-          <input
-            className={field}
+          <Input
+            className="w-full"
             value={orderId}
             placeholder="XXXX"
             onChange={(e) => setOrderId(e.target.value)}
@@ -169,16 +164,17 @@ function NewSessionForm({
       )}
 
       <div className="mt-2.5 flex gap-2">
-        <button onClick={onCancel} className="rounded border border-ink-700 px-2 py-1 text-[11px]">
+        <Button variant="ghost" size="sm" onClick={onCancel}>
           Cancel
-        </button>
-        <button
+        </Button>
+        <Button
+          size="sm"
+          className="ml-auto"
           onClick={() => create.mutate()}
           disabled={!testerId.trim() || !env.trim() || create.isPending}
-          className="ml-auto rounded bg-sky-700 px-3 py-1 text-[12px] font-medium text-white hover:bg-sky-600 disabled:opacity-40"
         >
           {create.isPending ? 'Starting…' : 'Start session'}
-        </button>
+        </Button>
       </div>
     </Card>
   );

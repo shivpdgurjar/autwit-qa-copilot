@@ -118,12 +118,17 @@ export default function PlanRoute() {
         {/* Session history — the accumulating record the next generation builds on. */}
         <div className="mt-6 min-h-0 flex-1 overflow-y-auto border-t border-ink-700 pt-3">
           <h2 className="mb-2 px-1 text-[10px] font-semibold uppercase tracking-wide text-ink-400">History</h2>
-          <ul className="space-y-2">
-            {detail.activity.length === 0 && <li className="px-1 text-[11px] text-ink-500">No activity yet.</li>}
-            {[...detail.activity].reverse().map((a) => (
-              <li key={a.id} className="px-1 text-[11px] leading-snug">
-                <span className="text-ink-200">{a.summary ?? a.kind}</span>
-                <span className="mt-0.5 block text-ink-500">
+          <ul className="space-y-3">
+            {detail.activity.length === 0 && <li className="px-1 text-[11px] text-ink-400">No activity yet.</li>}
+            {[...detail.activity].reverse().map((a, i) => (
+              <li key={a.id} className="relative pl-4 text-[11px] leading-snug">
+                <span
+                  className={`absolute top-1 left-0 size-2 rounded-full border-2 ${
+                    i === 0 ? 'border-sky-600 bg-sky-600' : 'border-ink-600 bg-ink-900'
+                  }`}
+                />
+                <span className="text-ink-300">{a.summary ?? a.kind}</span>
+                <span className="mt-0.5 block text-ink-400">
                   <Ago at={a.at} />
                 </span>
               </li>
@@ -142,8 +147,11 @@ export default function PlanRoute() {
             </Mono>
           )}
           {session.chainable && (
-            <Muted className="text-[11px]" title="This session has generation history the next request reuses">
-              reusing session history
+            <Muted
+              className="inline-flex items-center gap-1.5 text-[11px]"
+              title="This session has generation history the next request reuses"
+            >
+              <span className="size-1.5 rounded-full bg-emerald-400" /> reusing session history
             </Muted>
           )}
           {session.tester_id && (

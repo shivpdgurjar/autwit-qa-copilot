@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import type { PlanningSessionView } from '../../api/client';
 import { useCreateSession, useSessions } from '../../hooks/usePlanning';
-import { Ago, Card, EmptyState, Mono, Muted, Spinner } from '../../components/ui';
+import { Ago, Badge, Button, Card, EmptyState, Input, Mono, Muted, Spinner, Textarea } from '../../components/ui';
 
 /**
  * The Planning Copilot landing: a tester's recent, resumable sessions. A session is a
@@ -19,12 +19,7 @@ export default function PlanListRoute() {
       <img src="/AutwitLogo.png" alt="AutWit" className="mb-5 h-8 w-auto" />
       <div className="mb-1 flex items-center">
         <h1 className="text-lg font-semibold">Test Plan &amp; Data Studio</h1>
-        <button
-          onClick={() => setCreating(true)}
-          className="ml-auto rounded bg-sky-700 px-3 py-1.5 text-[12px] font-medium text-white hover:bg-sky-600"
-        >
-          New session
-        </button>
+        <Button size="sm" className="ml-auto" onClick={() => setCreating(true)}>New session</Button>
       </div>
       <p className="mb-4 text-[12px] text-ink-400">
         Resume a planning session, or start a new one. Each session keeps its history so later
@@ -54,14 +49,11 @@ export default function PlanListRoute() {
                 <div className="flex items-baseline gap-2">
                   <span className="text-sm font-medium">{s.title ?? 'Planning session'}</span>
                   {s.chainable && (
-                    <span
-                      title="Has generation history the next request builds on"
-                      className="rounded bg-sky-700/15 px-1.5 py-0.5 text-[10px] text-sky-400"
-                    >
-                      history
+                    <span title="Has generation history the next request builds on">
+                      <Badge tone="sky">history</Badge>
                     </span>
                   )}
-                  {s.status !== 'active' && <span className="text-[11px] text-amber-300">{s.status}</span>}
+                  {s.status !== 'active' && <Badge tone="amber">{s.status}</Badge>}
                   <span className="ml-auto text-[11px]">
                     <Ago at={s.last_active_at} />
                   </span>
@@ -93,33 +85,30 @@ function NewSessionForm({
   const [description, setDescription] = useState('');
   const create = useCreateSession();
 
-  const field =
-    'w-full rounded border border-ink-700 bg-ink-950 px-2 py-1 text-[12px] outline-none focus:border-sky-700';
-
   return (
     <Card className="mb-4">
       <div className="grid grid-cols-2 gap-2">
         <label className="block">
           <span className="mb-1 block text-[11px] text-ink-400">tester</span>
-          <input className={field} value={tester} placeholder="you" onChange={(e) => setTester(e.target.value)} />
+          <Input className="w-full" value={tester} placeholder="you" onChange={(e) => setTester(e.target.value)} />
         </label>
         <label className="block">
           <span className="mb-1 block text-[11px] text-ink-400">env</span>
-          <input className={field} value={env} placeholder="qa2" onChange={(e) => setEnv(e.target.value)} />
+          <Input className="w-full" value={env} placeholder="qa2" onChange={(e) => setEnv(e.target.value)} />
         </label>
         <label className="block">
           <span className="mb-1 block text-[11px] text-ink-400">Jira epic / feature key</span>
-          <input className={field} value={featureKey} placeholder="PAY-2481"
+          <Input className="w-full" value={featureKey} placeholder="PAY-2481"
             onChange={(e) => setFeatureKey(e.target.value)} />
         </label>
         <label className="block">
           <span className="mb-1 block text-[11px] text-ink-400">title</span>
-          <input className={field} value={title} placeholder="Payment retry plan"
+          <Input className="w-full" value={title} placeholder="Payment retry plan"
             onChange={(e) => setTitle(e.target.value)} />
         </label>
         <label className="col-span-2 block">
           <span className="mb-1 block text-[11px] text-ink-400">What are we testing?</span>
-          <textarea className={`${field} font-sans`} rows={2} value={description}
+          <Textarea className="w-full" rows={2} value={description}
             placeholder="Payment retry logic — automatic retries with backoff…"
             onChange={(e) => setDescription(e.target.value)} />
         </label>
@@ -132,10 +121,10 @@ function NewSessionForm({
       )}
 
       <div className="mt-2.5 flex gap-2">
-        <button onClick={onCancel} className="rounded border border-ink-700 px-2 py-1 text-[11px]">
-          Cancel
-        </button>
-        <button
+        <Button variant="ghost" size="sm" onClick={onCancel}>Cancel</Button>
+        <Button
+          size="sm"
+          className="ml-auto"
           onClick={() =>
             create.mutate(
               {
@@ -149,10 +138,9 @@ function NewSessionForm({
             )
           }
           disabled={create.isPending}
-          className="ml-auto rounded bg-sky-700 px-3 py-1 text-[12px] font-medium text-white hover:bg-sky-600 disabled:opacity-40"
         >
           {create.isPending ? 'Creating…' : 'Create session'}
-        </button>
+        </Button>
       </div>
     </Card>
   );

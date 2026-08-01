@@ -14,7 +14,7 @@ import { EventBatchCard } from '../../components/timeline/EventBatchCard';
 import { ArtifactDrawer } from '../../components/drawer/ArtifactViewer';
 import { DiffViewer } from '../../components/drawer/DiffViewer';
 import { FindingCounts, FindingsFeed } from '../../components/findings/FindingsFeed';
-import { Mono, Muted, Spinner } from '../../components/ui';
+import { Button, Mono, Muted, Spinner } from '../../components/ui';
 
 export default function SessionRoute() {
   const { sessionId = '' } = useParams();
@@ -91,13 +91,14 @@ export default function SessionRoute() {
               Report ↗
             </a>
           ) : (
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => endSession.mutate({ format: 'both' })}
               disabled={endSession.isPending}
-              className="rounded border border-ink-700 px-2 py-1 text-[11px] text-ink-300 hover:border-ink-600 hover:text-ink-100 disabled:opacity-40"
             >
               End &amp; report
-            </button>
+            </Button>
           )}
           <StreamIndicator status={stream.status} />
         </div>
@@ -116,14 +117,16 @@ export default function SessionRoute() {
         <main className="min-w-0 flex-1 overflow-y-auto p-4">
           <div className="mb-3 flex items-center justify-between gap-2">
             <Subjects subjects={session.subjects} />
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
+              className="ml-auto shrink-0"
               onClick={() => setAnalysis(true)}
               disabled={ended}
               title="Assemble captured evidence into a financial analysis"
-              className="ml-auto shrink-0 rounded border border-ink-700 px-2 py-1 text-[11px] text-sky-400 hover:border-ink-600 hover:text-sky-300 disabled:opacity-40"
             >
               Financial analysis
-            </button>
+            </Button>
           </div>
           <Timeline
             session={session}

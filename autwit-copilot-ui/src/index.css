@@ -1,38 +1,45 @@
 @import 'tailwindcss';
 
 /*
-  Light theme, aligned to acuverconsulting.com: a clean corporate consulting look —
-  white/soft-grey surfaces, deep-navy text, a professional blue accent. Replaces the
-  original terminal-dark theme.
+  Elevated corporate theme — a refined, consulting-grade take on the Acuver light look.
+  Approved visual direction (2026-08-01): keep the light ground + Acuver blue, lift it to a
+  premium product feel with a cool near-white ground, white cards, hairline borders, soft
+  navy-tinted elevation, a real type scale (Inter), and a deep-navy activity rail.
 
-  The whole app is driven by three token groups, all overridden here in one place:
-    - ink-*    : the neutral scale. Used by luminance ROLE — ink-950 = page background,
-                 ink-900 = cards, 850/800 = subtle surfaces, 700/600 = borders,
-                 400/300 = muted/secondary text, 100 = primary text. Flipped to light.
-    - sky-*    : the accent (buttons, links, selected state) → Acuver blue.
-    - red/amber/emerald/orange : semantic (error/warning/success/severity). Re-ramped for
-                 a light ground — dark readable text, faint tint backgrounds. The app uses
-                 opacity modifiers (bg-red-950/20, border-red-900/60), so the *-950 shades
-                 are the lightest tint and text uses the mid/dark shades.
-
-  NOTE ON BRAND EXACTNESS: Acuver's stylesheet is external and its exact brand hex could
-  not be scraped, so the accent blue is an estimate of the corporate palette. It is tuned
-  in one place — swap --color-sky-600/700 (and the sky text shades) to the real brand
-  values to match precisely.
+  Everything is driven by token groups overridden here in one place, so refining a value
+  uplifts every screen that reads the token:
+    - ink-*   : neutral scale by luminance ROLE — ink-950 = page ground, ink-900 = cards,
+                850/800 = raised/hover surfaces, 700/600 = borders, 400/300 = muted/secondary
+                text, 100 = primary text (deep navy).
+    - navy-*  : the dark chrome (activity rail) — brand navy, always paired with light text.
+    - sky-*   : the accent (buttons, links, selected) → Acuver blue. NOTE: still the estimate
+                from the original theme; swap sky-600/700 + the sky text shades to the real
+                brand hex when it's supplied — one place, whole app follows.
+    - red / amber / emerald / orange : semantic (error/warning/success/severity), separate
+                from the accent hue. Faint tint backgrounds + readable text on the light ground.
+    - shadow-*: navy-tinted elevation so cards read as raised, not outlined.
 */
 @theme {
-  /* ---- neutrals: light surfaces, navy text ---- */
-  --color-ink-950: #ffffff; /* page background */
-  --color-ink-900: #f5f7fa; /* cards / panels */
-  --color-ink-850: #eef1f6; /* subtle raised surface */
-  --color-ink-800: #e6eaf1; /* inputs / hover / selected row */
-  --color-ink-700: #d6dde6; /* borders */
-  --color-ink-600: #bcc6d3; /* stronger borders / disabled */
-  --color-ink-400: #647082; /* muted text (~4.6:1 on white) */
+  /* ---- neutrals: cool near-white ground, white cards, navy text ---- */
+  --color-ink-950: #f6f8fb; /* page ground (cool near-white, slight blue bias) */
+  --color-ink-900: #ffffff; /* cards / panels */
+  --color-ink-850: #f2f5f9; /* subtle raised surface */
+  --color-ink-800: #e9eef4; /* inputs / hover / selected row */
+  --color-ink-700: #e4e9f0; /* hairline borders */
+  --color-ink-600: #d4dce7; /* stronger borders / disabled */
+  --color-ink-400: #5b6b82; /* muted text (~5:1 on white) */
   --color-ink-300: #3c4757; /* secondary text */
-  --color-ink-100: #15233c; /* primary text — deep navy */
+  --color-ink-100: #0f1e38; /* primary text — deep navy */
 
-  /* ---- accent: Acuver blue ---- */
+  /* ---- dark chrome: brand navy (activity rail) ---- */
+  --color-navy-950: #0c1830;
+  --color-navy-900: #0f1e38;
+  --color-navy-800: #16294a;
+  --color-navy-700: #1b2f52;
+  --color-navy-300: #8ea3c4; /* muted text on navy */
+  --color-navy-100: #eaf2fc; /* primary text on navy */
+
+  /* ---- accent: Acuver blue (still the estimate — swap for the real hex) ---- */
   --color-sky-200: #12508f; /* darkest accent text */
   --color-sky-300: #17588f; /* accent text hover */
   --color-sky-400: #1a6ac0; /* links / accent text (~4.6:1 on white) */
@@ -40,33 +47,44 @@
   --color-sky-600: #1a6ac0; /* primary button */
   --color-sky-700: #175a9e; /* button default / accent border */
   --color-sky-800: #17588f; /* ring */
-  --color-sky-900: #cadffa; /* light blue border/tint */
+  --color-sky-900: #cfe0f6; /* light blue border/tint */
   --color-sky-950: #eaf2fc; /* lightest blue tint background */
 
   /* ---- error / critical (red) ---- */
-  --color-red-200: #8f1d1d; /* darkest error text */
-  --color-red-300: #bd2822; /* error text */
-  --color-red-400: #d13029; /* error accent */
-  --color-red-900: #e7a6a2; /* error border (used at /60) */
-  --color-red-950: #f7dcda; /* error background tint (used at /20) */
+  --color-red-200: #8f1d1d;
+  --color-red-300: #bd2822;
+  --color-red-400: #cf2f28;
+  --color-red-900: #f3cecb; /* border (used at /60) */
+  --color-red-950: #fdeeed; /* background tint (used at /20) */
 
   /* ---- warning / partial (amber) ---- */
-  --color-amber-200: #7a5300; /* darkest warning text */
-  --color-amber-300: #986600; /* warning text (~4.5:1 on white) */
-  --color-amber-400: #c2870f; /* solid warning chip/dot */
-  --color-amber-900: #e6c584; /* warning border */
-  --color-amber-950: #f8edd0; /* warning background tint */
+  --color-amber-200: #7a5300;
+  --color-amber-300: #8a6a09; /* warning text (~4.6:1 on white) */
+  --color-amber-400: #b88a12; /* solid warning chip/dot */
+  --color-amber-900: #efdfb4; /* border */
+  --color-amber-950: #fbf3de; /* background tint */
 
   /* ---- success / pass (emerald) ---- */
-  --color-emerald-300: #0e7a51; /* success text */
-  --color-emerald-400: #128f68; /* solid success chip/dot */
-  --color-emerald-900: #a6dcc3; /* success border */
-  --color-emerald-950: #e1f4eb; /* success background tint */
+  --color-emerald-300: #0d7050; /* success text */
+  --color-emerald-400: #10855f; /* solid success chip/dot */
+  --color-emerald-900: #bce3d2; /* border */
+  --color-emerald-950: #e5f4ee; /* background tint */
 
   /* ---- extra severity (orange) ---- */
-  --color-orange-300: #b85515; /* orange text */
-  --color-orange-900: #f0b48a; /* orange border */
-  --color-orange-950: #fbe6d8; /* orange background tint */
+  --color-orange-300: #b85515;
+  --color-orange-900: #f0b48a;
+  --color-orange-950: #fbe6d8;
+
+  /* ---- type ---- */
+  --font-sans: 'Inter Variable', system-ui, 'Segoe UI', -apple-system, BlinkMacSystemFont,
+    Roboto, 'Helvetica Neue', Arial, sans-serif;
+
+  /* ---- elevation: navy-tinted, so surfaces read as raised not just bordered ---- */
+  --shadow-2xs: 0 1px 2px rgba(15, 30, 56, 0.05);
+  --shadow-xs: 0 1px 2px rgba(15, 30, 56, 0.06);
+  --shadow-sm: 0 1px 2px rgba(15, 30, 56, 0.06), 0 1px 1px rgba(15, 30, 56, 0.03);
+  --shadow-md: 0 6px 20px rgba(15, 30, 56, 0.09), 0 2px 5px rgba(15, 30, 56, 0.05);
+  --shadow-lg: 0 20px 48px rgba(15, 30, 56, 0.16), 0 4px 12px rgba(15, 30, 56, 0.08);
 }
 
 html,
@@ -78,5 +96,15 @@ body,
 body {
   background: var(--color-ink-950);
   color: var(--color-ink-100);
-  font-feature-settings: 'tnum' 1;
+  font-family: var(--font-sans);
+  font-feature-settings: 'tnum' 1, 'cv05' 1;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+/* A visible, on-brand focus ring for keyboard users across the app. */
+:focus-visible {
+  outline: 2px solid var(--color-sky-600);
+  outline-offset: 2px;
+  border-radius: 4px;
 }

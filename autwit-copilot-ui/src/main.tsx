@@ -7,6 +7,7 @@ import SessionListRoute from './routes/sessions/SessionListRoute';
 import { AppShell } from './components/AppShell';
 import PlanListRoute from './routes/plan/PlanListRoute';
 import PlanRoute from './routes/plan/PlanRoute';
+import '@fontsource-variable/inter';
 import './index.css';
 
 const queryClient = new QueryClient({

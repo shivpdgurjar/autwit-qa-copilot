@@ -25,7 +25,7 @@ import {
 } from '../../hooks/useAnalysis';
 import { FailedRunCard, PendingRunCard } from '../chat/PendingRunCard';
 import { VerdictBadge } from '../findings/SeverityBadge';
-import { Ago, Mono, Muted, Spinner } from '../ui';
+import { Ago, Badge, Button, Mono, Muted, Spinner } from '../ui';
 
 /**
  * The evidence picker — "assemble from evidence" for financial analysis.
@@ -421,22 +421,23 @@ export function EvidencePicker({
                     : 'Select one to analyze, or two or more to compare.'}
               </Muted>
               <div className="ml-auto flex items-center gap-2">
-                <button
+                <Button
+                  variant="ghost"
+                  size="sm"
                   onClick={() => submit('SNAPSHOT_SANCTITY')}
                   disabled={!canAnalyzeThis || create.isPending}
                   title="One selected state — internal consistency of a single order picture"
-                  className="rounded border border-ink-700 px-3 py-1.5 text-[12px] font-medium text-ink-100 hover:border-ink-600 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {create.isPending ? 'Submitting…' : 'Analyze this'}
-                </button>
-                <button
+                </Button>
+                <Button
+                  size="sm"
                   onClick={() => submit('LIFECYCLE_COMPARISON')}
                   disabled={!canBuild || create.isPending}
                   title="Two or more ordered states — compare across the order lifecycle"
-                  className="rounded bg-sky-700 px-3 py-1.5 text-[12px] font-medium text-white hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   {create.isPending ? 'Submitting…' : 'Build states → Analyze'}
-                </button>
+                </Button>
               </div>
             </footer>
           </>
@@ -675,13 +676,9 @@ function UploadForm({
         </p>
       )}
 
-      <button
-        onClick={submit}
-        disabled={!ready || upload.isPending}
-        className="self-start rounded bg-sky-600 px-3 py-1.5 text-[12px] font-medium text-white hover:bg-sky-500 disabled:opacity-40"
-      >
+      <Button size="sm" className="self-start" onClick={submit} disabled={!ready || upload.isPending}>
         {upload.isPending ? 'Uploading…' : 'Upload evidence'}
-      </button>
+      </Button>
     </div>
   );
 }
@@ -873,9 +870,7 @@ function ResultView({
     <div className="flex min-h-0 flex-1 flex-col">
       <div className="min-h-0 flex-1 overflow-y-auto p-4">
         <div className="flex flex-wrap items-center gap-2">
-          <span className="rounded bg-emerald-950 px-2 py-0.5 text-[11px] font-semibold text-emerald-300 ring-1 ring-inset ring-emerald-900">
-            assembled
-          </span>
+          <Badge tone="emerald">assembled</Badge>
           <Mono className="text-ink-300">{data.analysis_mode}</Mono>
           <Muted className="text-[11px]">order</Muted>
           <Mono className="text-ink-100">{data.order_number}</Mono>
@@ -951,18 +946,12 @@ function ResultView({
       </div>
 
       <footer className="flex items-center gap-2 border-t border-ink-700 px-4 py-2.5">
-        <button
-          onClick={onAgain}
-          className="rounded border border-ink-700 px-3 py-1.5 text-[12px] text-ink-200 hover:border-ink-600 hover:text-ink-100"
-        >
+        <Button variant="ghost" size="sm" onClick={onAgain}>
           Assemble another
-        </button>
-        <button
-          onClick={onDone}
-          className="ml-auto rounded bg-sky-700 px-3 py-1.5 text-[12px] font-medium text-white hover:bg-sky-600"
-        >
+        </Button>
+        <Button size="sm" className="ml-auto" onClick={onDone}>
           Done
-        </button>
+        </Button>
       </footer>
     </div>
   );
@@ -1072,9 +1061,7 @@ function RunVerdict({ runId }: { runId: string }) {
         {verdict ? (
           <VerdictBadge verdict={verdict} />
         ) : (
-          <span className="rounded bg-ink-800 px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-ink-300 ring-1 ring-inset ring-ink-600">
-            {overall ?? 'no verdict reported'}
-          </span>
+          <Badge tone="neutral">{overall ?? 'no verdict reported'}</Badge>
         )}
         {overall && verdict && <Mono className="text-ink-400">{overall}</Mono>}
         {confidence !== undefined && (

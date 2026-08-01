@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api, unwrap, type Skill } from '../../api/client';
 import { useInvokeSkill } from '../../hooks/useSubmitRun';
-import { Mono, Muted, Spinner } from '../ui';
+import { Badge, Button, Mono, Muted, Spinner } from '../ui';
 import { missingRequired, pruneEmpty, SchemaForm, type JsonSchema } from './SchemaForm';
 
 /**
@@ -138,11 +138,7 @@ export function SkillPalette({
                     <div className="flex items-center gap-2">
                       <Mono className="text-ink-100">{skill.skill_name}</Mono>
                       <Muted className="text-[11px]">{skill.version}</Muted>
-                      {skill.side_effects === 'mutating' && (
-                        <span className="rounded bg-red-950 px-1.5 py-0.5 text-[10px] font-semibold uppercase text-red-300 ring-1 ring-inset ring-red-900">
-                          mutating
-                        </span>
-                      )}
+                      {skill.side_effects === 'mutating' && <Badge tone="red">mutating</Badge>}
                       {skill.enabled === false && (
                         <Muted className="text-[10px] uppercase">disabled</Muted>
                       )}
@@ -205,13 +201,14 @@ export function SkillPalette({
                   required: <Mono>{missing.join(', ')}</Mono>
                 </Muted>
               )}
-              <button
+              <Button
+                size="sm"
+                className="ml-auto"
                 onClick={submit}
                 disabled={blocked || invoke.isPending}
-                className="ml-auto rounded bg-sky-700 px-3 py-1.5 text-[12px] font-medium text-white hover:bg-sky-600 disabled:cursor-not-allowed disabled:opacity-40"
               >
                 {invoke.isPending ? 'Submitting…' : 'Run skill'}
-              </button>
+              </Button>
             </footer>
           </div>
         )}

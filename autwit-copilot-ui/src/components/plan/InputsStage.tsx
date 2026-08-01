@@ -7,7 +7,7 @@ import {
   useSetSelected,
   useUploadDocument,
 } from '../../hooks/usePlanning';
-import { Card, EmptyState, Mono, Spinner } from '../../components/ui';
+import { Button, Card, EmptyState, Mono, Spinner, Textarea } from '../../components/ui';
 
 /** Step 1 — add the source material the plan is based on. */
 export function InputsStage({ projectId, onNext }: { projectId: string; onNext: () => void }) {
@@ -76,21 +76,17 @@ export function InputsStage({ projectId, onNext }: { projectId: string; onNext: 
         />
 
         <div className="mt-4">
-          <textarea
+          <Textarea
             value={paste}
             onChange={(e) => setPaste(e.target.value)}
             placeholder="…or paste requirement text here"
             rows={3}
-            className="w-full rounded border border-ink-700 bg-ink-950 px-2 py-1.5 text-[12px] outline-none focus:border-sky-700"
+            className="w-full"
           />
           <div className="mt-1.5 flex justify-end">
-            <button
-              onClick={onPaste}
-              disabled={!paste.trim() || add.isPending}
-              className="rounded border border-ink-700 px-2 py-1 text-[11px] hover:border-ink-600 disabled:opacity-40"
-            >
+            <Button variant="ghost" size="sm" onClick={onPaste} disabled={!paste.trim() || add.isPending}>
               Add pasted text
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -130,12 +126,7 @@ export function InputsStage({ projectId, onNext }: { projectId: string; onNext: 
       </ul>
 
       <div className="mt-6 flex justify-end">
-        <button
-          onClick={onNext}
-          className="rounded bg-sky-700 px-4 py-2 text-[13px] font-medium text-white hover:bg-sky-600"
-        >
-          Continue to Jira &amp; Confluence →
-        </button>
+        <Button onClick={onNext}>Continue to Jira &amp; Confluence →</Button>
       </div>
     </div>
   );

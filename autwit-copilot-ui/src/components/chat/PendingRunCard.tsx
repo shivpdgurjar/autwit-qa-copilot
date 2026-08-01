@@ -1,5 +1,5 @@
 import type { Run } from '../../api/client';
-import { Card, Elapsed, Mono, Muted, Spinner } from '../ui';
+import { Button, Card, Elapsed, Mono, Muted, Spinner } from '../ui';
 
 /**
  * The optimistic card for a run that has not finished.
@@ -25,13 +25,14 @@ export function PendingRunCard({ run, onCancel }: { run: Run; onCancel?: (runId:
         <span className="ml-auto flex items-center gap-3">
           <Elapsed ms={run.elapsed_ms} />
           {onCancel && !queued && (
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={() => onCancel(run.run_id)}
               disabled={run.cancel_requested}
-              className="rounded border border-ink-700 px-1.5 py-0.5 text-[11px] text-ink-300 hover:border-ink-600 hover:text-ink-100 disabled:opacity-40"
             >
               {run.cancel_requested ? 'Cancelling…' : 'Cancel'}
-            </button>
+            </Button>
           )}
         </span>
       </div>
