@@ -985,6 +985,7 @@ paths:
               schema: { $ref: '#/components/schemas/GenerationView' }
         '400': { $ref: '#/components/responses/BadRequest' }
         '404': { $ref: '#/components/responses/NotFound' }
+        '409': { $ref: '#/components/responses/Conflict' }
 
   /planning/projects/{projectId}/test-data:
     parameters:
@@ -1006,6 +1007,76 @@ paths:
             application/json:
               schema: { $ref: '#/components/schemas/GenerationView' }
         '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /planning/projects/{projectId}/analyze:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    post:
+      tags: [planning]
+      summary: Run a reasoning round over the selected corpus (Reasoning)
+      description: |
+        Analyzes the selected documents for conflicts and clarifications before a test plan is
+        generated. Async — returns 202 with a generation id to poll. Each call runs the next
+        round, feeding back every recorded resolution. Opt-in; once run it gates test-plan
+        generation until the thread is clean or overridden.
+      operationId: analyzeDocuments
+      responses:
+        '202':
+          description: Enqueued
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/GenerationView' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /planning/projects/{projectId}/reasoning:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    get:
+      tags: [planning]
+      summary: The reasoning thread with its latest round + resolutions (Reasoning)
+      operationId: getReasoning
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/ReasoningView' }
+        '204': { description: No reasoning has been run for this project }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /planning/projects/{projectId}/reasoning/resolutions:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    post:
+      tags: [planning]
+      summary: Record a tester's answer to a finding (Reasoning)
+      operationId: addResolution
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/AddResolutionRequest' }
+      responses:
+        '204': { description: Recorded }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
+  /planning/projects/{projectId}/reasoning/override:
+    parameters:
+      - $ref: '#/components/parameters/ProjectId'
+    post:
+      tags: [planning]
+      summary: Record a "proceed anyway" override, unlocking generation (Reasoning)
+      operationId: overrideReasoning
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/OverrideRequest' }
+      responses:
+        '204': { description: Recorded }
         '404': { $ref: '#/components/responses/NotFound' }
 
   /planning/projects/{projectId}/generations:
@@ -1964,7 +2035,7 @@ components:
         kind:
           type: string
           enum: [session_created, project_added, document_added, context_fetched,
-                 plan_generated, data_generated]
+                 plan_generated, data_generated, documents_analyzed]
         ref: { type: string, nullable: true }
         summary: { type: string, nullable: true }
         at: { type: string, format: date-time }
@@ -2069,7 +2140,7 @@ components:
       properties:
         generation_id: { type: string, format: uuid }
         project_id: { type: string, format: uuid }
-        generation_type: { type: string, enum: [test_plan, test_data] }
+        generation_type: { type: string, enum: [test_plan, test_data, document_analysis] }
         status: { type: string, enum: [pending, running, succeeded, failed, cancelled] }
         response_id: { type: string, nullable: true }
         error:
@@ -2140,6 +2211,83 @@ components:
           items:
             type: object
             additionalProperties: true
+
+    ReasoningView:
+      type: object
+      required: [reasoning_id, status, round, resolutions]
+      properties:
+        reasoning_id: { type: string, format: uuid }
+        status: { type: string, enum: [open, clean, overridden] }
+        round: { type: integer }
+        override_reason: { type: string, nullable: true }
+        override_at: { type: string, format: date-time, nullable: true }
+        latest:
+          nullable: true
+          allOf: [ { $ref: '#/components/schemas/AnalysisView' } ]
+        resolutions:
+          type: array
+          items: { $ref: '#/components/schemas/ResolutionView' }
+
+    AnalysisView:
+      type: object
+      required: [analysis_id, generation_id, round, conflicts_total, clarifications_total, findings]
+      properties:
+        analysis_id: { type: string, format: uuid }
+        generation_id: { type: string, format: uuid }
+        round: { type: integer }
+        conflicts_total: { type: integer }
+        clarifications_total: { type: integer }
+        findings:
+          type: array
+          items: { $ref: '#/components/schemas/FindingView' }
+        created_at: { type: string, format: date-time }
+
+    FindingView:
+      type: object
+      required: [finding_id, kind, seq, title, sources, options]
+      properties:
+        finding_id: { type: string, format: uuid }
+        kind: { type: string, enum: [conflict, clarification] }
+        seq: { type: integer }
+        title: { type: string }
+        detail: { type: string, nullable: true }
+        sources:
+          type: array
+          description: Grounding — a list of { doc_title, quote } objects.
+          items:
+            type: object
+            additionalProperties: true
+        options:
+          type: array
+          description: The distinct candidate values for a conflict; empty for a clarification.
+          items: { type: string }
+
+    ResolutionView:
+      type: object
+      required: [resolution_id, round, kind, prompt, answer]
+      properties:
+        resolution_id: { type: string, format: uuid }
+        round: { type: integer }
+        finding_id: { type: string, format: uuid, nullable: true }
+        kind: { type: string, enum: [conflict, clarification] }
+        prompt: { type: string }
+        answer: { type: string }
+        created_at: { type: string, format: date-time }
+
+    AddResolutionRequest:
+      type: object
+      required: [prompt, answer]
+      properties:
+        finding_id: { type: string, format: uuid, nullable: true }
+        kind: { type: string, enum: [conflict, clarification] }
+        prompt: { type: string, description: The finding (title/question) being answered. }
+        answer: { type: string }
+
+    OverrideRequest:
+      type: object
+      properties:
+        reason: { type: string }
+        by: { type: string }
 
   securitySchemes:
     bearerAuth:

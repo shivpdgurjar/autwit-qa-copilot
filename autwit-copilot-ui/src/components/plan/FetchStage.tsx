@@ -3,7 +3,6 @@ import { type PlanningCandidate } from '../../api/client';
 import {
   useConfluenceSearch,
   useFetchContext,
-  useGenerateTestPlan,
   useJiraSearch,
 } from '../../hooks/usePlanning';
 import { Card, Mono, Spinner } from '../../components/ui';
@@ -12,11 +11,11 @@ import { Card, Mono, Spinner } from '../../components/ui';
 export function FetchStage({
   projectId,
   onBack,
-  onGenerated,
+  onNext,
 }: {
   projectId: string;
   onBack: () => void;
-  onGenerated: (generationId: string) => void;
+  onNext: () => void;
 }) {
   const [query, setQuery] = useState('');
   const [submitted, setSubmitted] = useState(''); // '' → auto-searches on open
@@ -30,7 +29,6 @@ export function FetchStage({
   const searching = jiraQ.isFetching || confQ.isFetching;
 
   const fetchContext = useFetchContext(projectId);
-  const generate = useGenerateTestPlan(projectId);
 
   // The fetch mutation already holds its result — derive the console + the fetched flag from
   // it rather than mirroring them into extra state.
@@ -147,20 +145,23 @@ export function FetchStage({
             </button>
           ) : (
             <button
-              onClick={() => generate.mutate(undefined, { onSuccess: (g) => onGenerated(g.generation_id) })}
-              disabled={generate.isPending}
-              className="rounded bg-sky-700 px-4 py-2 text-[13px] font-medium text-white hover:bg-sky-600 disabled:opacity-40"
+              onClick={onNext}
+              className="rounded bg-sky-700 px-4 py-2 text-[13px] font-medium text-white hover:bg-sky-600"
             >
-              {generate.isPending ? 'Starting…' : 'Generate test plan →'}
+              Continue to reasoning →
+            </button>
+          )}
+          {/* Reasoning is optional — let the tester skip straight to it without fetching. */}
+          {!fetched && (
+            <button
+              onClick={onNext}
+              className="rounded border border-ink-700 px-3 py-2 text-[13px] text-ink-300 hover:border-ink-600"
+            >
+              Skip →
             </button>
           )}
         </div>
       </div>
-      {generate.error != null && (
-        <p className="mt-2 text-right text-[11px] text-red-300">
-          {(generate.error as { detail?: string }).detail ?? 'Could not start generation.'}
-        </p>
-      )}
     </div>
   );
 }

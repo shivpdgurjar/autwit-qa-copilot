@@ -203,7 +203,74 @@ public class PlanningService {
             throw new ApiException.BadRequest("no_sources",
                     "Select at least one document before generating a test plan.");
         }
+        // Reasoning gate (opt-in): if a reasoning thread was started and still has open findings,
+        // block generation until they are resolved or the tester records a "proceed anyway"
+        // override. A project that never ran reasoning has no thread and generates as before.
+        repo.findReasoningByProject(projectId).ifPresent(r -> {
+            if (r.isOpen()) {
+                throw new ApiException.Conflict("reasoning_incomplete",
+                        "Resolve the open document conflicts and clarifications, or choose "
+                                + "'proceed anyway', before generating a test plan.");
+            }
+        });
         return repo.createGeneration(projectId, GenerationType.TEST_PLAN, Map.of());
+    }
+
+    // ---- reasoning (pre-generation conflict/clarification loop) ------------------------
+
+    public record ReasoningDetail(PlanningReasoning reasoning, PlanningAnalysis latest,
+            List<Resolution> resolutions) {
+    }
+
+    /**
+     * Enqueue a reasoning round over the project's selected corpus. The first call starts the
+     * thread (round 1); each subsequent call re-analyzes (round + 1), feeding back every
+     * resolution the tester has recorded so the model does not re-raise a settled point.
+     */
+    @Transactional
+    public Generation analyzeDocuments(UUID projectId) {
+        requireProject(projectId);
+        if (repo.listSelectedDocuments(projectId).isEmpty()) {
+            throw new ApiException.BadRequest("no_sources",
+                    "Select at least one document before analyzing.");
+        }
+        var reasoning = repo.startReasoningRound(projectId);
+        var config = new java.util.LinkedHashMap<String, Object>();
+        config.put("reasoning_id", reasoning.reasoningId().toString());
+        config.put("round", reasoning.round());
+        return repo.createGeneration(projectId, GenerationType.DOCUMENT_ANALYSIS, config);
+    }
+
+    /** The reasoning thread with its latest round + accumulated resolutions, or empty if none. */
+    public java.util.Optional<ReasoningDetail> getReasoning(UUID projectId) {
+        requireProject(projectId);
+        return repo.findReasoningByProject(projectId).map(r -> new ReasoningDetail(
+                r, repo.findLatestAnalysis(r.reasoningId()).orElse(null),
+                repo.listResolutions(r.reasoningId())));
+    }
+
+    /** Record a tester's answer to a finding (a conflict confirmation or a clarification). */
+    @Transactional
+    public void addResolution(UUID projectId, UUID findingId, String kind, String prompt, String answer) {
+        requireProject(projectId);
+        var reasoning = repo.findReasoningByProject(projectId)
+                .orElseThrow(() -> new ApiException.NotFound("planning_reasoning", projectId));
+        if (prompt == null || prompt.isBlank() || answer == null || answer.isBlank()) {
+            throw new ApiException.BadRequest("invalid_resolution",
+                    "A resolution needs both the point it answers and an answer.");
+        }
+        var normalizedKind = "conflict".equals(kind) ? "conflict" : "clarification";
+        repo.addResolution(reasoning.reasoningId(), reasoning.round(), findingId, normalizedKind,
+                prompt.trim(), answer.trim());
+    }
+
+    /** Record the explicit "proceed anyway" override, unlocking generation despite open findings. */
+    @Transactional
+    public void overrideReasoning(UUID projectId, String reason, String by) {
+        requireProject(projectId);
+        var reasoning = repo.findReasoningByProject(projectId)
+                .orElseThrow(() -> new ApiException.NotFound("planning_reasoning", projectId));
+        repo.overrideReasoning(reasoning.reasoningId(), blankToNull(reason), blankToNull(by));
     }
 
     /**

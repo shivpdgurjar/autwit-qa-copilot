@@ -52,7 +52,12 @@ class MigrationSmokeTest extends AbstractPostgresIT {
             "test_dataset",
             // V7 — planning sessions (resumability + reusable history)
             "planning_session",
-            "planning_activity");
+            "planning_activity",
+            // V8 — reasoning (pre-generation conflict/clarification loop)
+            "planning_reasoning",
+            "planning_analysis",
+            "planning_analysis_finding",
+            "planning_resolution");
 
     @Autowired
     private JdbcTemplate jdbc;
@@ -70,7 +75,7 @@ class MigrationSmokeTest extends AbstractPostgresIT {
         var applied = jdbc.queryForList(
                 "select version, description, success from flyway_schema_history order by installed_rank");
 
-        assertThat(applied).hasSize(7);
+        assertThat(applied).hasSize(8);
         assertThat(applied.get(0)).containsEntry("version", "1").containsEntry("success", true);
         assertThat(applied.get(1)).containsEntry("version", "2").containsEntry("success", true);
         assertThat(applied.get(2)).containsEntry("version", "3").containsEntry("success", true);
@@ -82,6 +87,8 @@ class MigrationSmokeTest extends AbstractPostgresIT {
         assertThat(applied.get(5)).containsEntry("version", "6").containsEntry("success", true);
         // V7 — planning_session + planning_activity + planning_project.session_id.
         assertThat(applied.get(6)).containsEntry("version", "7").containsEntry("success", true);
+        // V8 — reasoning: planning_reasoning/analysis/finding/resolution + extended CHECKs.
+        assertThat(applied.get(7)).containsEntry("version", "8").containsEntry("success", true);
     }
 
     @Test

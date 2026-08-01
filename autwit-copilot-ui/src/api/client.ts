@@ -55,6 +55,11 @@ export type PlanningSessionView = Schemas['PlanningSessionView'];
 export type PlanningSessionDetail = Schemas['PlanningSessionDetail'];
 export type PlanningActivityView = Schemas['PlanningActivityView'];
 export type CreatePlanningSessionResponse = Schemas['CreatePlanningSessionResponse'];
+// Reasoning (pre-generation conflict/clarification loop)
+export type ReasoningView = Schemas['ReasoningView'];
+export type AnalysisView = Schemas['AnalysisView'];
+export type FindingView = Schemas['FindingView'];
+export type ResolutionView = Schemas['ResolutionView'];
 
 /** SSE event types the stream can emit (documentation-only schema in the spec). */
 export type StreamEventType = NonNullable<Schemas['StreamEvent']['type']>;

@@ -1,6 +1,7 @@
 package com.autwit.copilot.planning;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -37,6 +38,7 @@ public class PlanningGenerationRunner {
         switch (gen.generationType()) {
             case TEST_PLAN -> runTestPlan(gen, workerId, project, session);
             case TEST_DATA -> runTestData(gen, workerId, project, session);
+            case DOCUMENT_ANALYSIS -> runDocumentAnalysis(gen, workerId, project, session);
         }
     }
 
@@ -98,6 +100,62 @@ public class PlanningGenerationRunner {
 
         finish(gen, workerId, session, result.responseId(),
                 "data_generated", "Generated test data (" + result.datasets().size() + " scenarios)");
+    }
+
+    /**
+     * The reasoning pass: analyze the selected corpus (plus the tester's accumulated resolutions)
+     * for conflicts and clarifications, persist the round + findings, and set the thread clean or
+     * open. Chains on the session lineage exactly like the generators; the analysis is advisory —
+     * the tester resolves each finding, the model decides nothing.
+     */
+    private void runDocumentAnalysis(Generation gen, String workerId, PlanningProject project,
+            PlanningSession session) {
+        var reasoning = repo.findReasoningByProject(project.projectId())
+                .orElseThrow(() -> new IllegalStateException(
+                        "planning_reasoning gone for project " + project.projectId()));
+
+        var selected = repo.listSelectedDocuments(project.projectId());
+        var docs = selected.stream()
+                .map(d -> new PlanningClient.Doc(d.sourceType().wire(), d.title(), d.textContent()))
+                .toList();
+        var resolutions = repo.listResolutions(reasoning.reasoningId()).stream()
+                .map(r -> new PlanningClient.ResolutionRef(r.prompt(), r.kind(), r.answer()))
+                .toList();
+
+        var request = new PlanningClient.AnalyzeRequest(
+                project.featureKey(), project.featureDescription(), docs, resolutions,
+                session.latestResponseId());
+        var result = client.analyzeDocuments(request);
+
+        var findings = new ArrayList<AnalysisFinding>();
+        for (var c : result.conflicts()) {
+            findings.add(toFinding("conflict", c));
+        }
+        for (var c : result.clarifications()) {
+            findings.add(toFinding("clarification", c));
+        }
+        repo.createAnalysisRound(reasoning.reasoningId(), gen.generationId(), reasoning.round(),
+                result.conflicts().size(), result.clarifications().size(), findings);
+
+        boolean clean = result.conflicts().isEmpty() && result.clarifications().isEmpty();
+        repo.setReasoningStatus(reasoning.reasoningId(), clean ? "clean" : "open");
+
+        int total = result.conflicts().size() + result.clarifications().size();
+        finish(gen, workerId, session, result.responseId(), "documents_analyzed",
+                clean ? "Analyzed documents — no conflicts or gaps"
+                        : "Analyzed documents — " + total + " item(s) to resolve");
+    }
+
+    private static AnalysisFinding toFinding(String kind, PlanningClient.Finding f) {
+        var sources = new ArrayList<Map<String, Object>>();
+        for (var s : f.sources()) {
+            var m = new LinkedHashMap<String, Object>();
+            m.put("doc_title", s.docTitle());
+            m.put("quote", s.quote());
+            sources.add(m);
+        }
+        // seq is assigned by the repository as it inserts; findingId is DB-generated.
+        return new AnalysisFinding(null, kind, 0, f.title(), f.detail(), sources, f.options());
     }
 
     /**

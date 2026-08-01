@@ -3,12 +3,14 @@ package com.autwit.copilot.planning;
 import java.util.List;
 import java.util.Map;
 
+import com.autwit.copilot.common.ApiException;
 import com.autwit.copilot.support.AbstractPostgresIT;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.test.context.ActiveProfiles;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * Both generations end to end against the {@code fake} planning client: create project + a
@@ -67,6 +69,79 @@ class PlanningGenerationRunTest extends AbstractPostgresIT {
         assertThat(repo.listActivity(sp.session().sessionId()))
                 .extracting(PlanningActivity::kind)
                 .contains("session_created", "project_added", "document_added", "plan_generated");
+    }
+
+    @Test
+    void analysisSurfacesFindingsAndGatesGeneration() {
+        var project = service.createProject("PAY-2481", "Payment retry logic", null, "m.alvarez", "qa2");
+        service.addTextDocument(project.projectId(), SourceType.PASTE, "spec", null, null,
+                "Retry a failed charge; give up after N attempts.");
+
+        var gen = service.analyzeDocuments(project.projectId());
+        assertThat(gen.generationType()).isEqualTo(GenerationType.DOCUMENT_ANALYSIS);
+        assertThat(worker.pollOnce()).as("the worker runs the analysis").isTrue();
+
+        var reasoning = service.getReasoning(project.projectId()).orElseThrow();
+        assertThat(reasoning.reasoning().status()).isEqualTo("open");
+        assertThat(reasoning.latest().conflictsTotal()).isEqualTo(1);
+        assertThat(reasoning.latest().clarificationsTotal()).isEqualTo(1);
+        assertThat(reasoning.latest().findings()).extracting(AnalysisFinding::kind)
+                .containsExactlyInAnyOrder("conflict", "clarification");
+
+        // The gate: an open reasoning thread blocks test-plan generation with a 409.
+        assertThatThrownBy(() -> service.generateTestPlan(project.projectId()))
+                .isInstanceOf(ApiException.Conflict.class)
+                .satisfies(e -> assertThat(((ApiException) e).code()).isEqualTo("reasoning_incomplete"));
+    }
+
+    @Test
+    void resolvingAllFindingsClearsTheGateOnReanalysis() {
+        var project = service.createProject("PAY-2481", "Payment retry logic", null, "m.alvarez", "qa2");
+        service.addTextDocument(project.projectId(), SourceType.PASTE, "spec", null, null, "retry with backoff");
+
+        service.analyzeDocuments(project.projectId());
+        assertThat(worker.pollOnce()).isTrue();
+
+        // Answer every finding (prompt = the finding's title, which the fake keys "resolved" off).
+        var round1 = service.getReasoning(project.projectId()).orElseThrow().latest();
+        for (var f : round1.findings()) {
+            service.addResolution(project.projectId(), f.findingId(), f.kind(), f.title(), "resolved: use 15 attempts");
+        }
+
+        // Re-analyze: with both points resolved, the fake returns a clean corpus.
+        service.analyzeDocuments(project.projectId());
+        assertThat(worker.pollOnce()).isTrue();
+
+        var reasoning = service.getReasoning(project.projectId()).orElseThrow();
+        assertThat(reasoning.reasoning().status()).isEqualTo("clean");
+        assertThat(reasoning.reasoning().round()).isEqualTo(2);
+        assertThat(reasoning.latest().findings()).isEmpty();
+
+        // Gate cleared → generation is allowed and runs.
+        var gen = service.generateTestPlan(project.projectId());
+        assertThat(gen.status()).isEqualTo("pending");
+        assertThat(worker.pollOnce()).isTrue();
+        assertThat(repo.findPlanByGeneration(gen.generationId())).isPresent();
+    }
+
+    @Test
+    void overrideUnlocksGenerationDespiteOpenFindings() {
+        var project = service.createProject("PAY-2481", "Payment retry logic", null, "m.alvarez", "qa2");
+        service.addTextDocument(project.projectId(), SourceType.PASTE, "spec", null, null, "retry with backoff");
+
+        service.analyzeDocuments(project.projectId());
+        assertThat(worker.pollOnce()).isTrue();
+        assertThat(service.getReasoning(project.projectId()).orElseThrow().reasoning().status()).isEqualTo("open");
+
+        service.overrideReasoning(project.projectId(), "Known-good; docs lag the decision", "m.alvarez");
+
+        var reasoning = service.getReasoning(project.projectId()).orElseThrow().reasoning();
+        assertThat(reasoning.status()).isEqualTo("overridden");
+        assertThat(reasoning.overrideReason()).contains("docs lag");
+
+        // Override unlocks generation.
+        var gen = service.generateTestPlan(project.projectId());
+        assertThat(gen.status()).isEqualTo("pending");
     }
 
     @Test

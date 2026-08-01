@@ -208,6 +208,69 @@ export function useFetchContext(projectId: string) {
   });
 }
 
+// ---- reasoning (pre-generation conflict/clarification loop) -------------------------
+
+export const reasoningKey = (id: string) => ['planning', 'reasoning', id];
+
+/** The reasoning thread with its latest round + resolutions, or null if never run. */
+export function useReasoning(projectId: string) {
+  return useQuery({
+    queryKey: reasoningKey(projectId),
+    queryFn: async ({ signal }) => {
+      const res = await api.GET('/planning/projects/{projectId}/reasoning', {
+        params: { path: { projectId } },
+        signal,
+      });
+      // 204 → no reasoning run yet; openapi-fetch gives undefined data with no error.
+      return res.data ?? null;
+    },
+    enabled: !!projectId,
+  });
+}
+
+/** Start (or re-run) a reasoning round. Async — returns a generation id to poll. */
+export function useAnalyzeDocuments(projectId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async () =>
+      unwrap(await api.POST('/planning/projects/{projectId}/analyze', {
+        params: { path: { projectId } },
+      })),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['planning', 'generations', projectId] }),
+  });
+}
+
+/** Record a tester's answer to a finding (a conflict confirmation or a clarification). */
+export function useAddResolution(projectId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: {
+      finding_id?: string;
+      kind?: 'conflict' | 'clarification';
+      prompt: string;
+      answer: string;
+    }) =>
+      unwrap(await api.POST('/planning/projects/{projectId}/reasoning/resolutions', {
+        params: { path: { projectId } },
+        body,
+      })),
+    onSuccess: () => qc.invalidateQueries({ queryKey: reasoningKey(projectId) }),
+  });
+}
+
+/** Record the "proceed anyway" override, unlocking generation despite open findings. */
+export function useOverrideReasoning(projectId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: { reason?: string; by?: string }) =>
+      unwrap(await api.POST('/planning/projects/{projectId}/reasoning/override', {
+        params: { path: { projectId } },
+        body,
+      })),
+    onSuccess: () => qc.invalidateQueries({ queryKey: reasoningKey(projectId) }),
+  });
+}
+
 export function useGenerateTestPlan(projectId: string) {
   const qc = useQueryClient();
   return useMutation({

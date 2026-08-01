@@ -31,6 +31,9 @@ public interface PlanningClient {
     /** Step 4: generate per-scenario test data. */
     TestDataResult generateTestData(TestDataRequest request);
 
+    /** Reasoning: analyze the selected corpus for conflicts + clarifications before generating. */
+    AnalyzeResult analyzeDocuments(AnalyzeRequest request);
+
     // ---- search ----------------------------------------------------------------------
 
     /**
@@ -94,5 +97,29 @@ public interface PlanningClient {
     }
 
     record Dataset(String scenarioKey, List<String> columns, List<Map<String, Object>> rows) {
+    }
+
+    // ---- analyze documents (reasoning) -----------------------------------------------
+
+    record AnalyzeRequest(
+            String featureKey,
+            String featureDescription,
+            List<Doc> sourceDocuments,
+            List<ResolutionRef> resolutions,
+            String previousResponseId) {
+    }
+
+    /** A tester answer carried forward so the model does not re-raise a settled point. */
+    record ResolutionRef(String point, String kind, String answer) {
+    }
+
+    record AnalyzeResult(List<Finding> conflicts, List<Finding> clarifications, String responseId) {
+    }
+
+    /** One conflict or clarification. {@code options} is empty for a clarification. */
+    record Finding(String title, String detail, List<Source> sources, List<String> options) {
+    }
+
+    record Source(String docTitle, String quote) {
     }
 }

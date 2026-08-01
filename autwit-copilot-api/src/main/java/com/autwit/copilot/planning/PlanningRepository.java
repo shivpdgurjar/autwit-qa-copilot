@@ -30,6 +30,7 @@ public class PlanningRepository {
     private final RowMapper<SourceDocument> documentMapper;
     private final RowMapper<Generation> generationMapper;
     private final RowMapper<PlanningSession> sessionMapper;
+    private final RowMapper<PlanningReasoning> reasoningMapper;
 
     public PlanningRepository(JdbcTemplate jdbc, Json json) {
         this.jdbc = jdbc;
@@ -82,6 +83,17 @@ public class PlanningRepository {
                 Columns.instant(rs, "lease_expires_at"),
                 json.read(rs.getString("error"), new com.fasterxml.jackson.core.type.TypeReference<Map<String, Object>>() {
                 }),
+                Columns.instant(rs, "created_at"),
+                Columns.instant(rs, "updated_at"));
+        this.reasoningMapper = (rs, n) -> new PlanningReasoning(
+                Columns.uuid(rs, "reasoning_id"),
+                Columns.uuid(rs, "project_id"),
+                rs.getString("status"),
+                rs.getInt("round"),
+                rs.getString("override_reason"),
+                rs.getString("override_by"),
+                Columns.instant(rs, "override_at"),
+                rs.getInt("version"),
                 Columns.instant(rs, "created_at"),
                 Columns.instant(rs, "updated_at"));
     }
@@ -435,5 +447,131 @@ public class PlanningRepository {
                         }),
                         Columns.instant(rs, "created_at")),
                 generationId);
+    }
+
+    // ---- reasoning (conflict/clarification loop) -------------------------------------
+
+    /**
+     * Get-or-create the project's reasoning thread and start a new round in one atomic upsert:
+     * round 1 on first analysis, round + 1 on each re-analysis. Status returns to 'open' — a
+     * fresh round is running, findings unknown, so generation stays gated until it settles.
+     */
+    public PlanningReasoning startReasoningRound(UUID projectId) {
+        return jdbc.queryForObject(
+                """
+                insert into autwit.planning_reasoning (project_id, status, round)
+                values (?, 'open', 1)
+                on conflict (project_id) do update
+                  set round = autwit.planning_reasoning.round + 1,
+                      status = 'open',
+                      version = autwit.planning_reasoning.version + 1,
+                      updated_at = now()
+                returning *
+                """,
+                reasoningMapper, projectId);
+    }
+
+    public Optional<PlanningReasoning> findReasoningByProject(UUID projectId) {
+        return jdbc.query("select * from autwit.planning_reasoning where project_id = ?", reasoningMapper, projectId)
+                .stream().findFirst();
+    }
+
+    /** Marks the thread clean (no findings) or open (findings remain). */
+    public void setReasoningStatus(UUID reasoningId, String status) {
+        jdbc.update("update autwit.planning_reasoning set status = ?, updated_at = now() where reasoning_id = ?",
+                status, reasoningId);
+    }
+
+    /** Records the explicit "proceed anyway" override, unlocking generation. */
+    public void overrideReasoning(UUID reasoningId, String reason, String by) {
+        jdbc.update(
+                """
+                update autwit.planning_reasoning
+                   set status = 'overridden', override_reason = ?, override_by = ?,
+                       override_at = now(), updated_at = now()
+                 where reasoning_id = ?
+                """,
+                reason, by, reasoningId);
+    }
+
+    /** Persists one analysis round (the deliverable) plus its findings. Returns the analysis id. */
+    public UUID createAnalysisRound(UUID reasoningId, UUID generationId, int round,
+            int conflictsTotal, int clarificationsTotal, List<AnalysisFinding> findings) {
+        var analysisId = jdbc.queryForObject(
+                """
+                insert into autwit.planning_analysis
+                  (reasoning_id, generation_id, round, conflicts_total, clarifications_total)
+                values (?, ?, ?, ?, ?)
+                returning analysis_id
+                """,
+                UUID.class, reasoningId, generationId, round, conflictsTotal, clarificationsTotal);
+        int seq = 1;
+        for (var f : findings) {
+            jdbc.update(
+                    """
+                    insert into autwit.planning_analysis_finding
+                      (analysis_id, kind, seq, title, detail, sources, options)
+                    values (?, ?, ?, ?, ?, ?::jsonb, ?::jsonb)
+                    """,
+                    analysisId, f.kind(), seq++, f.title(), f.detail(),
+                    json.write(f.sources()), json.write(f.options()));
+        }
+        return analysisId;
+    }
+
+    /** The most recent round for a thread, with its findings — what the UI renders. */
+    public Optional<PlanningAnalysis> findLatestAnalysis(UUID reasoningId) {
+        var header = jdbc.query(
+                "select * from autwit.planning_analysis where reasoning_id = ? order by round desc limit 1",
+                (rs, n) -> new Object[] {
+                        Columns.uuid(rs, "analysis_id"), Columns.uuid(rs, "generation_id"),
+                        rs.getInt("round"), rs.getInt("conflicts_total"), rs.getInt("clarifications_total"),
+                        Columns.instant(rs, "created_at") },
+                reasoningId).stream().findFirst();
+        if (header.isEmpty()) {
+            return Optional.empty();
+        }
+        var h = header.get();
+        var analysisId = (UUID) h[0];
+        var findings = jdbc.query(
+                "select * from autwit.planning_analysis_finding where analysis_id = ? order by seq",
+                (rs, n) -> new AnalysisFinding(
+                        Columns.uuid(rs, "finding_id"),
+                        rs.getString("kind"),
+                        rs.getInt("seq"),
+                        rs.getString("title"),
+                        rs.getString("detail"),
+                        json.read(rs.getString("sources"), new com.fasterxml.jackson.core.type.TypeReference<List<Map<String, Object>>>() {
+                        }),
+                        json.read(rs.getString("options"), new com.fasterxml.jackson.core.type.TypeReference<List<String>>() {
+                        })),
+                analysisId);
+        return Optional.of(new PlanningAnalysis(analysisId, reasoningId, (UUID) h[1],
+                (int) h[2], (int) h[3], (int) h[4], findings, (Instant) h[5]));
+    }
+
+    public void addResolution(UUID reasoningId, int round, UUID findingId, String kind,
+            String prompt, String answer) {
+        jdbc.update(
+                """
+                insert into autwit.planning_resolution (reasoning_id, round, finding_id, kind, prompt, answer)
+                values (?, ?, ?, ?, ?, ?)
+                """,
+                reasoningId, round, findingId, kind, prompt, answer);
+    }
+
+    public List<Resolution> listResolutions(UUID reasoningId) {
+        return jdbc.query(
+                "select * from autwit.planning_resolution where reasoning_id = ? order by created_at",
+                (rs, n) -> new Resolution(
+                        Columns.uuid(rs, "resolution_id"),
+                        Columns.uuid(rs, "reasoning_id"),
+                        rs.getInt("round"),
+                        Columns.uuid(rs, "finding_id"),
+                        rs.getString("kind"),
+                        rs.getString("prompt"),
+                        rs.getString("answer"),
+                        Columns.instant(rs, "created_at")),
+                reasoningId);
     }
 }

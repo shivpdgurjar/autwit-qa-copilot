@@ -126,6 +126,43 @@ public class FakePlanningClient implements PlanningClient {
         return new TestDataResult(datasets, "resp-fake-data-" + request.scenarios().size());
     }
 
+    @Override
+    public AnalyzeResult analyzeDocuments(AnalyzeRequest request) {
+        // The tester's answers carried forward. A finding whose title is already resolved is
+        // NOT re-raised — so a second round after both are answered returns clean, driving the
+        // whole reasoning loop deterministically for the demo and the tests.
+        var resolved = new java.util.HashSet<String>();
+        for (var r : request.resolutions() == null ? List.<ResolutionRef>of() : request.resolutions()) {
+            if (r.point() != null) {
+                resolved.add(r.point().trim().toLowerCase());
+            }
+        }
+
+        var conflicts = new ArrayList<Finding>();
+        var conflictTitle = "Retry attempt limit disagreement";
+        if (!resolved.contains(conflictTitle.toLowerCase())) {
+            conflicts.add(new Finding(conflictTitle,
+                    "The ticket and the design doc give different maximum retry counts, so the "
+                            + "'exhausts attempts' scenario cannot be pinned down.",
+                    List.of(new Source("PAY-2481 — Payment retry logic", "give up after N attempts"),
+                            new Source("Payment Retry — Design Doc v3", "retries, capped at 8s")),
+                    List.of("3 attempts", "5 attempts")));
+        }
+
+        var clarifications = new ArrayList<Finding>();
+        var clarifyTitle = "Idempotency key TTL vs. retry window";
+        if (!resolved.contains(clarifyTitle.toLowerCase())) {
+            clarifications.add(new Finding(clarifyTitle,
+                    "The retry window can outlast the stated 24h key TTL; behaviour after the key "
+                            + "expires mid-retry is undefined and the plan needs it.",
+                    List.of(new Source("Payment Retry — Design Doc v3", "idempotency key store (TTL 24h)")),
+                    List.of()));
+        }
+
+        int answered = resolved.size();
+        return new AnalyzeResult(conflicts, clarifications, "resp-fake-analysis-" + answered);
+    }
+
     // ---- helpers ---------------------------------------------------------------------
 
     private static List<String> sourceRefs(TestPlanRequest request) {

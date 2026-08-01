@@ -144,6 +144,46 @@ public class HttpPlanningClient implements PlanningClient {
         return new TestDataResult(datasets, str(body, "response_id"));
     }
 
+    @Override
+    public AnalyzeResult analyzeDocuments(AnalyzeRequest request) {
+        var resolutions = new ArrayList<Map<String, Object>>();
+        for (var r : request.resolutions() == null ? List.<ResolutionRef>of() : request.resolutions()) {
+            var m = new LinkedHashMap<String, Object>();
+            m.put("point", r.point());
+            m.put("kind", r.kind());
+            m.put("answer", r.answer());
+            resolutions.add(m);
+        }
+        var input = new LinkedHashMap<String, Object>();
+        input.put("feature_key", request.featureKey());
+        input.put("feature_description", request.featureDescription());
+        input.put("source_documents", docs(request.sourceDocuments()));
+        input.put("resolutions", resolutions);
+        input.put("previous_response_id", request.previousResponseId());
+        var body = artifactBody(execute("planning.analyze_documents", input), "planning_document_analysis");
+
+        return new AnalyzeResult(findings(body.get("conflicts")), findings(body.get("clarifications")),
+                str(body, "response_id"));
+    }
+
+    private static List<Finding> findings(Object raw) {
+        var out = new ArrayList<Finding>();
+        for (var f : listOfMaps(raw)) {
+            var sources = new ArrayList<Source>();
+            for (var s : listOfMaps(f.get("sources"))) {
+                sources.add(new Source(str(s, "doc_title"), str(s, "quote")));
+            }
+            var options = new ArrayList<String>();
+            if (f.get("options") instanceof List<?> opts) {
+                for (var o : opts) {
+                    options.add(String.valueOf(o));
+                }
+            }
+            out.add(new Finding(str(f, "title"), str(f, "detail"), sources, options));
+        }
+        return out;
+    }
+
     // ---- transport -------------------------------------------------------------------
 
     /**

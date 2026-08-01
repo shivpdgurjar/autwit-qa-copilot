@@ -8,6 +8,7 @@ import java.util.UUID;
 
 import com.autwit.copilot.common.ApiException;
 import com.autwit.copilot.planning.Generation;
+import com.autwit.copilot.planning.PlanningAnalysis;
 import com.autwit.copilot.planning.PlanningClient;
 import com.autwit.copilot.planning.PlanningService;
 import com.autwit.copilot.planning.SourceDocument;
@@ -257,6 +258,56 @@ public class PlanningController {
         return planning.listGenerations(projectId).stream().map(PlanningController::generation).toList();
     }
 
+    // ---- reasoning (pre-generation conflict/clarification loop) -----------------------
+
+    public record FindingView(String findingId, String kind, int seq, String title, String detail,
+            List<Map<String, Object>> sources, List<String> options) {
+    }
+
+    public record AnalysisView(String analysisId, String generationId, int round, int conflictsTotal,
+            int clarificationsTotal, List<FindingView> findings, Instant createdAt) {
+    }
+
+    public record ResolutionView(String resolutionId, int round, String findingId, String kind,
+            String prompt, String answer, Instant createdAt) {
+    }
+
+    public record ReasoningView(String reasoningId, String status, int round, String overrideReason,
+            Instant overrideAt, AnalysisView latest, List<ResolutionView> resolutions) {
+    }
+
+    /** Start (or re-run) a reasoning round over the selected corpus. Async, like the generators. */
+    @PostMapping("/projects/{projectId}/analyze")
+    ResponseEntity<GenerationView> analyze(@PathVariable UUID projectId) {
+        return ResponseEntity.accepted().body(generation(planning.analyzeDocuments(projectId)));
+    }
+
+    @GetMapping("/projects/{projectId}/reasoning")
+    ResponseEntity<ReasoningView> reasoning(@PathVariable UUID projectId) {
+        return planning.getReasoning(projectId).map(d -> ResponseEntity.ok(reasoningView(d)))
+                .orElseGet(() -> ResponseEntity.noContent().build());
+    }
+
+    public record AddResolutionRequest(String findingId, String kind, String prompt, String answer) {
+    }
+
+    @PostMapping("/projects/{projectId}/reasoning/resolutions")
+    ResponseEntity<Void> addResolution(@PathVariable UUID projectId, @RequestBody AddResolutionRequest req) {
+        var findingId = req.findingId() == null || req.findingId().isBlank()
+                ? null : UUID.fromString(req.findingId());
+        planning.addResolution(projectId, findingId, req.kind(), req.prompt(), req.answer());
+        return ResponseEntity.noContent().build();
+    }
+
+    public record OverrideRequest(String reason, String by) {
+    }
+
+    @PostMapping("/projects/{projectId}/reasoning/override")
+    ResponseEntity<Void> overrideReasoning(@PathVariable UUID projectId, @RequestBody OverrideRequest req) {
+        planning.overrideReasoning(projectId, req.reason(), req.by());
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping("/projects/{projectId}/generations/{generationId}")
     GenerationView getGeneration(@PathVariable UUID projectId, @PathVariable UUID generationId) {
         return generation(planning.requireGeneration(projectId, generationId));
@@ -317,6 +368,27 @@ public class PlanningController {
     private static GenerationView generation(Generation g) {
         return new GenerationView(g.generationId().toString(), g.projectId().toString(),
                 g.generationType().wire(), g.status(), g.responseId(), g.error(), g.createdAt(), g.updatedAt());
+    }
+
+    private static ReasoningView reasoningView(PlanningService.ReasoningDetail d) {
+        var r = d.reasoning();
+        var latest = d.latest() == null ? null : analysis(d.latest());
+        var resolutions = d.resolutions().stream()
+                .map(x -> new ResolutionView(x.resolutionId().toString(), x.round(),
+                        x.findingId() == null ? null : x.findingId().toString(),
+                        x.kind(), x.prompt(), x.answer(), x.createdAt()))
+                .toList();
+        return new ReasoningView(r.reasoningId().toString(), r.status(), r.round(),
+                r.overrideReason(), r.overrideAt(), latest, resolutions);
+    }
+
+    private static AnalysisView analysis(PlanningAnalysis a) {
+        var findings = a.findings().stream()
+                .map(f -> new FindingView(f.findingId().toString(), f.kind(), f.seq(), f.title(), f.detail(),
+                        f.sources(), f.options()))
+                .toList();
+        return new AnalysisView(a.analysisId().toString(), a.generationId().toString(), a.round(),
+                a.conflictsTotal(), a.clarificationsTotal(), findings, a.createdAt());
     }
 
     private static PlanView plan(TestPlan p) {

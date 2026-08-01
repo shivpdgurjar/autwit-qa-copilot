@@ -3,14 +3,16 @@ import { useSession } from '../../hooks/usePlanning';
 import { Ago, Mono, Muted, Spinner } from '../../components/ui';
 import { InputsStage } from '../../components/plan/InputsStage';
 import { FetchStage } from '../../components/plan/FetchStage';
+import { ReasoningStage } from '../../components/plan/ReasoningStage';
 import { PlanStage } from '../../components/plan/PlanStage';
 import { DataStage } from '../../components/plan/DataStage';
 
-export type Stage = 'inputs' | 'connect' | 'plan' | 'data';
+export type Stage = 'inputs' | 'connect' | 'reasoning' | 'plan' | 'data';
 
 const STEPS: { id: Stage; title: string; sub: string }[] = [
   { id: 'inputs', title: 'Add inputs', sub: 'Docs & test cases' },
   { id: 'connect', title: 'Fetch context', sub: 'Jira & Confluence' },
+  { id: 'reasoning', title: 'Reasoning', sub: 'Conflicts & gaps' },
   { id: 'plan', title: 'Test plan', sub: 'Review & export' },
   { id: 'data', title: 'Test data', sub: 'Generate datasets' },
 ];
@@ -24,14 +26,16 @@ export default function PlanRoute() {
   const [params, setParams] = useSearchParams();
   const planGenId = params.get('planGen') ?? undefined;
   const dataGenId = params.get('dataGen') ?? undefined;
+  const analyzeGenId = params.get('analyzeGen') ?? undefined;
 
-  const patch = (next: { stage?: Stage; planGen?: string; dataGen?: string }) =>
+  const patch = (next: { stage?: Stage; planGen?: string; dataGen?: string; analyzeGen?: string }) =>
     setParams(
       (prev) => {
         const p = new URLSearchParams(prev);
         if (next.stage) p.set('stage', next.stage);
         if (next.planGen) p.set('planGen', next.planGen);
         if (next.dataGen) p.set('dataGen', next.dataGen);
+        if (next.analyzeGen) p.set('analyzeGen', next.analyzeGen);
         return p;
       },
       { replace: true },
@@ -64,9 +68,11 @@ export default function PlanRoute() {
     ? 'data'
     : kinds.has('plan_generated')
       ? 'plan'
-      : kinds.has('context_fetched') || kinds.has('document_added')
-        ? 'connect'
-        : 'inputs';
+      : kinds.has('documents_analyzed')
+        ? 'reasoning'
+        : kinds.has('context_fetched') || kinds.has('document_added')
+          ? 'connect'
+          : 'inputs';
   const rawStage = params.get('stage');
   const stage: Stage = STEPS.some((s) => s.id === rawStage) ? (rawStage as Stage) : derived;
   const stepIndex = STEPS.findIndex((s) => s.id === stage);
@@ -153,6 +159,15 @@ export default function PlanRoute() {
             <FetchStage
               projectId={projectId}
               onBack={() => setStage('inputs')}
+              onNext={() => setStage('reasoning')}
+            />
+          )}
+          {stage === 'reasoning' && (
+            <ReasoningStage
+              projectId={projectId}
+              analyzeGenId={analyzeGenId}
+              onAnalyzeStarted={(genId) => patch({ analyzeGen: genId, stage: 'reasoning' })}
+              onBack={() => setStage('connect')}
               onGenerated={(genId) => patch({ planGen: genId, stage: 'plan' })}
             />
           )}
@@ -160,7 +175,7 @@ export default function PlanRoute() {
             <PlanStage
               projectId={projectId}
               generationId={planGenId}
-              onBack={() => setStage('connect')}
+              onBack={() => setStage('reasoning')}
               onNext={() => setStage('data')}
             />
           )}
