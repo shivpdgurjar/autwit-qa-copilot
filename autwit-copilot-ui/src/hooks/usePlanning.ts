@@ -11,6 +11,49 @@ const GEN_TERMINAL = ['succeeded', 'failed', 'cancelled'];
 
 export const projectKey = (id: string) => ['planning', 'project', id];
 
+// ---- sessions (resumable, history-bearing context) ---------------------------------
+
+export const sessionKey = (id: string) => ['planning', 'session', id];
+
+/** A tester's recent sessions — the resume list. */
+export function useSessions(testerId?: string) {
+  return useQuery({
+    queryKey: ['planning', 'sessions', testerId ?? ''],
+    queryFn: async ({ signal }) =>
+      unwrap(await api.GET('/planning/sessions', {
+        params: { query: { tester_id: testerId || undefined, limit: 50 } },
+        signal,
+      })),
+  });
+}
+
+/** A session with its project(s) + history timeline — what the wizard resumes against. */
+export function useSession(sessionId: string) {
+  return useQuery({
+    queryKey: sessionKey(sessionId),
+    queryFn: async ({ signal }) =>
+      unwrap(await api.GET('/planning/sessions/{sessionId}', {
+        params: { path: { sessionId } },
+        signal,
+      })),
+    enabled: !!sessionId,
+  });
+}
+
+export function useCreateSession() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (body: {
+      tester_id?: string;
+      env?: string;
+      title?: string;
+      feature_key?: string;
+      feature_description?: string;
+    }) => unwrap(await api.POST('/planning/sessions', { body })),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['planning', 'sessions'] }),
+  });
+}
+
 export function useProjects() {
   return useQuery({
     queryKey: ['planning', 'projects'],

@@ -29,7 +29,7 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/sessions" element={<SessionListRoute />} />
             <Route path="/sessions/:sessionId" element={<SessionRoute />} />
             <Route path="/plan" element={<PlanListRoute />} />
-            <Route path="/plan/:projectId" element={<PlanRoute />} />
+            <Route path="/plan/:sessionId" element={<PlanRoute />} />
           </Route>
         </Routes>
       </BrowserRouter>

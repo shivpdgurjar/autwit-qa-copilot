@@ -49,7 +49,10 @@ class MigrationSmokeTest extends AbstractPostgresIT {
             "generation",
             "test_plan",
             "test_scenario",
-            "test_dataset");
+            "test_dataset",
+            // V7 — planning sessions (resumability + reusable history)
+            "planning_session",
+            "planning_activity");
 
     @Autowired
     private JdbcTemplate jdbc;
@@ -67,7 +70,7 @@ class MigrationSmokeTest extends AbstractPostgresIT {
         var applied = jdbc.queryForList(
                 "select version, description, success from flyway_schema_history order by installed_rank");
 
-        assertThat(applied).hasSize(6);
+        assertThat(applied).hasSize(7);
         assertThat(applied.get(0)).containsEntry("version", "1").containsEntry("success", true);
         assertThat(applied.get(1)).containsEntry("version", "2").containsEntry("success", true);
         assertThat(applied.get(2)).containsEntry("version", "3").containsEntry("success", true);
@@ -77,6 +80,8 @@ class MigrationSmokeTest extends AbstractPostgresIT {
         // other laptop after the first real joint run failed to persist them (orch v1.0.32).
         assertThat(applied.get(4)).containsEntry("version", "5").containsEntry("success", true);
         assertThat(applied.get(5)).containsEntry("version", "6").containsEntry("success", true);
+        // V7 — planning_session + planning_activity + planning_project.session_id.
+        assertThat(applied.get(6)).containsEntry("version", "7").containsEntry("success", true);
     }
 
     @Test

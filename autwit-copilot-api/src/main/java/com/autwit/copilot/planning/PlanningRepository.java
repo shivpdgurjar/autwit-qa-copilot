@@ -29,12 +29,25 @@ public class PlanningRepository {
     private final RowMapper<PlanningProject> projectMapper;
     private final RowMapper<SourceDocument> documentMapper;
     private final RowMapper<Generation> generationMapper;
+    private final RowMapper<PlanningSession> sessionMapper;
 
     public PlanningRepository(JdbcTemplate jdbc, Json json) {
         this.jdbc = jdbc;
         this.json = json;
+        this.sessionMapper = (rs, n) -> new PlanningSession(
+                Columns.uuid(rs, "session_id"),
+                rs.getString("tester_id"),
+                rs.getString("env"),
+                rs.getString("title"),
+                rs.getString("status"),
+                rs.getString("latest_response_id"),
+                rs.getInt("version"),
+                Columns.instant(rs, "created_at"),
+                Columns.instant(rs, "updated_at"),
+                Columns.instant(rs, "last_active_at"));
         this.projectMapper = (rs, n) -> new PlanningProject(
                 Columns.uuid(rs, "project_id"),
+                Columns.uuid(rs, "session_id"),
                 rs.getString("feature_key"),
                 rs.getString("feature_description"),
                 rs.getString("title"),
@@ -73,17 +86,92 @@ public class PlanningRepository {
                 Columns.instant(rs, "updated_at"));
     }
 
-    // ---- project ---------------------------------------------------------------------
+    // ---- session ---------------------------------------------------------------------
 
-    public PlanningProject createProject(String featureKey, String featureDescription, String title,
-            String createdBy, String env) {
+    public PlanningSession createSession(String testerId, String env, String title) {
         return jdbc.queryForObject(
                 """
-                insert into autwit.planning_project (feature_key, feature_description, title, created_by, env)
-                values (?, ?, ?, ?, ?)
+                insert into autwit.planning_session (tester_id, env, title)
+                values (?, ?, ?)
                 returning *
                 """,
-                projectMapper, featureKey, featureDescription, title, createdBy, env);
+                sessionMapper, testerId, env, title);
+    }
+
+    public Optional<PlanningSession> findSession(UUID sessionId) {
+        return jdbc.query("select * from autwit.planning_session where session_id = ?", sessionMapper, sessionId)
+                .stream().findFirst();
+    }
+
+    /** A tester's resume list — most-recently-active first. */
+    public List<PlanningSession> listRecentSessions(String testerId, int limit) {
+        if (testerId == null || testerId.isBlank()) {
+            return jdbc.query("select * from autwit.planning_session order by last_active_at desc limit ?",
+                    sessionMapper, limit);
+        }
+        return jdbc.query(
+                "select * from autwit.planning_session where tester_id = ? order by last_active_at desc limit ?",
+                sessionMapper, testerId, limit);
+    }
+
+    public void touchSession(UUID sessionId) {
+        jdbc.update("update autwit.planning_session set last_active_at = now(), updated_at = now() "
+                + "where session_id = ?", sessionId);
+    }
+
+    /**
+     * Optimistically pins the running OpenAI lineage on the session head after a generation, and
+     * touches last_active_at. Same discipline as {@code AnalysisRepository.recordResult}.
+     *
+     * @return true if this writer won the version race
+     */
+    public boolean bumpSessionHead(UUID sessionId, int expectedVersion, String latestResponseId) {
+        return jdbc.update(
+                """
+                update autwit.planning_session
+                   set latest_response_id = ?, version = version + 1,
+                       last_active_at = now(), updated_at = now()
+                 where session_id = ? and version = ?
+                """,
+                latestResponseId, sessionId, expectedVersion) == 1;
+    }
+
+    // ---- activity --------------------------------------------------------------------
+
+    /** Appends a history entry and touches the session's last_active_at in one write. */
+    public void addActivity(UUID sessionId, String kind, String ref, String summary) {
+        jdbc.update("insert into autwit.planning_activity (session_id, kind, ref, summary) values (?, ?, ?, ?)",
+                sessionId, kind, ref, summary);
+        touchSession(sessionId);
+    }
+
+    public List<PlanningActivity> listActivity(UUID sessionId) {
+        return jdbc.query(
+                "select * from autwit.planning_activity where session_id = ? order by id",
+                (rs, n) -> new PlanningActivity(rs.getLong("id"), Columns.uuid(rs, "session_id"),
+                        rs.getString("kind"), rs.getString("ref"), rs.getString("summary"),
+                        Columns.instant(rs, "at")),
+                sessionId);
+    }
+
+    // ---- project ---------------------------------------------------------------------
+
+    public PlanningProject createProject(UUID sessionId, String featureKey, String featureDescription,
+            String title, String createdBy, String env) {
+        return jdbc.queryForObject(
+                """
+                insert into autwit.planning_project
+                  (session_id, feature_key, feature_description, title, created_by, env)
+                values (?, ?, ?, ?, ?, ?)
+                returning *
+                """,
+                projectMapper, sessionId, featureKey, featureDescription, title, createdBy, env);
+    }
+
+    /** The project(s) in a session — v1 has one; ordered oldest-first. */
+    public List<PlanningProject> listProjectsBySession(UUID sessionId) {
+        return jdbc.query("select * from autwit.planning_project where session_id = ? order by created_at",
+                projectMapper, sessionId);
     }
 
     public Optional<PlanningProject> findProject(UUID projectId) {

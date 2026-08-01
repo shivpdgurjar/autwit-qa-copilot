@@ -46,9 +46,27 @@ class PlanningGenerationRunTest extends AbstractPostgresIT {
         assertThat(plan.scenarios()).hasSize(5);
         assertThat(plan.scenarios().get(0).scenarioKey()).isEqualTo("TC-01");
 
-        // The chaining token was pinned on the project head so a regenerate can continue it.
-        assertThat(repo.findProject(project.projectId())).get()
-                .extracting(PlanningProject::latestResponseId).isEqualTo("resp-fake-plan-PAY-2481");
+        // The chaining token is pinned on the SESSION head (V7) so the next generation reuses it.
+        assertThat(repo.findSession(project.sessionId())).get()
+                .extracting(PlanningSession::latestResponseId).isEqualTo("resp-fake-plan-PAY-2481");
+    }
+
+    @Test
+    void generationPinsTheSessionLineageAndHistoryForReuse() {
+        var sp = service.createSession("m.alvarez", "qa2", "Retry", "PAY-2481", "Payment retry logic");
+        service.addTextDocument(sp.project().projectId(), SourceType.PASTE, "spec", null, null, "retry with backoff");
+
+        service.generateTestPlan(sp.project().projectId());
+        assertThat(worker.pollOnce()).isTrue();
+
+        // The lineage is pinned on the SESSION head (not just the project) — this is what the
+        // next generation reuses via previous_response_id.
+        assertThat(repo.findSession(sp.session().sessionId())).get()
+                .extracting(PlanningSession::latestResponseId).isEqualTo("resp-fake-plan-PAY-2481");
+        // …and the history timeline recorded the arc.
+        assertThat(repo.listActivity(sp.session().sessionId()))
+                .extracting(PlanningActivity::kind)
+                .contains("session_created", "project_added", "document_added", "plan_generated");
     }
 
     @Test

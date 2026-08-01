@@ -45,6 +45,45 @@ class PlanningControllerTest extends AbstractPostgresIT {
     }
 
     @Test
+    void createsASessionWithItsFirstProject() throws Exception {
+        mvc.perform(post("/planning/sessions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"tester_id":"sess-tester","env":"qa2","title":"Retry",
+                                 "feature_key":"PAY-2481","feature_description":"retry"}
+                                """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.session.session_id", notNullValue()))
+                .andExpect(jsonPath("$.session.tester_id", is("sess-tester")))
+                .andExpect(jsonPath("$.project.session_id", is(notNullValue())))
+                .andExpect(jsonPath("$.project.feature_key", is("PAY-2481")));
+    }
+
+    @Test
+    void listsAndResumesASessionWithHistory() throws Exception {
+        var body = mvc.perform(post("/planning/sessions")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"tester_id":"resume-tester","env":"qa2","title":"S","feature_key":"PAY-9"}
+                                """))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        var sid = json.readTree(body).get("session").get("session_id").asText();
+
+        // The tester's resume list.
+        mvc.perform(get("/planning/sessions").param("tester_id", "resume-tester"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$[0].session_id", is(sid)));
+
+        // Resume detail: the session + its one project + a history timeline (created + project).
+        mvc.perform(get("/planning/sessions/{id}", sid))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.session.session_id", is(sid)))
+                .andExpect(jsonPath("$.projects", hasSize(1)))
+                .andExpect(jsonPath("$.activity[0].kind", is("session_created")));
+    }
+
+    @Test
     void uploadsADocxParsedServerSide() throws Exception {
         var id = createProject();
         var out = new ByteArrayOutputStream();

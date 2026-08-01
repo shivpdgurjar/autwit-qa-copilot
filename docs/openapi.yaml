@@ -682,6 +682,63 @@ paths:
 
   # ---------------------------------------------------------------- planning (Test Plan & Data Studio)
 
+  /planning/sessions:
+    get:
+      tags: [planning]
+      summary: A tester's recent planning sessions (the resume list)
+      operationId: listPlanningSessions
+      parameters:
+        - name: tester_id
+          in: query
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 50 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/PlanningSessionView' }
+    post:
+      tags: [planning]
+      summary: Create a planning session (+ its first project)
+      description: |
+        A resumable, single-tester context whose OpenAI lineage the next generation reuses.
+        Creates the session and its first project in one call.
+      operationId: createPlanningSession
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/CreatePlanningSessionRequest' }
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/CreatePlanningSessionResponse' }
+
+  /planning/sessions/{sessionId}:
+    parameters:
+      - name: sessionId
+        in: path
+        required: true
+        schema: { type: string, format: uuid }
+    get:
+      tags: [planning]
+      summary: Resume a session — its projects + history timeline
+      operationId: getPlanningSession
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PlanningSessionDetail' }
+        '404': { $ref: '#/components/responses/NotFound' }
+
   /planning/projects:
     get:
       tags: [planning]
@@ -1868,11 +1925,68 @@ components:
         created_by: { type: string }
         env: { type: string }
 
+    CreatePlanningSessionRequest:
+      type: object
+      properties:
+        tester_id: { type: string }
+        env: { type: string }
+        title: { type: string }
+        feature_key: { type: string }
+        feature_description: { type: string }
+
+    PlanningSessionView:
+      type: object
+      required: [session_id, status, chainable]
+      properties:
+        session_id: { type: string, format: uuid }
+        tester_id: { type: string, nullable: true }
+        env: { type: string, nullable: true }
+        title: { type: string, nullable: true }
+        status: { type: string, enum: [active, archived] }
+        chainable:
+          type: boolean
+          description: True once a generation has produced a lineage the next request reuses.
+        created_at: { type: string, format: date-time }
+        last_active_at: { type: string, format: date-time }
+
+    CreatePlanningSessionResponse:
+      type: object
+      required: [session, project]
+      properties:
+        session: { $ref: '#/components/schemas/PlanningSessionView' }
+        project: { $ref: '#/components/schemas/PlanningProject' }
+
+    PlanningActivityView:
+      type: object
+      required: [id, kind]
+      properties:
+        id: { type: integer, format: int64 }
+        kind:
+          type: string
+          enum: [session_created, project_added, document_added, context_fetched,
+                 plan_generated, data_generated]
+        ref: { type: string, nullable: true }
+        summary: { type: string, nullable: true }
+        at: { type: string, format: date-time }
+
+    PlanningSessionDetail:
+      type: object
+      required: [session, projects, activity]
+      properties:
+        session: { $ref: '#/components/schemas/PlanningSessionView' }
+        projects:
+          type: array
+          items: { $ref: '#/components/schemas/PlanningProject' }
+        activity:
+          type: array
+          items: { $ref: '#/components/schemas/PlanningActivityView' }
+
     PlanningProject:
       type: object
-      required: [project_id, status, chainable]
+      required: [project_id, session_id, status, chainable]
       properties:
         project_id: { type: string, format: uuid }
+        session_id: { type: string, format: uuid }
         feature_key: { type: string, nullable: true }
         feature_description: { type: string, nullable: true }
         title: { type: string, nullable: true }

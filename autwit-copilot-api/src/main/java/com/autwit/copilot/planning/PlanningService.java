@@ -36,10 +36,51 @@ public class PlanningService {
 
     // ---- step 1: project + inputs ----------------------------------------------------
 
+    // ---- sessions (resumable, history-bearing context) -------------------------------
+
+    public record SessionWithProject(PlanningSession session, PlanningProject project) {
+    }
+
+    public record SessionDetail(PlanningSession session, List<PlanningProject> projects,
+            List<PlanningActivity> activity) {
+    }
+
+    /** Create a planning session and its first project — the "New session" entry point. */
+    @Transactional
+    public SessionWithProject createSession(String testerId, String env, String title,
+            String featureKey, String featureDescription) {
+        var session = repo.createSession(blankToNull(testerId), blankToNull(env), blankToNull(title));
+        repo.addActivity(session.sessionId(), "session_created", null,
+                "Planning session created" + (title != null && !title.isBlank() ? ": " + title.trim() : ""));
+        var project = repo.createProject(session.sessionId(), blankToNull(featureKey),
+                blankToNull(featureDescription), blankToNull(title), blankToNull(testerId), blankToNull(env));
+        repo.addActivity(session.sessionId(), "project_added", blankToNull(featureKey),
+                "Started " + (featureKey != null && !featureKey.isBlank() ? featureKey.trim() : "a feature"));
+        return new SessionWithProject(session, project);
+    }
+
+    public List<PlanningSession> listRecentSessions(String testerId, int limit) {
+        return repo.listRecentSessions(blankToNull(testerId), limit);
+    }
+
+    public PlanningSession requireSession(UUID sessionId) {
+        return repo.findSession(sessionId)
+                .orElseThrow(() -> new ApiException.NotFound("planning_session", sessionId));
+    }
+
+    /** A session with its project(s) and history timeline — what the wizard resumes against. */
+    public SessionDetail getSession(UUID sessionId) {
+        var session = requireSession(sessionId);
+        return new SessionDetail(session, repo.listProjectsBySession(sessionId), repo.listActivity(sessionId));
+    }
+
+    // ---- projects --------------------------------------------------------------------
+
+    /** Back-compat: create a project, auto-creating a session to hold it. */
+    @Transactional
     public PlanningProject createProject(String featureKey, String featureDescription, String title,
             String createdBy, String env) {
-        return repo.createProject(blankToNull(featureKey), blankToNull(featureDescription),
-                blankToNull(title), blankToNull(createdBy), blankToNull(env));
+        return createSession(createdBy, env, title, featureKey, featureDescription).project();
     }
 
     public PlanningProject requireProject(UUID projectId) {
@@ -58,7 +99,7 @@ public class PlanningService {
     @Transactional
     public SourceDocument addTextDocument(UUID projectId, SourceType sourceType, String title,
             String filename, String mime, String rawText) {
-        requireProject(projectId);
+        var project = requireProject(projectId);
         if (sourceType != SourceType.UPLOAD && sourceType != SourceType.PASTE) {
             throw new ApiException.BadRequest("invalid_source_type",
                     "Only 'upload' or 'paste' documents can be added directly; jira/confluence come via fetch.");
@@ -69,7 +110,9 @@ public class PlanningService {
                 : filename != null && !filename.isBlank() ? filename.trim() : "Pasted text";
         // Uploads dedupe on filename; a paste has no external ref so each is distinct.
         var externalRef = sourceType == SourceType.UPLOAD ? filename : null;
-        return repo.upsertDocument(projectId, sourceType, externalRef, docTitle, mime, text, hash);
+        var doc = repo.upsertDocument(projectId, sourceType, externalRef, docTitle, mime, text, hash);
+        repo.addActivity(project.sessionId(), "document_added", externalRef, "Added " + docTitle);
+        return doc;
     }
 
     /**
@@ -79,12 +122,14 @@ public class PlanningService {
      */
     @Transactional
     public SourceDocument addUploadedFile(UUID projectId, String filename, String mime, byte[] bytes, String title) {
-        requireProject(projectId);
+        var project = requireProject(projectId);
         var text = extractor.extractFile(filename, mime, bytes);
         var hash = hasher.hash(ArtifactFormat.TEXT, text);
         var docTitle = title != null && !title.isBlank() ? title.trim()
                 : filename != null && !filename.isBlank() ? filename.trim() : "Uploaded document";
-        return repo.upsertDocument(projectId, SourceType.UPLOAD, filename, docTitle, mime, text, hash);
+        var doc = repo.upsertDocument(projectId, SourceType.UPLOAD, filename, docTitle, mime, text, hash);
+        repo.addActivity(project.sessionId(), "document_added", filename, "Uploaded " + docTitle);
+        return doc;
     }
 
     public List<SourceDocument> listDocuments(UUID projectId) {
@@ -130,7 +175,7 @@ public class PlanningService {
      */
     @Transactional
     public FetchOutcome fetchContext(UUID projectId, List<String> jiraKeys, List<String> confluencePageIds) {
-        requireProject(projectId);
+        var project = requireProject(projectId);
         var result = client.fetchContext(jiraKeys, confluencePageIds);
         var persisted = result.documents().stream().map(d -> {
             // Fetched text is already extracted; normalise without the upload guards so an
@@ -140,6 +185,8 @@ public class PlanningService {
             return repo.upsertDocument(projectId, SourceType.fromWire(d.sourceType()),
                     d.externalRef(), d.title(), null, text, hash);
         }).toList();
+        repo.addActivity(project.sessionId(), "context_fetched", null,
+                "Fetched " + persisted.size() + " document(s) from Jira/Confluence");
         return new FetchOutcome(persisted, result.log());
     }
 

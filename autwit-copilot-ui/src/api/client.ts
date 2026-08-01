@@ -51,6 +51,10 @@ export type TestPlanView = Schemas['TestPlanView'];
 export type TestScenarioView = Schemas['TestScenarioView'];
 export type TestDatasetView = Schemas['TestDatasetView'];
 export type GenerateDataRequest = Schemas['GenerateDataRequest'];
+export type PlanningSessionView = Schemas['PlanningSessionView'];
+export type PlanningSessionDetail = Schemas['PlanningSessionDetail'];
+export type PlanningActivityView = Schemas['PlanningActivityView'];
+export type CreatePlanningSessionResponse = Schemas['CreatePlanningSessionResponse'];
 
 /** SSE event types the stream can emit (documentation-only schema in the spec). */
 export type StreamEventType = NonNullable<Schemas['StreamEvent']['type']>;

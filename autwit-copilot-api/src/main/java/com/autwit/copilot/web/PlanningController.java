@@ -47,14 +47,58 @@ public class PlanningController {
         this.planning = planning;
     }
 
+    // ---- sessions (resumable, history-bearing context) -------------------------------
+
+    public record CreateSessionRequest(String testerId, String env, String title,
+            String featureKey, String featureDescription) {
+    }
+
+    public record SessionView(String sessionId, String testerId, String env, String title, String status,
+            boolean chainable, Instant createdAt, Instant lastActiveAt) {
+    }
+
+    public record ActivityView(long id, String kind, String ref, String summary, Instant at) {
+    }
+
+    public record SessionDetailView(SessionView session, List<ProjectView> projects, List<ActivityView> activity) {
+    }
+
+    public record CreateSessionResponse(SessionView session, ProjectView project) {
+    }
+
+    @PostMapping("/sessions")
+    ResponseEntity<CreateSessionResponse> createSession(@RequestBody CreateSessionRequest req) {
+        var r = planning.createSession(req.testerId(), req.env(), req.title(),
+                req.featureKey(), req.featureDescription());
+        return ResponseEntity.status(201)
+                .body(new CreateSessionResponse(session(r.session()), project(r.project())));
+    }
+
+    @GetMapping("/sessions")
+    List<SessionView> listSessions(@RequestParam(name = "tester_id", required = false) String testerId,
+            @RequestParam(defaultValue = "50") int limit) {
+        return planning.listRecentSessions(testerId, limit).stream().map(PlanningController::session).toList();
+    }
+
+    @GetMapping("/sessions/{sessionId}")
+    SessionDetailView getSession(@PathVariable UUID sessionId) {
+        var d = planning.getSession(sessionId);
+        return new SessionDetailView(
+                session(d.session()),
+                d.projects().stream().map(PlanningController::project).toList(),
+                d.activity().stream()
+                        .map(a -> new ActivityView(a.id(), a.kind(), a.ref(), a.summary(), a.at()))
+                        .toList());
+    }
+
     // ---- projects --------------------------------------------------------------------
 
     public record CreateProjectRequest(String featureKey, String featureDescription, String title,
             String createdBy, String env) {
     }
 
-    public record ProjectView(String projectId, String featureKey, String featureDescription, String title,
-            String status, String createdBy, String env, boolean chainable, Instant createdAt) {
+    public record ProjectView(String projectId, String sessionId, String featureKey, String featureDescription,
+            String title, String status, String createdBy, String env, boolean chainable, Instant createdAt) {
     }
 
     @PostMapping("/projects")
@@ -250,8 +294,14 @@ public class PlanningController {
 
     // ---- mappers ---------------------------------------------------------------------
 
+    private static SessionView session(com.autwit.copilot.planning.PlanningSession s) {
+        return new SessionView(s.sessionId().toString(), s.testerId(), s.env(), s.title(), s.status(),
+                s.latestResponseId() != null, s.createdAt(), s.lastActiveAt());
+    }
+
     private static ProjectView project(com.autwit.copilot.planning.PlanningProject p) {
-        return new ProjectView(p.projectId().toString(), p.featureKey(), p.featureDescription(), p.title(),
+        return new ProjectView(p.projectId().toString(), p.sessionId().toString(), p.featureKey(),
+                p.featureDescription(), p.title(),
                 p.status(), p.createdBy(), p.env(), p.latestResponseId() != null, p.createdAt());
     }
 

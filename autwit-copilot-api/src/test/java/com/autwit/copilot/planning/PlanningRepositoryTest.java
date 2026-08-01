@@ -16,9 +16,15 @@ class PlanningRepositoryTest extends AbstractPostgresIT {
     @Autowired
     private PlanningRepository repo;
 
+    /** V7: every project needs a session — create one and a project under it. */
+    private PlanningProject mkProject(String featureKey, String desc, String title, String by, String env) {
+        var s = repo.createSession(by, env, title);
+        return repo.createProject(s.sessionId(), featureKey, desc, title, by, env);
+    }
+
     @Test
     void createsAndReadsAProject() {
-        var p = repo.createProject("PAY-2481", "Payment retry", "Retry plan", "m.alvarez", "qa2");
+        var p = mkProject("PAY-2481", "Payment retry", "Retry plan", "m.alvarez", "qa2");
         assertThat(p.projectId()).isNotNull();
         assertThat(repo.findProject(p.projectId())).get()
                 .extracting(PlanningProject::featureKey).isEqualTo("PAY-2481");
@@ -27,7 +33,7 @@ class PlanningRepositoryTest extends AbstractPostgresIT {
 
     @Test
     void upsertDedupesTheSameExternalRefWithinAProject() {
-        var p = repo.createProject("PAY-1", null, null, null, "qa2");
+        var p = mkProject("PAY-1", null, null, null, "qa2");
         var first = repo.upsertDocument(p.projectId(), SourceType.JIRA, "PAY-1", "v1", null, "old text", "h1");
         var second = repo.upsertDocument(p.projectId(), SourceType.JIRA, "PAY-1", "v2", null, "new text", "h2");
 
@@ -40,7 +46,7 @@ class PlanningRepositoryTest extends AbstractPostgresIT {
 
     @Test
     void selectedFilterDrivesTheGenerationCorpus() {
-        var p = repo.createProject("PAY-2", null, null, null, "qa2");
+        var p = mkProject("PAY-2", null, null, null, "qa2");
         var a = repo.upsertDocument(p.projectId(), SourceType.UPLOAD, "a.md", "A", null, "aaa", "ha");
         repo.upsertDocument(p.projectId(), SourceType.UPLOAD, "b.md", "B", null, "bbb", "hb");
         repo.setSelected(a.documentId(), false);
@@ -51,7 +57,7 @@ class PlanningRepositoryTest extends AbstractPostgresIT {
 
     @Test
     void dequeueClaimsExactlyOncePerGeneration() {
-        var p = repo.createProject("PAY-3", null, null, null, "qa2");
+        var p = mkProject("PAY-3", null, null, null, "qa2");
         var gen = repo.createGeneration(p.projectId(), GenerationType.TEST_PLAN, Map.of());
         assertThat(gen.status()).isEqualTo("pending");
 
@@ -70,7 +76,7 @@ class PlanningRepositoryTest extends AbstractPostgresIT {
 
     @Test
     void persistsAndReadsBackATestPlanWithScenarios() {
-        var p = repo.createProject("PAY-4", null, null, null, "qa2");
+        var p = mkProject("PAY-4", null, null, null, "qa2");
         var gen = repo.createGeneration(p.projectId(), GenerationType.TEST_PLAN, Map.of());
         var scenarios = List.of(
                 new TestPlan.TestScenario("TC-01", 1, "Retry succeeds", "High", "PAY-4"),
@@ -90,7 +96,7 @@ class PlanningRepositoryTest extends AbstractPostgresIT {
 
     @Test
     void persistsAndReadsBackDatasets() {
-        var p = repo.createProject("PAY-5", null, null, null, "qa2");
+        var p = mkProject("PAY-5", null, null, null, "qa2");
         var gen = repo.createGeneration(p.projectId(), GenerationType.TEST_DATA, Map.of());
         repo.insertDataset(p.projectId(), gen.generationId(), "TC-01",
                 List.of("a", "b"), List.of(Map.of("a", 1, "b", 2)));
@@ -103,7 +109,7 @@ class PlanningRepositoryTest extends AbstractPostgresIT {
 
     @Test
     void reapsAGenerationWhoseWorkerLeaseExpired() {
-        var p = repo.createProject("PAY-6", null, null, null, "qa2");
+        var p = mkProject("PAY-6", null, null, null, "qa2");
         var gen = repo.createGeneration(p.projectId(), GenerationType.TEST_PLAN, Map.of());
         // Claim it with an already-expired lease — a worker that died before renewing. attempts
         // becomes 1 (= max_attempts), so the dequeue can never reclaim it; only the reaper can.
@@ -120,7 +126,7 @@ class PlanningRepositoryTest extends AbstractPostgresIT {
 
     @Test
     void doesNotReapAHealthyRunningGeneration() {
-        var p = repo.createProject("PAY-7", null, null, null, "qa2");
+        var p = mkProject("PAY-7", null, null, null, "qa2");
         var gen = repo.createGeneration(p.projectId(), GenerationType.TEST_PLAN, Map.of());
         repo.dequeueGeneration("live-worker", Duration.ofMinutes(5)); // lease well in the future
 

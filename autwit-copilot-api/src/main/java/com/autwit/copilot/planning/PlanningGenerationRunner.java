@@ -31,24 +31,28 @@ public class PlanningGenerationRunner {
     public void execute(Generation gen, String workerId) {
         var project = repo.findProject(gen.projectId())
                 .orElseThrow(() -> new IllegalStateException("planning_project gone: " + gen.projectId()));
+        var session = repo.findSession(project.sessionId())
+                .orElseThrow(() -> new IllegalStateException("planning_session gone: " + project.sessionId()));
 
         switch (gen.generationType()) {
-            case TEST_PLAN -> runTestPlan(gen, workerId, project);
-            case TEST_DATA -> runTestData(gen, workerId, project);
+            case TEST_PLAN -> runTestPlan(gen, workerId, project, session);
+            case TEST_DATA -> runTestData(gen, workerId, project, session);
         }
     }
 
-    private void runTestPlan(Generation gen, String workerId, PlanningProject project) {
+    private void runTestPlan(Generation gen, String workerId, PlanningProject project, PlanningSession session) {
         var selected = repo.listSelectedDocuments(project.projectId());
         var docs = selected.stream()
                 .map(d -> new PlanningClient.Doc(d.sourceType().wire(), d.title(), d.textContent()))
                 .toList();
 
+        // Seed from the SESSION lineage, not the project — so a re-plan (and later data) build on
+        // whatever the session has generated so far (the reusable-history requirement).
         var request = new PlanningClient.TestPlanRequest(
                 project.featureKey(), project.featureDescription(), docs,
                 // Existing-test-cases as a distinct input is a pass-2 refinement; pass 1 folds
                 // everything selected into the corpus.
-                List.of(), project.latestResponseId());
+                List.of(), session.latestResponseId());
 
         var result = client.generateTestPlan(request);
 
@@ -60,11 +64,12 @@ public class PlanningGenerationRunner {
         repo.insertPlan(project.projectId(), gen.generationId(), result.overview(), result.scope(),
                 result.provenance(), scenarios);
 
-        finish(gen, workerId, project, result.responseId());
+        finish(gen, workerId, session, result.responseId(),
+                "plan_generated", "Generated a test plan (" + scenarios.size() + " scenarios)");
     }
 
     @SuppressWarnings("unchecked")
-    private void runTestData(Generation gen, String workerId, PlanningProject project) {
+    private void runTestData(Generation gen, String workerId, PlanningProject project, PlanningSession session) {
         var config = gen.config();
         var scenarioRefs = new ArrayList<PlanningClient.ScenarioRef>();
         for (var raw : (List<Object>) config.getOrDefault("scenarios", List.of())) {
@@ -82,7 +87,7 @@ public class PlanningGenerationRunner {
                 ? (Map<String, Object>) em : null;
 
         var request = new PlanningClient.TestDataRequest(
-                scenarioRefs, exampleRecord, edgeCases, rows, project.latestResponseId());
+                scenarioRefs, exampleRecord, edgeCases, rows, session.latestResponseId());
 
         var result = client.generateTestData(request);
 
@@ -91,14 +96,20 @@ public class PlanningGenerationRunner {
                     ds.columns(), ds.rows());
         }
 
-        finish(gen, workerId, project, result.responseId());
+        finish(gen, workerId, session, result.responseId(),
+                "data_generated", "Generated test data (" + result.datasets().size() + " scenarios)");
     }
 
-    /** Pin the chaining token on the head (optimistic), then mark the job succeeded. */
-    private void finish(Generation gen, String workerId, PlanningProject project, String responseId) {
+    /**
+     * Pin the lineage on the SESSION head (optimistic), record the history entry, then mark the
+     * job succeeded. Pinning on the session is what lets the next generation reuse this one.
+     */
+    private void finish(Generation gen, String workerId, PlanningSession session, String responseId,
+            String activityKind, String activitySummary) {
         if (responseId != null) {
-            repo.bumpHead(project.projectId(), project.version(), responseId);
+            repo.bumpSessionHead(session.sessionId(), session.version(), responseId);
         }
+        repo.addActivity(session.sessionId(), activityKind, gen.generationId().toString(), activitySummary);
         if (!repo.succeedGeneration(gen.generationId(), workerId, responseId)) {
             throw new IllegalStateException("generation " + gen.generationId()
                     + " was no longer running when it completed");
