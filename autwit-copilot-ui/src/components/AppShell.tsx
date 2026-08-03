@@ -12,8 +12,12 @@ import type { ReactNode } from 'react';
  */
 export function AppShell() {
   const { pathname } = useLocation();
-  // /sessions is the execution flavor; everything under /plan is planning.
-  const flavor = pathname.startsWith('/plan') ? 'plan' : 'execute';
+  // /sessions is the execution flavor; /plan is planning; /automation is the run plane.
+  const flavor = pathname.startsWith('/plan')
+    ? 'plan'
+    : pathname.startsWith('/automation')
+      ? 'automation'
+      : 'execute';
 
   return (
     <div className="flex h-full">
@@ -28,6 +32,12 @@ export function AppShell() {
         </div>
         <FlavorLink to="/sessions" active={flavor === 'execute'} label="Execute" icon={<PlayIcon />} />
         <FlavorLink to="/plan" active={flavor === 'plan'} label="Plan" icon={<PlanIcon />} />
+        <FlavorLink
+          to="/automation"
+          active={flavor === 'automation'}
+          label="Runs"
+          icon={<AutomationIcon />}
+        />
       </nav>
       <div className="min-w-0 flex-1">
         <Outlet />
@@ -68,6 +78,16 @@ function PlayIcon() {
   return (
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-[19px]">
       <polygon points="6 4 20 12 6 20 6 4" />
+    </svg>
+  );
+}
+
+function AutomationIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-[19px]">
+      <path d="M9 17H7A5 5 0 0 1 7 7h2" />
+      <path d="M15 7h2a5 5 0 1 1 0 10h-2" />
+      <path d="M8 12h8" />
     </svg>
   );
 }

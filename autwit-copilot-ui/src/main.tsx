@@ -7,6 +7,8 @@ import SessionListRoute from './routes/sessions/SessionListRoute';
 import { AppShell } from './components/AppShell';
 import PlanListRoute from './routes/plan/PlanListRoute';
 import PlanRoute from './routes/plan/PlanRoute';
+import AutomationListRoute from './routes/automation/AutomationListRoute';
+import AutomationRunRoute from './routes/automation/AutomationRunRoute';
 import '@fontsource-variable/inter';
 import './index.css';
 
@@ -31,6 +33,8 @@ createRoot(document.getElementById('root')!).render(
             <Route path="/sessions/:sessionId" element={<SessionRoute />} />
             <Route path="/plan" element={<PlanListRoute />} />
             <Route path="/plan/:sessionId" element={<PlanRoute />} />
+            <Route path="/automation" element={<AutomationListRoute />} />
+            <Route path="/automation/:runId" element={<AutomationRunRoute />} />
           </Route>
         </Routes>
       </BrowserRouter>

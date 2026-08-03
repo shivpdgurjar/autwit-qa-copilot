@@ -64,6 +64,28 @@ export type ResolutionView = Schemas['ResolutionView'];
 /** SSE event types the stream can emit (documentation-only schema in the spec). */
 export type StreamEventType = NonNullable<Schemas['StreamEvent']['type']>;
 
+// Automation plane — runs executed by the AUTWIT run service, proxied through copilot.
+export type AutomationRun = Schemas['AutomationRun'];
+export type AutomationRunStatus = Schemas['AutomationRunStatus'];
+export type AutomationRunSummary = Schemas['AutomationRunSummary'];
+export type StartAutomationRunRequest = Schemas['StartAutomationRunRequest'];
+export type AutomationConfirmationRequired = Schemas['AutomationConfirmationRequired'];
+
+/**
+ * Terminal automation statuses. Uppercase, unlike copilot's own RunStatus — these come
+ * from a different service with its own vocabulary, and flattening the two would hide
+ * that CANCELLED and TIMED_OUT are not failures.
+ */
+const AUTOMATION_TERMINAL: AutomationRunStatus[] = ['SUCCEEDED', 'FAILED', 'CANCELLED', 'TIMED_OUT'];
+
+export function isAutomationTerminal(status: AutomationRunStatus | undefined): boolean {
+  return status !== undefined && AUTOMATION_TERMINAL.includes(status);
+}
+
+export function isAutomationActive(status: AutomationRunStatus | undefined): boolean {
+  return status === 'QUEUED' || status === 'RUNNING';
+}
+
 /** Terminal run statuses. A run in one of these will not change again. */
 const TERMINAL: RunStatus[] = ['succeeded', 'failed', 'cancelled', 'timed_out'];
 
