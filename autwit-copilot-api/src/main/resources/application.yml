@@ -1,5 +1,13 @@
 # BUILD_BRIEF §11. The lease/timeout pair is asserted at startup by ConfigAssertions.
 autwit:
+  # The AUTWIT run service (autwit repo, docs/REMOTE_RUN_TRIGGER_MODEL.md). copilot proxies
+  # it so the browser stays same-origin — an embedded report needs that to be framed, and
+  # reports can carry the PII api.fetch_order persists, so they go through our auth.
+  # Empty base-url disables the automation plane rather than failing at startup.
+  automation:
+    base-url: ${AUTWIT_RUN_SERVICE_URL:}
+    token: ${AUTWIT_RUN_SERVICE_TOKEN:}
+    timeout: 15s            # registry reads and submits only; runs are asynchronous
   orchestrator:
     base-url: ${ORCHESTRATOR_URL:http://localhost:9090}
     token: ${ORCHESTRATOR_TOKEN:}

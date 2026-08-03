@@ -27,6 +27,7 @@ tags:
   - name: skills
   - name: stream
   - name: planning
+  - name: automation
 
 paths:
 
@@ -631,6 +632,144 @@ paths:
 
   # ---------------------------------------------------------------- skills
 
+  # -------------------------------------------------------------- automation
+  #
+  # A proxy in front of the AUTWIT run service, which owns automation runs
+  # (autwit repo, docs/REMOTE_RUN_TRIGGER_MODEL.md). Proxied rather than called
+  # directly by the browser so the automation plane stays same-origin: an embedded
+  # report needs that to be framed, and a report can carry the member/card data
+  # api.fetch_order persists, so it goes through copilot's authentication.
+
+  /automation/runs:
+    post:
+      tags: [automation]
+      summary: Start an automation run
+      description: |
+        Queues a run on the AUTWIT run service. Returns 202 with the queued run.
+
+        Returns **409 confirmation_required** when a run is already active on the
+        target environment. That is a question, not a failure: the per-environment
+        limit is a soft gate. The response carries the active runs so the caller can
+        show who is already running, then resubmit with `confirm: true`.
+      operationId: startAutomationRun
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/StartAutomationRunRequest' }
+      responses:
+        '202':
+          description: Queued
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AutomationRun' }
+        '400': { $ref: '#/components/responses/BadRequest' }
+        '409':
+          description: A run is already active on this environment; resubmit with confirm=true
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AutomationConfirmationRequired' }
+        '503': { $ref: '#/components/responses/AutomationUnavailable' }
+    get:
+      tags: [automation]
+      summary: List automation runs, newest first
+      operationId: listAutomationRuns
+      parameters:
+        - name: env
+          in: query
+          schema: { type: string }
+        - name: status
+          in: query
+          schema: { $ref: '#/components/schemas/AutomationRunStatus' }
+        - name: startedBy
+          in: query
+          schema: { type: string }
+        - name: limit
+          in: query
+          schema: { type: integer, default: 50, maximum: 200 }
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/AutomationRun' }
+        '503': { $ref: '#/components/responses/AutomationUnavailable' }
+
+  /automation/runs/{runId}:
+    parameters:
+      - $ref: '#/components/parameters/AutomationRunId'
+    get:
+      tags: [automation]
+      summary: Get one automation run
+      operationId: getAutomationRun
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AutomationRun' }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/AutomationUnavailable' }
+
+  /automation/runs/{runId}/log:
+    parameters:
+      - $ref: '#/components/parameters/AutomationRunId'
+    get:
+      tags: [automation]
+      summary: Recent output for a run
+      description: |
+        Non-destructive: several viewers see the same lines. While a run is active this
+        is its live tail; afterwards it is read back from the stored log.
+      operationId: getAutomationRunLog
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [run_id, lines]
+                properties:
+                  run_id: { type: string, format: uuid }
+                  lines:
+                    type: array
+                    items: { type: string }
+        '503': { $ref: '#/components/responses/AutomationUnavailable' }
+
+  /automation/runs/{runId}/cancel:
+    parameters:
+      - $ref: '#/components/parameters/AutomationRunId'
+    post:
+      tags: [automation]
+      summary: Cancel a queued or running automation run
+      description: |
+        A queued run is cancelled outright; a running one has its whole process tree
+        terminated. The run lands `cancelled`, never `failed` — it carries no verdict
+        about the system under test.
+      operationId: cancelAutomationRun
+      responses:
+        '202': { description: Cancellation requested }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/AutomationUnavailable' }
+
+  /automation/runs/{runId}/report:
+    parameters:
+      - $ref: '#/components/parameters/AutomationRunId'
+    get:
+      tags: [automation]
+      summary: The run's single-file Allure report
+      operationId: getAutomationRunReport
+      responses:
+        '200':
+          description: OK
+          content:
+            text/html:
+              schema: { type: string }
+        '404': { $ref: '#/components/responses/NotFound' }
+        '503': { $ref: '#/components/responses/AutomationUnavailable' }
+
   /skills:
     get:
       tags: [skills]
@@ -1152,6 +1291,11 @@ components:
       in: path
       required: true
       schema: { type: string, format: uuid }
+    AutomationRunId:
+      name: runId
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
     ProjectId:
       name: projectId
       in: path
@@ -1205,8 +1349,105 @@ components:
       content:
         application/problem+json:
           schema: { $ref: '#/components/schemas/Problem' }
+    AutomationUnavailable:
+      description: |
+        The AUTWIT run service is not configured or not reachable. Distinct from 500 on
+        purpose: nothing in copilot is broken, and the difference tells a tester to check
+        whether the runner is up rather than to raise a copilot bug.
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              code: { type: string, examples: [automation_unavailable] }
+              message: { type: string }
 
   schemas:
+
+    # ------------------------------------------------------------- automation
+
+    AutomationRunStatus:
+      type: string
+      description: |
+        `cancelled` and `timed_out` are deliberately distinct from `failed`: only `failed`
+        carries a verdict about the system under test.
+      enum: [QUEUED, RUNNING, SUCCEEDED, FAILED, CANCELLED, TIMED_OUT]
+
+    AutomationRunSummary:
+      type: object
+      description: |
+        Scenario counts extracted once at run end and stored on the run, so a run list and
+        a pass-rate trend render without opening a multi-megabyte report per row.
+      properties:
+        total: { type: integer }
+        passed: { type: integer }
+        failed: { type: integer }
+        skipped:
+          type: integer
+          description: |
+            A skipped scenario is PAUSED awaiting data, not a defect. Never fold this into
+            `failed` — a run of only skips is a success.
+
+    AutomationRun:
+      type: object
+      required: [runId, env, suite, startedBy, queueKey, status]
+      properties:
+        runId: { type: string, format: uuid }
+        env: { type: string, examples: [qa2, qa3] }
+        suite: { type: string, examples: [testng-agentic-compare.xml] }
+        tags: { type: string, description: Cucumber tag expression, examples: ["@bopic and not @wip"] }
+        startedBy: { type: string }
+        queueKey:
+          type: string
+          description: |
+            Display label `<env>-<UTC timestamp>`. NOT a partition key — it embeds a
+            per-second timestamp, so it is effectively unique and partitions nothing.
+            `runId` is the key.
+          examples: ["qa3-2026-08-03 14:22:07"]
+        status: { $ref: '#/components/schemas/AutomationRunStatus' }
+        exitCode:
+          type: integer
+          nullable: true
+          description: |
+            Not a verdict on its own. client-tests sets testFailureIgnore=true, so Maven
+            can exit 0 with failing scenarios; the summary decides.
+        reportUrl: { type: string, nullable: true }
+        logUrl: { type: string, nullable: true }
+        summary: { $ref: '#/components/schemas/AutomationRunSummary' }
+        queuedAt: { type: string, format: date-time }
+        startedAt: { type: string, format: date-time, nullable: true }
+        endedAt: { type: string, format: date-time, nullable: true }
+        cancelRequested: { type: boolean }
+
+    StartAutomationRunRequest:
+      type: object
+      required: [env, suite, startedBy]
+      description: |
+        Every field is allowlisted and validated before a run is queued. There is
+        deliberately no free-form Maven argument field.
+      properties:
+        env: { type: string, examples: [qa3] }
+        suite: { type: string, examples: [testng-agentic-compare.xml] }
+        tags: { type: string }
+        startedBy: { type: string }
+        confirm:
+          type: boolean
+          default: false
+          description: |
+            Acknowledges that a run is already active on this environment. The
+            per-environment limit is a soft gate, so this turns a 409 into a start.
+
+    AutomationConfirmationRequired:
+      type: object
+      description: |
+        Not a rejection. The caller may resubmit with `confirm: true`; the active runs
+        travel with the response so the UI can name who is already running.
+      properties:
+        code: { type: string, examples: [confirmation_required] }
+        message: { type: string }
+        active_runs:
+          type: array
+          items: { $ref: '#/components/schemas/AutomationRun' }
 
     # ---- errors (RFC 7807)
 
