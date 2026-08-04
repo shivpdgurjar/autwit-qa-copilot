@@ -1,10 +1,12 @@
 # SKILL_CONTRACT.md
 
 **Between:** `autwit-copilot-api` (client) and `autwit-ai-orchestrator` (server)
-**Version:** 0.1.8
+**Version:** 0.1.9
 **Status:** **Closed.** Both sides' closeout items are complete — B1–B7 (orchestrator) and
 C1–C5 (copilot-api), with C6/C7/C8 recorded as deliberate holds. v0.1.8 adds the
-null-bearing hash vectors V7/V8, the last outstanding request from either side.
+null-bearing hash vectors V7/V8, the last outstanding request from either side. v0.1.9 records
+the authoritative `artifact_type` vocabulary in §6.1 (a coordination fix from the first real
+joint run — no behaviour change).
 
 > **Verification status — how each section is known to be true.** This document's body
 > descends from the pre-ratification **v0.1.0** text, so age is not evidence. What
@@ -34,6 +36,15 @@ dependency on the other outside this document.
 
 ## Changelog
 
+- **v0.1.9** — §6.1 now carries the **authoritative `artifact_type` vocabulary** (the closed
+  set copilot-api's `artifact` CHECK enforces), replacing the by-example-only `rdbms_table`.
+  Added after the first real joint run surfaced that every skill made real after v0.1.6
+  (`order.fulfil`, `order.place`, `compare.cross_system`, and `financial.*` via the skill
+  path) emitted a type the CHECK rejected — so a **succeeded, side-effecting run failed only
+  at persist** (`message-to-qa-copilot/v1.0.32` → `message-from-qa-copilot/v1.0.33`).
+  copilot-api adopted the widened enum (migrations V5/V6) and asked for the list to live in
+  the contract so the next new type is coordinated up front instead of found at INSERT time.
+  No behaviour change — a documentation/coordination fix.
 - **v0.1.1** — orchestrator ratification (see `RATIFICATION_RESPONSE.md`):
   §6.1 canonical-body/content_hash **defined** (key-sorted, scale-preserving; test
   vectors reproduced in both Python and Node); §5 partial finding severity `warn` →
@@ -498,6 +509,25 @@ Both `/invoke` and `/execute` return this shape.
 - `client_ref` is a within-response handle so `snapshots[].parts[]` can point at
   artifacts in the same payload before real UUIDs exist. copilot-api assigns
   the `artifact_id`.
+- `artifact_type` is a **closed vocabulary** *(v0.1.9)*. copilot-api's `artifact` table
+  enforces it as a CHECK constraint, so a value outside this set is rejected **at persist
+  time** — an otherwise-succeeded (and possibly side-effecting) run then fails only on
+  evidence storage, which is the failure mode that produced this list. The authoritative
+  set, and the single point both sides coordinate on, is:
+
+  ```
+  rdbms_table, dynamo_doc, event_batch, api_response, xml_payload, log,
+  diff_report, analysis, final_report, other,
+  order_fulfilment, order_placement, comparison, comparison_report,
+  db_snapshot, financial_analysis
+  ```
+
+  A new skill that needs a new `artifact_type` MUST add it **here and in a copilot-api
+  migration in the same coordinated change** — not discover it at INSERT time on a live run
+  (see `message-to-qa-copilot/v1.0.32` → `message-from-qa-copilot/v1.0.33`). The `planning_*`
+  artifacts are deliberately **not** in this set: copilot-api consumes them from the response
+  envelope via `HttpPlanningClient` and never persists them to `autwit.artifact`, so they
+  never reach the CHECK.
 - `body` shape follows `format`: parsed JSON for `json`, a string for
   `xml`/`text`/`csv`/`html`/`md`, base64 for `binary`.
 - `content_hash` is `"sha256:"` followed by the lowercase hex sha256 of the
