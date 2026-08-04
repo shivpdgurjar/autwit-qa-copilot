@@ -102,10 +102,89 @@ function ArtifactBody({ artifactId }: { artifactId: string }) {
   return (
     <div className="flex min-h-0 flex-1 flex-col">
       <ArtifactMeta artifact={data} />
-      <pre className="min-h-0 flex-1 overflow-auto bg-ink-950 p-3 font-mono text-[11px] leading-relaxed text-ink-200">
-        {render(data)}
-      </pre>
+      <ArtifactContent artifact={data} />
     </div>
+  );
+}
+
+/**
+ * An HTML artifact is a document, not a string.
+ *
+ * Every body used to render into a `<pre>`, which is right for json/csv/text and wrong
+ * for the one format whose entire point is being rendered: `compare.cross_system` emits
+ * its cross-system report as `format: html`, and it was shown as raw markup — tags and
+ * all — while the same bytes render properly inside Allure.
+ *
+ * The document goes in a **fully sandboxed** iframe (`sandbox=""`): no scripts, no forms,
+ * no same-origin access, no top-level navigation. An artifact body is data captured from
+ * a run, so it is treated as untrusted content rather than as part of the app. The
+ * comparison report is built to need no JavaScript for exactly this reason, so nothing is
+ * lost by refusing to run any.
+ *
+ * `srcdoc` rather than pointing at `/raw`: the body is already fetched for the metadata
+ * above, so this renders what was loaded instead of asking for it twice.
+ */
+function ArtifactContent({ artifact }: { artifact: Artifact }) {
+  const [asSource, setAsSource] = useState(false);
+  const body = render(artifact);
+  const isHtml = artifact.format === 'html' && typeof artifact.body === 'string';
+
+  if (!isHtml) {
+    return (
+      <pre className="min-h-0 flex-1 overflow-auto bg-ink-950 p-3 font-mono text-[11px] leading-relaxed text-ink-200">
+        {body}
+      </pre>
+    );
+  }
+
+  return (
+    <div className="flex min-h-0 flex-1 flex-col">
+      {/* Source stays one click away: when a report renders wrongly, the markup is the
+          thing you need, and re-running the skill to get at it would be absurd. */}
+      <div className="flex items-center gap-1 border-b border-ink-700 px-3 py-1.5">
+        <ViewTab active={!asSource} onClick={() => setAsSource(false)}>
+          Rendered
+        </ViewTab>
+        <ViewTab active={asSource} onClick={() => setAsSource(true)}>
+          Source
+        </ViewTab>
+      </div>
+
+      {asSource ? (
+        <pre className="min-h-0 flex-1 overflow-auto bg-ink-950 p-3 font-mono text-[11px] leading-relaxed text-ink-200">
+          {body}
+        </pre>
+      ) : (
+        <iframe
+          title={`${artifact.logical_name} (rendered)`}
+          srcDoc={body}
+          sandbox=""
+          className="min-h-0 flex-1 border-0 bg-white"
+        />
+      )}
+    </div>
+  );
+}
+
+function ViewTab({
+  active,
+  onClick,
+  children,
+}: {
+  active: boolean;
+  onClick: () => void;
+  children: React.ReactNode;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={`rounded px-2 py-0.5 text-[11px] font-medium transition-colors ${
+        active ? 'bg-ink-700 text-ink-100' : 'text-ink-400 hover:text-ink-200'
+      }`}
+    >
+      {children}
+    </button>
   );
 }
 
