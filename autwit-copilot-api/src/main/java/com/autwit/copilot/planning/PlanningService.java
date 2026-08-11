@@ -1,5 +1,6 @@
 package com.autwit.copilot.planning;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -186,11 +187,33 @@ public class PlanningService {
     /**
      * Pulls the selected Jira/Confluence items over MCP and persists each as a source document,
      * returning the console log so the UI can render Step 2's fetch activity.
+     *
+     * <p>{@code refs} carries whatever the tester typed or pasted — a bare key, a bare page id,
+     * or a link — and is normalised into the two lists alongside anything picked from search.
+     * An entry nothing can be made of is reported as its own console line and the rest still
+     * fetch: one bad paste should not cost the whole batch, which is the same tolerance the
+     * fetch already applies to a truncated Jira body.
      */
     @Transactional
-    public FetchOutcome fetchContext(UUID projectId, List<String> jiraKeys, List<String> confluencePageIds) {
+    public FetchOutcome fetchContext(UUID projectId, List<String> jiraKeys,
+            List<String> confluencePageIds, List<String> refs) {
         var project = requireProject(projectId);
-        var result = client.fetchContext(jiraKeys, confluencePageIds);
+
+        var parsed = ContextRefParser.parse(refs);
+        var allJira = merge(jiraKeys, parsed.jiraKeys());
+        var allPages = merge(confluencePageIds, parsed.confluencePageIds());
+
+        if (allJira.isEmpty() && allPages.isEmpty()) {
+            // Everything the caller offered was unusable; say so rather than round-tripping
+            // to MCP with two empty lists and returning a confusingly empty success.
+            if (!parsed.rejected().isEmpty()) {
+                return new FetchOutcome(List.of(), rejectionLog(parsed.rejected()));
+            }
+            throw new ApiException.BadRequest("no_refs",
+                    "Select or enter at least one Jira ticket or Confluence page.");
+        }
+
+        var result = client.fetchContext(allJira, allPages);
         var persisted = result.documents().stream().map(d -> {
             // Fetched text is already extracted; normalise without the upload guards so an
             // empty body (truncated Jira, PLAN-1) still lands rather than failing the fetch.
@@ -203,7 +226,31 @@ public class PlanningService {
         }).toList();
         repo.addActivity(project.sessionId(), "context_fetched", null,
                 "Fetched " + persisted.size() + " document(s) from Jira/Confluence");
-        return new FetchOutcome(persisted, result.log());
+
+        // Rejections lead: the tester needs to see what was dropped before reading what landed.
+        var log = new ArrayList<>(rejectionLog(parsed.rejected()));
+        log.addAll(result.log());
+        return new FetchOutcome(persisted, log);
+    }
+
+    /** Union preserving order, first occurrence wins — a ref both searched and pasted is one item. */
+    private static List<String> merge(List<String> selected, List<String> entered) {
+        var out = new ArrayList<String>();
+        for (var list : List.of(selected == null ? List.<String>of() : selected, entered)) {
+            for (var v : list) {
+                if (v != null && !v.isBlank() && !out.contains(v.trim())) {
+                    out.add(v.trim());
+                }
+            }
+        }
+        return out;
+    }
+
+    private static List<PlanningClient.LogLine> rejectionLog(List<ContextRefParser.Rejected> rejected) {
+        return rejected.stream()
+                .map(r -> new PlanningClient.LogLine(null, "warn", "input", r.input(),
+                        "Skipped \"" + r.input() + "\" — " + r.reason()))
+                .toList();
     }
 
     public record FetchOutcome(List<SourceDocument> documents, List<PlanningClient.LogLine> log) {

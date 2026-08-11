@@ -14,6 +14,7 @@ import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 
+import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.hamcrest.Matchers.notNullValue;
@@ -250,6 +251,38 @@ class PlanningControllerTest extends AbstractPostgresIT {
                 .andExpect(jsonPath("$[0].doc_role", is("existing_tests")))
                 // A role-only PATCH must not disturb the include toggle.
                 .andExpect(jsonPath("$[0].selected", is(true)));
+    }
+
+    @Test
+    void fetchAcceptsPastedKeysAndLinksAlongsideSearchPicks() throws Exception {
+        var id = createProject();
+
+        mvc.perform(post("/planning/projects/{id}/fetch", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"jira_keys":["PAY-2481"],
+                                 "confluence_page_ids":[],
+                                 "refs":["can-1201",
+                                         "https://acuver.atlassian.net/wiki/spaces/OES/pages/123456789/Design",
+                                         "https://acuver.atlassian.net/wiki/x/AbCdEf"]}
+                                """))
+                .andExpect(status().isOk())
+                // The unresolvable short link is reported and skipped; everything else fetched.
+                .andExpect(jsonPath("$.log[0].level", is("warn")))
+                .andExpect(jsonPath("$.log[0].message", containsString("short link")))
+                .andExpect(jsonPath("$.documents", hasSize(3)));
+    }
+
+    @Test
+    void fetchWithNothingUsableIs400() throws Exception {
+        var id = createProject();
+        mvc.perform(post("/planning/projects/{id}/fetch", id)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"jira_keys":[],"confluence_page_ids":[],"refs":[]}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code", is("no_refs")));
     }
 
     @Test

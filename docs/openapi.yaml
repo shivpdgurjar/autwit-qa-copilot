@@ -2372,12 +2372,28 @@ components:
 
     FetchRequest:
       type: object
+      description: |
+        At least one usable reference is required across all three fields.
       properties:
         jira_keys:
           type: array
+          description: Jira keys picked from search.
           items: { type: string }
         confluence_page_ids:
           type: array
+          description: Confluence page ids picked from search.
+          items: { type: string }
+        refs:
+          type: array
+          description: |
+            Free-form references the tester typed or pasted, classified server-side: a bare
+            Jira key (PAY-123), a bare Confluence page id, a Jira browse or board link, or a
+            Confluence page URL containing /pages/<id>/ or ?pageId=<id>.
+
+            Links that carry no id — Confluence short links (/wiki/x/...) and title-only
+            paths (/display/SPACE/Title) — cannot be resolved without calling Confluence and
+            are reported as their own `warn` line in the response log; every other reference
+            still fetches.
           items: { type: string }
 
     FetchResponse:
@@ -2394,8 +2410,13 @@ components:
     FetchLogLine:
       type: object
       properties:
-        ts: { type: string }
-        level: { type: string, enum: [ok, pending, info], description: Drives the console icon. }
+        ts: { type: string, nullable: true }
+        level:
+          type: string
+          enum: [ok, pending, info, warn]
+          description: |
+            Drives the console icon. `warn` marks a reference that could not be resolved —
+            it was skipped, and the rest of the batch still fetched.
         source: { type: string, nullable: true }
         ref: { type: string, nullable: true }
         message: { type: string }

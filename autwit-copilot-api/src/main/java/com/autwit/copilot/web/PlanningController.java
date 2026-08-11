@@ -220,7 +220,13 @@ public class PlanningController {
                 .map(PlanningController::candidate).toList();
     }
 
-    public record FetchRequest(List<String> jiraKeys, List<String> confluencePageIds) {
+    /**
+     * {@code jiraKeys}/{@code confluencePageIds} are what the tester picked from search;
+     * {@code refs} is whatever they typed or pasted — a bare key, a bare page id, or a link —
+     * classified server-side so the same forms work from the API and from CI.
+     */
+    public record FetchRequest(List<String> jiraKeys, List<String> confluencePageIds,
+            List<String> refs) {
     }
 
     public record LogLineView(String ts, String level, String source, String ref, String message) {
@@ -231,7 +237,8 @@ public class PlanningController {
 
     @PostMapping("/projects/{projectId}/fetch")
     FetchResponse fetch(@PathVariable UUID projectId, @RequestBody FetchRequest req) {
-        var outcome = planning.fetchContext(projectId, req.jiraKeys(), req.confluencePageIds());
+        var outcome = planning.fetchContext(projectId, req.jiraKeys(), req.confluencePageIds(),
+                req.refs());
         var docs = outcome.documents().stream().map(PlanningController::document).toList();
         var log = outcome.log().stream()
                 .map(l -> new LogLineView(l.ts(), l.level(), l.source(), l.ref(), l.message()))

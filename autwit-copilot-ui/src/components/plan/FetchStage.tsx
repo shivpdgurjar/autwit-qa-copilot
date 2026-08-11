@@ -5,9 +5,17 @@ import {
   useFetchContext,
   useJiraSearch,
 } from '../../hooks/usePlanning';
-import { Button, Card, Input, Mono, Spinner } from '../../components/ui';
+import { Button, Card, Input, Mono, Spinner, Textarea } from '../../components/ui';
 
-/** Step 2 — search Jira & Confluence over MCP, select context, fetch it. */
+/**
+ * Step 2 — gather the Jira tickets and Confluence pages the plan is built from.
+ *
+ * Two ways in, because one search rarely covers a feature: search by keyword (repeatedly —
+ * results and selections accumulate across searches rather than replacing), and paste keys,
+ * page ids or links directly for the items you already know. Pasted entries are classified
+ * server-side, so an unusable link is reported in the console and everything else still
+ * fetches.
+ */
 export function FetchStage({
   projectId,
   onBack,
@@ -19,30 +27,47 @@ export function FetchStage({
 }) {
   const [query, setQuery] = useState('');
   const [submitted, setSubmitted] = useState(''); // '' → auto-searches on open
+  const [searches, setSearches] = useState<string[]>([]);
   const [selected, setSelected] = useState<Set<string>>(new Set());
-  const [selInit, setSelInit] = useState<string | null>(null);
+  const [seenInit, setSeenInit] = useState<string | null>(null);
+  const [manual, setManual] = useState('');
+  const [entered, setEntered] = useState<string[]>([]);
+
+  // Everything any search has turned up so far, keyed so a repeat hit merges rather than
+  // duplicating. Without this, searching a second keyword silently discarded the first
+  // search's results along with whatever had been ticked in them.
+  const [found, setFound] = useState<Map<string, PlanningCandidate>>(new Map());
 
   const jiraQ = useJiraSearch(projectId, submitted);
   const confQ = useConfluenceSearch(projectId, submitted);
-  const jira = jiraQ.data ?? [];
-  const confluence = confQ.data ?? [];
   const searching = jiraQ.isFetching || confQ.isFetching;
 
   const fetchContext = useFetchContext(projectId);
-
-  // The fetch mutation already holds its result — derive the console + the fetched flag from
-  // it rather than mirroring them into extra state.
   const log = fetchContext.data?.log ?? [];
   const fetched = fetchContext.isSuccess;
 
-  const search = () => setSubmitted(query);
+  const candidates = [...found.values()];
+  const jira = candidates.filter((c) => c.kind === 'jira');
+  const confluence = candidates.filter((c) => c.kind === 'confluence');
 
-  // Pre-select everything found, once per completed search ("confirm and go"). The searches
-  // are cached by query, so re-entering this stage reuses them without re-hitting MCP.
+  function search() {
+    if (!query.trim()) return;
+    setSubmitted(query.trim());
+  }
+
+  // Merge each completed search into the accumulated set, and pre-select what it turned up —
+  // a keyword you deliberately searched is one you meant to add. Existing ticks are untouched.
   useEffect(() => {
-    if (!jiraQ.isSuccess || !confQ.isSuccess || selInit === submitted) return;
-    setSelected(new Set([...jira, ...confluence].map((x) => `${x.kind}:${x.ref}`)));
-    setSelInit(submitted);
+    if (!jiraQ.isSuccess || !confQ.isSuccess || seenInit === submitted) return;
+    const batch = [...(jiraQ.data ?? []), ...(confQ.data ?? [])];
+    setFound((prev) => {
+      const next = new Map(prev);
+      for (const c of batch) next.set(`${c.kind}:${c.ref}`, c);
+      return next;
+    });
+    setSelected((prev) => new Set([...prev, ...batch.map((c) => `${c.kind}:${c.ref}`)]));
+    setSeenInit(submitted);
+    if (submitted && !searches.includes(submitted)) setSearches((s) => [...s, submitted]);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [jiraQ.isSuccess, confQ.isSuccess, submitted]);
 
@@ -56,18 +81,35 @@ export function FetchStage({
     });
   }
 
+  /** Split on commas, whitespace and newlines so a pasted list works however it was copied. */
+  function addEntered() {
+    const parts = manual
+      .split(/[\s,]+/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+    if (parts.length === 0) return;
+    setEntered((prev) => [...prev, ...parts.filter((p) => !prev.includes(p))]);
+    setManual('');
+  }
+
+  const total = selected.size + entered.length;
+
   function runFetch() {
-    const jiraKeys = jira.filter((c) => selected.has(`jira:${c.ref}`)).map((c) => c.ref);
-    const pageIds = confluence.filter((c) => selected.has(`confluence:${c.ref}`)).map((c) => c.ref);
-    fetchContext.mutate({ jira_keys: jiraKeys, confluence_page_ids: pageIds });
+    fetchContext.mutate({
+      jira_keys: jira.filter((c) => selected.has(`jira:${c.ref}`)).map((c) => c.ref),
+      confluence_page_ids: confluence
+        .filter((c) => selected.has(`confluence:${c.ref}`))
+        .map((c) => c.ref),
+      refs: entered,
+    });
   }
 
   return (
     <div className="mx-auto max-w-4xl">
       <h2 className="text-lg font-semibold">Pull in the relevant context</h2>
       <p className="mt-1 mb-5 text-[13px] text-ink-400">
-        Connected to Jira and Confluence over MCP. Select the tickets and pages that describe this
-        feature — they're folded into the plan alongside your uploads.
+        Search Jira and Confluence as many times as you need — results add up. Or paste ticket
+        keys and page links directly if you already know them.
       </p>
 
       <div className="grid grid-cols-2 gap-5">
@@ -80,14 +122,62 @@ export function FetchStage({
               placeholder="Search issues & pages"
               className="flex-1"
             />
-            <Button variant="ghost" onClick={search}>Search</Button>
+            <Button variant="ghost" onClick={search} disabled={!query.trim() || searching}>
+              Search
+            </Button>
           </div>
+
+          {searches.length > 0 && (
+            <p className="text-[11px] text-ink-400">
+              Searched: {searches.map((s) => `“${s}”`).join(', ')}
+            </p>
+          )}
 
           {searching && (
             <p className="flex items-center gap-2 text-[12px] text-ink-400">
               <Spinner /> Searching…
             </p>
           )}
+
+          <Card>
+            <h3 className="text-[12px] font-semibold">Add by key or link</h3>
+            <p className="mb-2 text-[11px] text-ink-400">
+              Jira keys (PAY-2481), Confluence page ids, or links to either. Separate with
+              commas, spaces or new lines.
+            </p>
+            <Textarea
+              value={manual}
+              onChange={(e) => setManual(e.target.value)}
+              placeholder={'PAY-2481, CAN-1201\nhttps://acuver.atlassian.net/wiki/spaces/OES/pages/123456789/Design'}
+              rows={3}
+              className="w-full"
+            />
+            <div className="mt-1.5 flex justify-end">
+              <Button variant="ghost" size="sm" onClick={addEntered} disabled={!manual.trim()}>
+                Add
+              </Button>
+            </div>
+
+            {entered.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1.5">
+                {entered.map((e) => (
+                  <span
+                    key={e}
+                    className="inline-flex max-w-full items-center gap-1 rounded-full border border-ink-600 bg-ink-850 px-2 py-0.5 text-[11px]"
+                  >
+                    <span className="truncate font-mono text-sky-400">{e}</span>
+                    <button
+                      onClick={() => setEntered((prev) => prev.filter((x) => x !== e))}
+                      className="text-ink-500 hover:text-red-400"
+                      aria-label={`Remove ${e}`}
+                    >
+                      ✕
+                    </button>
+                  </span>
+                ))}
+              </div>
+            )}
+          </Card>
 
           <Results title="Jira issues" items={jira} selected={selected} onToggle={toggle} accent="J" />
           <Results title="Confluence pages" items={confluence} selected={selected} onToggle={toggle} accent="C" />
@@ -106,18 +196,10 @@ export function FetchStage({
               log.map((l, i) => (
                 <div key={i} className="mb-1.5 flex gap-2">
                   <span className="shrink-0 text-ink-500">{l.ts}</span>
-                  <span
-                    className={
-                      l.level === 'ok'
-                        ? 'text-emerald-400'
-                        : l.level === 'info'
-                          ? 'text-sky-400'
-                          : 'text-amber-400'
-                    }
-                  >
-                    {l.level === 'ok' ? '✓' : l.level === 'info' ? 'ℹ' : '…'}
+                  <span className={levelClass(l.level)}>{levelGlyph(l.level)}</span>
+                  <span className={l.level === 'warn' ? 'text-amber-300' : 'text-ink-300'}>
+                    {l.message}
                   </span>
-                  <span className="text-ink-300">{l.message}</span>
                 </div>
               ))
             )}
@@ -129,8 +211,8 @@ export function FetchStage({
         <Button variant="ghost" onClick={onBack}>← Back</Button>
         <div className="ml-auto flex gap-2">
           {!fetched ? (
-            <Button onClick={runFetch} disabled={selected.size === 0 || fetchContext.isPending}>
-              {fetchContext.isPending ? 'Fetching…' : `Fetch selected context (${selected.size})`}
+            <Button onClick={runFetch} disabled={total === 0 || fetchContext.isPending}>
+              {fetchContext.isPending ? 'Fetching…' : `Fetch selected context (${total})`}
             </Button>
           ) : (
             <Button onClick={onNext}>Continue to reasoning →</Button>
@@ -143,6 +225,20 @@ export function FetchStage({
       </div>
     </div>
   );
+}
+
+function levelClass(level?: string | null) {
+  return level === 'ok'
+    ? 'text-emerald-400'
+    : level === 'info'
+      ? 'text-sky-400'
+      : level === 'warn'
+        ? 'text-amber-400'
+        : 'text-amber-400';
+}
+
+function levelGlyph(level?: string | null) {
+  return level === 'ok' ? '✓' : level === 'info' ? 'ℹ' : level === 'warn' ? '!' : '…';
 }
 
 function Results({
@@ -159,6 +255,7 @@ function Results({
   accent: string;
 }) {
   if (items.length === 0) return null;
+  const chosen = items.filter((c) => selected.has(`${c.kind}:${c.ref}`)).length;
   return (
     <Card>
       <div className="mb-2 flex items-center gap-2">
@@ -166,6 +263,9 @@ function Results({
           {accent}
         </span>
         <h3 className="text-[12px] font-semibold">{title}</h3>
+        <span className="text-[11px] text-ink-400">
+          {chosen}/{items.length} selected
+        </span>
       </div>
       <div className="space-y-1.5">
         {items.map((c) => (

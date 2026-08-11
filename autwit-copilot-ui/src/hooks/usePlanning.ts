@@ -217,7 +217,12 @@ export function useConfluenceSearch(projectId: string, query: string) {
 export function useFetchContext(projectId: string) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: async (body: { jira_keys?: string[]; confluence_page_ids?: string[] }) =>
+    mutationFn: async (body: {
+      jira_keys?: string[];
+      confluence_page_ids?: string[];
+      /** Typed or pasted keys, page ids and links — classified server-side. */
+      refs?: string[];
+    }) =>
       unwrap(await api.POST('/planning/projects/{projectId}/fetch', {
         params: { path: { projectId } },
         body,

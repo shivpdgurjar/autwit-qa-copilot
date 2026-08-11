@@ -42,7 +42,8 @@ class PlanningServiceTest extends AbstractPostgresIT {
     @Test
     void fetchContextPersistsCandidatesAndReturnsAConsoleLog() {
         var p = service.createProject("PAY-2481", "Payment retry", null, null, "qa2", null);
-        var outcome = service.fetchContext(p.projectId(), List.of("PAY-2481"), List.of("PAY-DESIGN"));
+        var outcome = service.fetchContext(p.projectId(), List.of("PAY-2481"), List.of("PAY-DESIGN"),
+                List.of());
 
         assertThat(outcome.documents()).hasSize(2)
                 .extracting(d -> d.sourceType().wire()).containsExactlyInAnyOrder("jira", "confluence");
