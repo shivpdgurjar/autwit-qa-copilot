@@ -9,6 +9,15 @@ const apiTarget = process.env.VITE_API_TARGET ?? 'http://localhost:8080';
 
 export default defineConfig({
   plugins: [react(), tailwindcss()],
+  // Component tests run in jsdom. The only automated guard on the UI before this was
+  // `tsc --noEmit` against the generated OpenAPI client, which cannot catch a rendering
+  // regression (a dropped field, a plan shape that crashes the page).
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    setupFiles: ['./src/test/setup.ts'],
+    include: ['src/**/*.test.{ts,tsx}'],
+  },
   server: {
     port: 5173,
     // Bind all interfaces so the port is reachable when published from a container.

@@ -62,22 +62,55 @@ public interface PlanningClient {
             String featureDescription,
             List<Doc> sourceDocuments,
             List<Doc> existingTestCases,
+            /** Selects an orchestrator-owned domain-context block (e.g. "oes"). Null = none. */
+            String domain,
             String previousResponseId) {
     }
 
-    /** A source document flattened to what the generator reads. */
-    record Doc(String sourceType, String title, String text) {
+    /**
+     * A source document flattened to what the generator reads. {@code role} tells the model
+     * how to weight it — see {@link DocRole}; null is read as a requirement.
+     */
+    record Doc(String sourceType, String role, String title, String text) {
     }
 
+    /**
+     * The v2 plan. {@code payload} is the whole artifact body kept verbatim, so a field the
+     * mapper below does not yet read is still persisted rather than silently dropped — which
+     * is exactly what the v1 client did to everything outside its five keys.
+     */
     record TestPlanResult(
             String overview,
-            String scope,
-            List<Scenario> scenarios,
+            TestPlan.Scope scope,
+            Map<String, Object> architectureContext,
+            List<TestPlan.Requirement> requirements,
+            List<TestPlan.TestDataRequirement> testDataRequirements,
+            List<Capability> capabilities,
+            String executionStrategy,
+            List<Map<String, Object>> risks,
+            List<Map<String, Object>> gaps,
             Map<String, Object> provenance,
+            Map<String, Object> payload,
             String responseId) {
     }
 
-    record Scenario(String id, String title, String priority, String source) {
+    /** A business-capability group of test cases — how the plan is organised and rendered. */
+    record Capability(String name, String description, List<Scenario> testCases) {
+    }
+
+    record Scenario(
+            String id,
+            String title,
+            String priority,
+            String objective,
+            String lifecyclePhase,
+            List<String> sources,
+            List<String> requirementIds,
+            List<String> preconditions,
+            List<String> steps,
+            List<String> expectedResults,
+            List<String> testDataRequirements,
+            Map<String, Object> automationMapping) {
     }
 
     // ---- generate test data ----------------------------------------------------------

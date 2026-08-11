@@ -2,8 +2,11 @@ package com.autwit.copilot.planning;
 
 import java.time.Duration;
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -51,6 +54,7 @@ public class PlanningRepository {
                 Columns.uuid(rs, "session_id"),
                 rs.getString("feature_key"),
                 rs.getString("feature_description"),
+                rs.getString("domain"),
                 rs.getString("title"),
                 rs.getString("status"),
                 rs.getString("created_by"),
@@ -63,6 +67,7 @@ public class PlanningRepository {
                 Columns.uuid(rs, "document_id"),
                 Columns.uuid(rs, "project_id"),
                 SourceType.fromWire(rs.getString("source_type")),
+                DocRole.fromWire(rs.getString("doc_role")),
                 rs.getString("external_ref"),
                 rs.getString("title"),
                 rs.getString("mime"),
@@ -169,15 +174,15 @@ public class PlanningRepository {
     // ---- project ---------------------------------------------------------------------
 
     public PlanningProject createProject(UUID sessionId, String featureKey, String featureDescription,
-            String title, String createdBy, String env) {
+            String domain, String title, String createdBy, String env) {
         return jdbc.queryForObject(
                 """
                 insert into autwit.planning_project
-                  (session_id, feature_key, feature_description, title, created_by, env)
-                values (?, ?, ?, ?, ?, ?)
+                  (session_id, feature_key, feature_description, domain, title, created_by, env)
+                values (?, ?, ?, ?, ?, ?, ?)
                 returning *
                 """,
-                projectMapper, sessionId, featureKey, featureDescription, title, createdBy, env);
+                projectMapper, sessionId, featureKey, featureDescription, domain, title, createdBy, env);
     }
 
     /** The project(s) in a session — v1 has one; ordered oldest-first. */
@@ -219,20 +224,27 @@ public class PlanningRepository {
      * in the project — re-fetching PAY-2481 updates rather than doubles. A raw paste has a
      * null external_ref, so pastes never collide (Postgres treats nulls as distinct).
      */
-    public SourceDocument upsertDocument(UUID projectId, SourceType sourceType, String externalRef,
-            String title, String mime, String textContent, String contentHash) {
+    public SourceDocument upsertDocument(UUID projectId, SourceType sourceType, DocRole docRole,
+            String externalRef, String title, String mime, String textContent, String contentHash) {
         return jdbc.queryForObject(
                 """
                 insert into autwit.source_document
-                  (project_id, source_type, external_ref, title, mime, text_content, content_hash)
-                values (?, ?, ?, ?, ?, ?, ?)
+                  (project_id, source_type, doc_role, external_ref, title, mime, text_content, content_hash)
+                values (?, ?, ?, ?, ?, ?, ?, ?)
                 on conflict (project_id, source_type, external_ref) do update
-                  set title = excluded.title, mime = excluded.mime,
+                  set title = excluded.title, mime = excluded.mime, doc_role = excluded.doc_role,
                       text_content = excluded.text_content, content_hash = excluded.content_hash,
                       selected = true
                 returning *
                 """,
-                documentMapper, projectId, sourceType.wire(), externalRef, title, mime, textContent, contentHash);
+                documentMapper, projectId, sourceType.wire(), docRole.wire(), externalRef, title, mime,
+                textContent, contentHash);
+    }
+
+    /** The tester re-tagging a document after upload — the role drives how it is read. */
+    public boolean setDocRole(UUID documentId, DocRole docRole) {
+        return jdbc.update("update autwit.source_document set doc_role = ? where document_id = ?",
+                docRole.wire(), documentId) == 1;
     }
 
     public List<SourceDocument> listDocuments(UUID projectId) {
@@ -359,24 +371,94 @@ public class PlanningRepository {
 
     // ---- test plan -------------------------------------------------------------------
 
-    public TestPlan insertPlan(UUID projectId, UUID generationId, String overview, String scope,
-            Map<String, Object> provenance, List<TestPlan.TestScenario> scenarios) {
+    /**
+     * Writes a v2 plan: the canonical payload plus the rows Step 5 keys off.
+     *
+     * <p>The payload is the raw artifact body with the canonical keys overlaid from the typed
+     * result. The overlay matters: the read path reconstructs every plan-level field from the
+     * payload, so a client that has no raw wire body — the {@code fake} profile, which is the
+     * only offline path through the whole stack — would otherwise persist a plan with no
+     * scope, requirements, risks or gaps. Starting from the raw body keeps any field this
+     * version does not yet read, which is the reason the column exists at all.
+     */
+    public TestPlan insertPlan(UUID projectId, UUID generationId, PlanningClient.TestPlanResult result,
+            List<TestPlan.TestScenario> scenarios) {
+        var scope = result.scope() == null ? new TestPlan.Scope(List.of(), List.of()) : result.scope();
         var planId = jdbc.queryForObject(
                 """
-                insert into autwit.test_plan (project_id, generation_id, overview, scope, provenance)
-                values (?, ?, ?, ?, ?::jsonb)
+                insert into autwit.test_plan (project_id, generation_id, plan_version, overview, scope,
+                                              provenance, payload)
+                values (?, ?, 2, ?, ?, ?::jsonb, ?::jsonb)
                 returning test_plan_id
                 """,
-                UUID.class, projectId, generationId, overview, scope, json.writeOrEmptyObject(provenance));
-        for (var s : scenarios) {
-            jdbc.update(
-                    """
-                    insert into autwit.test_scenario (test_plan_id, scenario_key, seq, title, priority, source)
-                    values (?, ?, ?, ?, ?, ?)
-                    """,
-                    planId, s.scenarioKey(), s.seq(), s.title(), s.priority(), s.source());
-        }
+                UUID.class, projectId, generationId, result.overview(),
+                // The legacy `scope` text column stays populated so a v1 reader still sees
+                // something sensible; the structured form lives in payload.
+                String.join("; ", scope.inScope()),
+                json.writeOrEmptyObject(result.provenance()),
+                json.writeOrEmptyObject(canonicalPayload(result, scope)));
+
+        // Batched: the old per-row loop issued one round trip per case, and a rich plan has
+        // far more cases than the v1 shape did.
+        jdbc.batchUpdate(
+                """
+                insert into autwit.test_scenario (test_plan_id, scenario_key, seq, capability, title,
+                        priority, objective, lifecycle_phase, source, sources, requirement_ids,
+                        preconditions, steps, expected_results, test_data_requirements, automation_mapping)
+                values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?::jsonb, ?::jsonb, ?::jsonb, ?::jsonb, ?::jsonb,
+                        ?::jsonb, ?::jsonb)
+                """,
+                scenarios.stream()
+                        .map(s -> new Object[] {
+                                planId, s.scenarioKey(), s.seq(), s.capability(), s.title(),
+                                s.priority(), s.objective(), s.lifecyclePhase(), s.source(),
+                                json.writeOrEmptyArray(s.sources()),
+                                json.writeOrEmptyArray(s.requirementIds()),
+                                json.writeOrEmptyArray(s.preconditions()),
+                                json.writeOrEmptyArray(s.steps()),
+                                json.writeOrEmptyArray(s.expectedResults()),
+                                json.writeOrEmptyArray(s.testDataRequirements()),
+                                s.automationMapping() == null ? null
+                                        : json.writeOrEmptyObject(s.automationMapping()),
+                        })
+                        .toList());
         return findPlan(planId).orElseThrow();
+    }
+
+    /** Raw body first (so unread fields survive), typed fields overlaid (so they always read back). */
+    private static Map<String, Object> canonicalPayload(PlanningClient.TestPlanResult result,
+            TestPlan.Scope scope) {
+        var payload = new LinkedHashMap<String, Object>(
+                result.payload() == null ? Map.of() : result.payload());
+        payload.put("overview", result.overview());
+        payload.put("scope", Map.of("in_scope", scope.inScope(), "out_of_scope", scope.outOfScope()));
+        payload.put("architecture_context", result.architectureContext());
+        payload.put("requirements", result.requirements().stream()
+                .map(r -> mapOfNullable("id", r.id(), "statement", r.statement(), "category", r.category(),
+                        "sources", r.sources(), "evidence", r.evidence(),
+                        "lifecycle_phase", r.lifecyclePhase()))
+                .toList());
+        payload.put("test_data_requirements", result.testDataRequirements().stream()
+                .map(d -> mapOfNullable("id", d.id(), "name", d.name(), "description", d.description(),
+                        "attributes", d.attributes(), "source_of_truth", d.sourceOfTruth()))
+                .toList());
+        payload.put("execution_strategy", result.executionStrategy());
+        payload.put("risks", result.risks());
+        payload.put("gaps", result.gaps());
+        // Capability descriptions are read from here when building the grouped API view.
+        payload.put("capabilities", result.capabilities().stream()
+                .map(c -> mapOfNullable("name", c.name(), "description", c.description()))
+                .toList());
+        return payload;
+    }
+
+    /** Map.of rejects nulls, and several of these fields are legitimately null. */
+    private static Map<String, Object> mapOfNullable(Object... kv) {
+        var m = new LinkedHashMap<String, Object>();
+        for (int i = 0; i < kv.length; i += 2) {
+            m.put(String.valueOf(kv[i]), kv[i + 1]);
+        }
+        return m;
     }
 
     public Optional<TestPlan> findPlan(UUID testPlanId) {
@@ -384,14 +466,17 @@ public class PlanningRepository {
                 "select * from autwit.test_plan where test_plan_id = ?",
                 (rs, n) -> new PlanHeader(
                         Columns.uuid(rs, "test_plan_id"), Columns.uuid(rs, "project_id"),
-                        Columns.uuid(rs, "generation_id"), rs.getString("overview"), rs.getString("scope"),
-                        json.readObject(rs.getString("provenance")), Columns.instant(rs, "created_at")),
+                        Columns.uuid(rs, "generation_id"), rs.getInt("plan_version"),
+                        rs.getString("overview"), rs.getString("scope"),
+                        json.readObject(rs.getString("provenance")),
+                        json.readObject(rs.getString("payload")), Columns.instant(rs, "created_at")),
                 testPlanId).stream().findFirst().map(this::buildPlan);
     }
 
     /** The {@code test_plan} row on its own; scenarios are fetched separately in {@link #buildPlan}. */
-    private record PlanHeader(UUID planId, UUID projectId, UUID generationId, String overview,
-            String scope, Map<String, Object> provenance, Instant createdAt) {
+    private record PlanHeader(UUID planId, UUID projectId, UUID generationId, int planVersion,
+            String overview, String scope, Map<String, Object> provenance,
+            Map<String, Object> payload, Instant createdAt) {
     }
 
     public Optional<TestPlan> findPlanByGeneration(UUID generationId) {
@@ -408,15 +493,105 @@ public class PlanningRepository {
         return id.flatMap(this::findPlan);
     }
 
+    /**
+     * Reads a plan back. A v1 row (written before the v2 upgrade) has an empty payload, prose
+     * in the legacy {@code scope} column and no capability grouping; it is adapted here rather
+     * than migrated, so old plans stay openable without touching their data.
+     */
     private TestPlan buildPlan(PlanHeader h) {
         var scenarios = jdbc.query(
-                "select scenario_key, seq, title, priority, source from autwit.test_scenario "
-                        + "where test_plan_id = ? order by seq",
-                (rs, n) -> new TestPlan.TestScenario(rs.getString("scenario_key"), rs.getInt("seq"),
-                        rs.getString("title"), rs.getString("priority"), rs.getString("source")),
+                """
+                select scenario_key, seq, capability, title, priority, objective, lifecycle_phase,
+                       source, sources, requirement_ids, preconditions, steps, expected_results,
+                       test_data_requirements, automation_mapping
+                  from autwit.test_scenario
+                 where test_plan_id = ?
+                 order by seq
+                """,
+                (rs, n) -> new TestPlan.TestScenario(
+                        rs.getString("scenario_key"), rs.getInt("seq"), rs.getString("capability"),
+                        rs.getString("title"), rs.getString("priority"), rs.getString("objective"),
+                        rs.getString("lifecycle_phase"),
+                        json.readStringArray(rs.getString("sources")),
+                        json.readStringArray(rs.getString("requirement_ids")),
+                        json.readStringArray(rs.getString("preconditions")),
+                        json.readStringArray(rs.getString("steps")),
+                        json.readStringArray(rs.getString("expected_results")),
+                        json.readStringArray(rs.getString("test_data_requirements")),
+                        rs.getString("automation_mapping") == null ? null
+                                : json.readObject(rs.getString("automation_mapping")),
+                        rs.getString("source")),
                 h.planId());
-        return new TestPlan(h.planId(), h.projectId(), h.generationId(), h.overview(), h.scope(),
-                h.provenance(), scenarios, h.createdAt());
+
+        var payload = h.payload();
+        return new TestPlan(
+                h.planId(), h.projectId(), h.generationId(), h.planVersion(), h.overview(),
+                scopeOf(h, payload),
+                mapAt(payload, "architecture_context"),
+                requirementsOf(payload),
+                dataRequirementsOf(payload),
+                stringAt(payload, "execution_strategy"),
+                listAt(payload, "risks"),
+                listAt(payload, "gaps"),
+                h.provenance(), payload, scenarios, h.createdAt());
+    }
+
+    /** v2 reads the structured scope from payload; v1 folds its prose into in_scope. */
+    private static TestPlan.Scope scopeOf(PlanHeader h, Map<String, Object> payload) {
+        var scope = mapAt(payload, "scope");
+        if (scope != null) {
+            return new TestPlan.Scope(stringsAt(scope, "in_scope"), stringsAt(scope, "out_of_scope"));
+        }
+        var legacy = h.scope();
+        return new TestPlan.Scope(
+                legacy == null || legacy.isBlank() ? List.of() : List.of(legacy), List.of());
+    }
+
+    private static List<TestPlan.Requirement> requirementsOf(Map<String, Object> payload) {
+        return listAt(payload, "requirements").stream()
+                .map(r -> new TestPlan.Requirement(stringAt(r, "id"), stringAt(r, "statement"),
+                        stringAt(r, "category"), stringsAt(r, "sources"), stringAt(r, "evidence"),
+                        stringAt(r, "lifecycle_phase")))
+                .toList();
+    }
+
+    private static List<TestPlan.TestDataRequirement> dataRequirementsOf(Map<String, Object> payload) {
+        return listAt(payload, "test_data_requirements").stream()
+                .map(d -> new TestPlan.TestDataRequirement(stringAt(d, "id"), stringAt(d, "name"),
+                        stringAt(d, "description"), stringsAt(d, "attributes"),
+                        stringAt(d, "source_of_truth")))
+                .toList();
+    }
+
+    @SuppressWarnings("unchecked")
+    private static Map<String, Object> mapAt(Map<String, Object> m, String key) {
+        return m != null && m.get(key) instanceof Map<?, ?> v ? (Map<String, Object>) v : null;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<Map<String, Object>> listAt(Map<String, Object> m, String key) {
+        if (m == null || !(m.get(key) instanceof List<?> l)) {
+            return List.of();
+        }
+        var out = new ArrayList<Map<String, Object>>();
+        for (var e : l) {
+            if (e instanceof Map<?, ?> row) {
+                out.add((Map<String, Object>) row);
+            }
+        }
+        return out;
+    }
+
+    private static String stringAt(Map<String, Object> m, String key) {
+        var v = m == null ? null : m.get(key);
+        return v == null ? null : String.valueOf(v);
+    }
+
+    private static List<String> stringsAt(Map<String, Object> m, String key) {
+        if (m == null || !(m.get(key) instanceof List<?> l)) {
+            return List.of();
+        }
+        return l.stream().filter(Objects::nonNull).map(String::valueOf).toList();
     }
 
     // ---- test data -------------------------------------------------------------------

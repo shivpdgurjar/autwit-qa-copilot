@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api, unwrap, type GenerateDataRequest, type SourceDocumentView } from '../api/client';
+import { api, unwrap, type DocRole, type GenerateDataRequest, type SourceDocumentView } from '../api/client';
 
 /**
  * Data hooks for the Planning Copilot wizard. Generation is async (the backend returns
@@ -105,6 +105,7 @@ export function useAddDocument(projectId: string) {
   return useMutation({
     mutationFn: async (body: {
       source_type: 'upload' | 'paste';
+      doc_role?: DocRole;
       title?: string;
       filename?: string;
       mime?: string;
@@ -149,6 +150,23 @@ export function useSetSelected(projectId: string) {
       api.PATCH('/planning/projects/{projectId}/documents/{documentId}', {
         params: { path: { projectId, documentId } },
         body: { selected },
+      }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['planning', 'documents', projectId] }),
+  });
+}
+
+/**
+ * Re-tag a document's role. The role is what tells the generator how to read it — most
+ * importantly, that an `existing_tests` document is evidence of coverage, not a set of rows
+ * to reproduce as new cases.
+ */
+export function useSetDocRole(projectId: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ documentId, docRole }: { documentId: string; docRole: DocRole }) =>
+      api.PATCH('/planning/projects/{projectId}/documents/{documentId}', {
+        params: { path: { projectId, documentId } },
+        body: { doc_role: docRole },
       }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['planning', 'documents', projectId] }),
   });

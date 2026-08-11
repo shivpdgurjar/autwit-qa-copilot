@@ -48,12 +48,13 @@ public class PlanningService {
     /** Create a planning session and its first project — the "New session" entry point. */
     @Transactional
     public SessionWithProject createSession(String testerId, String env, String title,
-            String featureKey, String featureDescription) {
+            String featureKey, String featureDescription, String domain) {
         var session = repo.createSession(blankToNull(testerId), blankToNull(env), blankToNull(title));
         repo.addActivity(session.sessionId(), "session_created", null,
                 "Planning session created" + (title != null && !title.isBlank() ? ": " + title.trim() : ""));
         var project = repo.createProject(session.sessionId(), blankToNull(featureKey),
-                blankToNull(featureDescription), blankToNull(title), blankToNull(testerId), blankToNull(env));
+                blankToNull(featureDescription), blankToNull(domain), blankToNull(title),
+                blankToNull(testerId), blankToNull(env));
         repo.addActivity(session.sessionId(), "project_added", blankToNull(featureKey),
                 "Started " + (featureKey != null && !featureKey.isBlank() ? featureKey.trim() : "a feature"));
         return new SessionWithProject(session, project);
@@ -79,8 +80,8 @@ public class PlanningService {
     /** Back-compat: create a project, auto-creating a session to hold it. */
     @Transactional
     public PlanningProject createProject(String featureKey, String featureDescription, String title,
-            String createdBy, String env) {
-        return createSession(createdBy, env, title, featureKey, featureDescription).project();
+            String createdBy, String env, String domain) {
+        return createSession(createdBy, env, title, featureKey, featureDescription, domain).project();
     }
 
     public PlanningProject requireProject(UUID projectId) {
@@ -97,8 +98,8 @@ public class PlanningService {
      * pass 2 in {@link TextExtractor}).
      */
     @Transactional
-    public SourceDocument addTextDocument(UUID projectId, SourceType sourceType, String title,
-            String filename, String mime, String rawText) {
+    public SourceDocument addTextDocument(UUID projectId, SourceType sourceType, String docRole,
+            String title, String filename, String mime, String rawText) {
         var project = requireProject(projectId);
         if (sourceType != SourceType.UPLOAD && sourceType != SourceType.PASTE) {
             throw new ApiException.BadRequest("invalid_source_type",
@@ -110,7 +111,8 @@ public class PlanningService {
                 : filename != null && !filename.isBlank() ? filename.trim() : "Pasted text";
         // Uploads dedupe on filename; a paste has no external ref so each is distinct.
         var externalRef = sourceType == SourceType.UPLOAD ? filename : null;
-        var doc = repo.upsertDocument(projectId, sourceType, externalRef, docTitle, mime, text, hash);
+        var doc = repo.upsertDocument(projectId, sourceType, DocRole.fromWire(docRole), externalRef,
+                docTitle, mime, text, hash);
         repo.addActivity(project.sessionId(), "document_added", externalRef, "Added " + docTitle);
         return doc;
     }
@@ -121,13 +123,15 @@ public class PlanningService {
      * Uploads dedupe on filename within the project (re-uploading refreshes in place).
      */
     @Transactional
-    public SourceDocument addUploadedFile(UUID projectId, String filename, String mime, byte[] bytes, String title) {
+    public SourceDocument addUploadedFile(UUID projectId, String filename, String mime, byte[] bytes,
+            String title, String docRole) {
         var project = requireProject(projectId);
         var text = extractor.extractFile(filename, mime, bytes);
         var hash = hasher.hash(ArtifactFormat.TEXT, text);
         var docTitle = title != null && !title.isBlank() ? title.trim()
                 : filename != null && !filename.isBlank() ? filename.trim() : "Uploaded document";
-        var doc = repo.upsertDocument(projectId, SourceType.UPLOAD, filename, docTitle, mime, text, hash);
+        var doc = repo.upsertDocument(projectId, SourceType.UPLOAD, DocRole.fromWire(docRole), filename,
+                docTitle, mime, text, hash);
         repo.addActivity(project.sessionId(), "document_added", filename, "Uploaded " + docTitle);
         return doc;
     }
@@ -140,6 +144,16 @@ public class PlanningService {
     public void setSelected(UUID projectId, UUID documentId, boolean selected) {
         requireDocumentInProject(projectId, documentId);
         repo.setSelected(documentId, selected);
+    }
+
+    /**
+     * Re-tags a document after it was added. An unrecognised role falls back to `requirement`
+     * rather than 400ing — the role is an advisory hint to the generator, and a stricter
+     * contract would break the UI the next time a role is introduced.
+     */
+    public void setDocRole(UUID projectId, UUID documentId, String docRole) {
+        requireDocumentInProject(projectId, documentId);
+        repo.setDocRole(documentId, DocRole.fromWire(docRole));
     }
 
     public void deleteDocument(UUID projectId, UUID documentId) {
@@ -182,8 +196,10 @@ public class PlanningService {
             // empty body (truncated Jira, PLAN-1) still lands rather than failing the fetch.
             var text = extractor.normalize(d.text());
             var hash = hasher.hash(ArtifactFormat.TEXT, text);
+            // Fetched items default to `requirement`; the tester re-tags in the UI if a
+            // fetched page is actually architecture or existing tests.
             return repo.upsertDocument(projectId, SourceType.fromWire(d.sourceType()),
-                    d.externalRef(), d.title(), null, text, hash);
+                    DocRole.REQUIREMENT, d.externalRef(), d.title(), null, text, hash);
         }).toList();
         repo.addActivity(project.sessionId(), "context_fetched", null,
                 "Fetched " + persisted.size() + " document(s) from Jira/Confluence");

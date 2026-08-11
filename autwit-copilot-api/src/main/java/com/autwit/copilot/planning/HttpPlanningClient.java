@@ -101,15 +101,66 @@ public class HttpPlanningClient implements PlanningClient {
         input.put("feature_description", request.featureDescription());
         input.put("source_documents", docs(request.sourceDocuments()));
         input.put("existing_test_cases", docs(request.existingTestCases()));
+        input.put("domain", request.domain());
         input.put("previous_response_id", request.previousResponseId());
         var body = artifactBody(execute("planning.generate_test_plan", input), "planning_test_plan");
 
-        var scenarios = new ArrayList<Scenario>();
-        for (var s : listOfMaps(body.get("scenarios"))) {
-            scenarios.add(new Scenario(str(s, "id"), str(s, "title"), str(s, "priority"), str(s, "source")));
+        var capabilities = new ArrayList<Capability>();
+        for (var c : listOfMaps(body.get("capabilities"))) {
+            var cases = new ArrayList<Scenario>();
+            for (var s : listOfMaps(c.get("test_cases"))) {
+                cases.add(scenario(s));
+            }
+            capabilities.add(new Capability(str(c, "name"), str(c, "description"), cases));
         }
-        return new TestPlanResult(str(body, "overview"), str(body, "scope"), scenarios,
-                obj(body.get("provenance")), str(body, "response_id"));
+
+        var requirements = new ArrayList<TestPlan.Requirement>();
+        for (var r : listOfMaps(body.get("requirements"))) {
+            requirements.add(new TestPlan.Requirement(str(r, "id"), str(r, "statement"),
+                    str(r, "category"), strings(r.get("sources")), str(r, "evidence"),
+                    str(r, "lifecycle_phase")));
+        }
+
+        var dataRequirements = new ArrayList<TestPlan.TestDataRequirement>();
+        for (var d : listOfMaps(body.get("test_data_requirements"))) {
+            dataRequirements.add(new TestPlan.TestDataRequirement(str(d, "id"), str(d, "name"),
+                    str(d, "description"), strings(d.get("attributes")), str(d, "source_of_truth")));
+        }
+
+        var scope = obj(body.get("scope"));
+        return new TestPlanResult(
+                str(body, "overview"),
+                new TestPlan.Scope(strings(scope.get("in_scope")), strings(scope.get("out_of_scope"))),
+                // Null must survive as null — an empty map would read as "architecture was
+                // supplied and had nothing in it".
+                body.get("architecture_context") == null ? null : obj(body.get("architecture_context")),
+                requirements,
+                dataRequirements,
+                capabilities,
+                str(body, "execution_strategy"),
+                listOfMaps(body.get("risks")),
+                listOfMaps(body.get("gaps")),
+                obj(body.get("provenance")),
+                // The whole body, kept verbatim: a field this mapper does not yet read is
+                // still persisted rather than silently lost.
+                body,
+                str(body, "response_id"));
+    }
+
+    private static Scenario scenario(Map<String, Object> s) {
+        return new Scenario(
+                str(s, "id"),
+                str(s, "title"),
+                str(s, "priority"),
+                str(s, "objective"),
+                str(s, "lifecycle_phase"),
+                strings(s.get("sources")),
+                strings(s.get("requirement_ids")),
+                strings(s.get("preconditions")),
+                strings(s.get("steps")),
+                strings(s.get("expected_results")),
+                strings(s.get("test_data_requirements")),
+                s.get("automation_mapping") == null ? null : obj(s.get("automation_mapping")));
     }
 
     @Override
@@ -229,6 +280,7 @@ public class HttpPlanningClient implements PlanningClient {
         for (var d : docs == null ? List.<Doc>of() : docs) {
             var m = new LinkedHashMap<String, Object>();
             m.put("source_type", d.sourceType());
+            m.put("role", d.role());
             m.put("title", d.title());
             m.put("text", d.text());
             out.add(m);
@@ -258,6 +310,20 @@ public class HttpPlanningClient implements PlanningClient {
     private static String str(Map<String, Object> m, String key) {
         var v = m.get(key);
         return v == null ? null : String.valueOf(v);
+    }
+
+    /** A JSON string array as a Java list; anything else (or absent) becomes empty. */
+    private static List<String> strings(Object o) {
+        if (!(o instanceof List<?> l)) {
+            return List.of();
+        }
+        var out = new ArrayList<String>();
+        for (var e : l) {
+            if (e != null) {
+                out.add(String.valueOf(e));
+            }
+        }
+        return out;
     }
 
     private static String join(String... parts) {

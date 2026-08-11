@@ -1010,9 +1010,13 @@ paths:
           application/json:
             schema:
               type: object
-              required: [selected]
+              description: |
+                Both fields are optional: a PATCH may toggle the include selection, re-tag
+                the document's role, or both. Omitting one leaves it unchanged.
               properties:
                 selected: { type: boolean }
+                doc_role:
+                  $ref: '#/components/schemas/DocRole'
       responses:
         '204': { description: Updated }
         '404': { $ref: '#/components/responses/NotFound' }
@@ -2301,6 +2305,13 @@ components:
         session_id: { type: string, format: uuid }
         feature_key: { type: string, nullable: true }
         feature_description: { type: string, nullable: true }
+        domain:
+          type: string
+          nullable: true
+          enum: [oes]
+          description: |
+            Selects the orchestrator's domain-context block. Only this key travels; the
+            rules themselves live orchestrator-side. Null leaves the plan domain-neutral.
         title: { type: string, nullable: true }
         status: { type: string, enum: [active, archived] }
         created_by: { type: string, nullable: true }
@@ -2315,10 +2326,22 @@ components:
       required: [source_type, text]
       properties:
         source_type: { type: string, enum: [upload, paste] }
+        doc_role:
+          $ref: '#/components/schemas/DocRole'
         title: { type: string }
         filename: { type: string }
         mime: { type: string }
         text: { type: string, description: The document's text content (read client-side for uploads). }
+
+    DocRole:
+      type: string
+      enum: [requirement, architecture, existing_tests, domain_rules]
+      default: requirement
+      description: |
+        What the document IS, as opposed to source_type, which is where it came from.
+        This drives how the generator weights it: requirements are the source of truth,
+        architecture explains assembly, and existing_tests is evidence of coverage that
+        must NOT be reproduced as new cases.
 
     SourceDocumentView:
       type: object
@@ -2326,6 +2349,8 @@ components:
       properties:
         document_id: { type: string, format: uuid }
         source_type: { type: string, enum: [upload, paste, jira, confluence] }
+        doc_role:
+          $ref: '#/components/schemas/DocRole'
         external_ref: { type: string, nullable: true }
         title: { type: string }
         mime: { type: string, nullable: true }
@@ -2415,19 +2440,93 @@ components:
 
     TestPlanView:
       type: object
-      required: [test_plan_id, generation_id, scenarios]
+      required: [test_plan_id, generation_id, plan_version, scenarios, capabilities]
+      description: |
+        A synthesized test plan. plan_version 2 groups test cases under capabilities and
+        gives each case executable detail; plan_version 1 is a legacy plan written before
+        the upgrade - it reads back with an empty capabilities list, its prose scope folded
+        into scope.in_scope, and only the four original fields on each case.
       properties:
         test_plan_id: { type: string, format: uuid }
         generation_id: { type: string, format: uuid }
+        plan_version: { type: integer, enum: [1, 2] }
         overview: { type: string, nullable: true }
-        scope: { type: string, nullable: true }
+        scope:
+          $ref: '#/components/schemas/TestPlanScope'
+        architecture_context:
+          type: object
+          nullable: true
+          additionalProperties: true
+          description: Null when the corpus carried no architecture or design material.
+        requirements:
+          type: array
+          items: { $ref: '#/components/schemas/TestPlanRequirement' }
+        test_data_requirements:
+          type: array
+          items: { $ref: '#/components/schemas/TestDataRequirementView' }
+        capabilities:
+          type: array
+          description: Business-capability groups. Empty for a legacy (plan_version 1) plan.
+          items: { $ref: '#/components/schemas/TestPlanCapability' }
+        execution_strategy: { type: string, nullable: true }
+        risks:
+          type: array
+          items: { type: object, additionalProperties: true }
+        gaps:
+          type: array
+          description: What the material does not settle. Distinct from risks.
+          items: { type: object, additionalProperties: true }
         provenance:
           type: object
           additionalProperties: true
         scenarios:
           type: array
+          description: Every test case flattened in capability order, for readers wanting a flat list.
           items: { $ref: '#/components/schemas/TestScenarioView' }
         created_at: { type: string, format: date-time }
+
+    TestPlanScope:
+      type: object
+      required: [in_scope, out_of_scope]
+      properties:
+        in_scope: { type: array, items: { type: string } }
+        out_of_scope: { type: array, items: { type: string } }
+
+    TestPlanRequirement:
+      type: object
+      required: [id, statement]
+      description: One normalised, atomic, testable rule - the join between documents and cases.
+      properties:
+        id: { type: string, description: 'REQ-01, REQ-02, ...' }
+        statement: { type: string }
+        category:
+          type: string
+          nullable: true
+          enum: [functional, validation, data, integration, non_functional]
+        sources: { type: array, items: { type: string } }
+        evidence: { type: string, nullable: true, description: A short verbatim quote, when one exists. }
+        lifecycle_phase: { type: string, nullable: true }
+
+    TestDataRequirementView:
+      type: object
+      required: [id, name]
+      description: A plan-level data prerequisite - characteristics, never real order numbers.
+      properties:
+        id: { type: string, description: 'DATA-01, DATA-02, ...' }
+        name: { type: string }
+        description: { type: string, nullable: true }
+        attributes: { type: array, items: { type: string } }
+        source_of_truth: { type: string, nullable: true }
+
+    TestPlanCapability:
+      type: object
+      required: [name, test_cases]
+      properties:
+        name: { type: string }
+        description: { type: string, nullable: true }
+        test_cases:
+          type: array
+          items: { $ref: '#/components/schemas/TestScenarioView' }
 
     TestScenarioView:
       type: object
@@ -2435,9 +2534,23 @@ components:
       properties:
         scenario_key: { type: string, description: TC-01, TC-02, … }
         seq: { type: integer }
+        capability: { type: string, nullable: true, description: Null on a legacy plan. }
         title: { type: string }
         priority: { type: string, nullable: true, enum: [High, Medium, Low] }
-        source: { type: string, nullable: true }
+        objective: { type: string, nullable: true, description: What passing this case proves. }
+        lifecycle_phase: { type: string, nullable: true }
+        sources: { type: array, items: { type: string } }
+        requirement_ids: { type: array, items: { type: string } }
+        preconditions: { type: array, items: { type: string } }
+        steps: { type: array, items: { type: string } }
+        expected_results: { type: array, items: { type: string } }
+        test_data_requirements: { type: array, items: { type: string } }
+        automation_mapping:
+          type: object
+          nullable: true
+          additionalProperties: true
+          description: Null unless the material named an endpoint, page, table, topic or suite.
+        source: { type: string, nullable: true, description: 'sources[0]; retained for legacy readers.' }
 
     TestDatasetView:
       type: object

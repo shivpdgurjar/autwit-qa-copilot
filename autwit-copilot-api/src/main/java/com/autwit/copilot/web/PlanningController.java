@@ -2,6 +2,7 @@ package com.autwit.copilot.web;
 
 import java.io.IOException;
 import java.time.Instant;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -51,7 +52,9 @@ public class PlanningController {
     // ---- sessions (resumable, history-bearing context) -------------------------------
 
     public record CreateSessionRequest(String testerId, String env, String title,
-            String featureKey, String featureDescription) {
+            String featureKey, String featureDescription,
+            /** Domain-context key, e.g. "oes"; null leaves the plan domain-neutral. */
+            String domain) {
     }
 
     public record SessionView(String sessionId, String testerId, String env, String title, String status,
@@ -70,7 +73,7 @@ public class PlanningController {
     @PostMapping("/sessions")
     ResponseEntity<CreateSessionResponse> createSession(@RequestBody CreateSessionRequest req) {
         var r = planning.createSession(req.testerId(), req.env(), req.title(),
-                req.featureKey(), req.featureDescription());
+                req.featureKey(), req.featureDescription(), req.domain());
         return ResponseEntity.status(201)
                 .body(new CreateSessionResponse(session(r.session()), project(r.project())));
     }
@@ -95,17 +98,18 @@ public class PlanningController {
     // ---- projects --------------------------------------------------------------------
 
     public record CreateProjectRequest(String featureKey, String featureDescription, String title,
-            String createdBy, String env) {
+            String createdBy, String env, String domain) {
     }
 
     public record ProjectView(String projectId, String sessionId, String featureKey, String featureDescription,
-            String title, String status, String createdBy, String env, boolean chainable, Instant createdAt) {
+            String domain, String title, String status, String createdBy, String env, boolean chainable,
+            Instant createdAt) {
     }
 
     @PostMapping("/projects")
     ResponseEntity<ProjectView> createProject(@RequestBody CreateProjectRequest req) {
         var p = planning.createProject(req.featureKey(), req.featureDescription(), req.title(),
-                req.createdBy(), req.env());
+                req.createdBy(), req.env(), req.domain());
         return ResponseEntity.status(201).body(project(p));
     }
 
@@ -123,21 +127,23 @@ public class PlanningController {
 
     public record AddDocumentRequest(
             @NotBlank String sourceType,
+            /** What the document IS. Absent or unknown reads as "requirement". */
+            String docRole,
             String title,
             String filename,
             String mime,
             @NotBlank String text) {
     }
 
-    public record DocumentView(String documentId, String sourceType, String externalRef, String title,
-            String mime, boolean selected, int textLength, Instant createdAt) {
+    public record DocumentView(String documentId, String sourceType, String docRole, String externalRef,
+            String title, String mime, boolean selected, int textLength, Instant createdAt) {
     }
 
     @PostMapping("/projects/{projectId}/documents")
     ResponseEntity<DocumentView> addDocument(@PathVariable UUID projectId,
             @Valid @RequestBody AddDocumentRequest req) {
         var doc = planning.addTextDocument(projectId, SourceType.fromWire(req.sourceType()),
-                req.title(), req.filename(), req.mime(), req.text());
+                req.docRole(), req.title(), req.filename(), req.mime(), req.text());
         return ResponseEntity.status(201).body(document(doc));
     }
 
@@ -148,7 +154,8 @@ public class PlanningController {
     @PostMapping(value = "/projects/{projectId}/documents/upload", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     ResponseEntity<DocumentView> uploadDocument(@PathVariable UUID projectId,
             @RequestParam("file") MultipartFile file,
-            @RequestParam(value = "title", required = false) String title) {
+            @RequestParam(value = "title", required = false) String title,
+            @RequestParam(value = "doc_role", required = false) String docRole) {
         if (file == null || file.isEmpty()) {
             throw new ApiException.BadRequest("empty_document", "No file was uploaded.");
         }
@@ -158,7 +165,8 @@ public class PlanningController {
         } catch (IOException e) {
             throw new ApiException.BadRequest("upload_failed", "Could not read the uploaded file: " + e.getMessage());
         }
-        var doc = planning.addUploadedFile(projectId, file.getOriginalFilename(), file.getContentType(), bytes, title);
+        var doc = planning.addUploadedFile(projectId, file.getOriginalFilename(), file.getContentType(),
+                bytes, title, docRole);
         return ResponseEntity.status(201).body(document(doc));
     }
 
@@ -167,13 +175,19 @@ public class PlanningController {
         return planning.listDocuments(projectId).stream().map(PlanningController::document).toList();
     }
 
-    public record SelectRequest(boolean selected) {
+    /** Both fields optional: a PATCH may toggle selection, re-tag the role, or both. */
+    public record SelectRequest(Boolean selected, String docRole) {
     }
 
     @PatchMapping("/projects/{projectId}/documents/{documentId}")
     ResponseEntity<Void> select(@PathVariable UUID projectId, @PathVariable UUID documentId,
             @RequestBody SelectRequest req) {
-        planning.setSelected(projectId, documentId, req.selected());
+        if (req.selected() != null) {
+            planning.setSelected(projectId, documentId, req.selected());
+        }
+        if (req.docRole() != null) {
+            planning.setDocRole(projectId, documentId, req.docRole());
+        }
         return ResponseEntity.noContent().build();
     }
 
@@ -315,10 +329,32 @@ public class PlanningController {
 
     // ---- deliverables ----------------------------------------------------------------
 
-    public record ScenarioView(String scenarioKey, int seq, String title, String priority, String source) {
+    /** One executable test case. Legacy (plan_version 1) rows carry only the first five fields. */
+    public record ScenarioView(String scenarioKey, int seq, String capability, String title, String priority,
+            String objective, String lifecyclePhase, List<String> sources, List<String> requirementIds,
+            List<String> preconditions, List<String> steps, List<String> expectedResults,
+            List<String> testDataRequirements, Map<String, Object> automationMapping, String source) {
     }
 
-    public record PlanView(String testPlanId, String generationId, String overview, String scope,
+    public record ScopeView(List<String> inScope, List<String> outOfScope) {
+    }
+
+    public record RequirementView(String id, String statement, String category, List<String> sources,
+            String evidence, String lifecyclePhase) {
+    }
+
+    public record TestDataRequirementView(String id, String name, String description,
+            List<String> attributes, String sourceOfTruth) {
+    }
+
+    /** A capability group — how the plan is organised and how the UI renders it. */
+    public record CapabilityView(String name, String description, List<ScenarioView> testCases) {
+    }
+
+    public record PlanView(String testPlanId, String generationId, int planVersion, String overview,
+            ScopeView scope, Map<String, Object> architectureContext, List<RequirementView> requirements,
+            List<TestDataRequirementView> testDataRequirements, List<CapabilityView> capabilities,
+            String executionStrategy, List<Map<String, Object>> risks, List<Map<String, Object>> gaps,
             Map<String, Object> provenance, List<ScenarioView> scenarios, Instant createdAt) {
     }
 
@@ -352,13 +388,14 @@ public class PlanningController {
 
     private static ProjectView project(com.autwit.copilot.planning.PlanningProject p) {
         return new ProjectView(p.projectId().toString(), p.sessionId().toString(), p.featureKey(),
-                p.featureDescription(), p.title(),
+                p.featureDescription(), p.domain(), p.title(),
                 p.status(), p.createdBy(), p.env(), p.latestResponseId() != null, p.createdAt());
     }
 
     private static DocumentView document(SourceDocument d) {
-        return new DocumentView(d.documentId().toString(), d.sourceType().wire(), d.externalRef(), d.title(),
-                d.mime(), d.selected(), d.textContent() == null ? 0 : d.textContent().length(), d.createdAt());
+        return new DocumentView(d.documentId().toString(), d.sourceType().wire(), d.docRole().wire(),
+                d.externalRef(), d.title(), d.mime(), d.selected(),
+                d.textContent() == null ? 0 : d.textContent().length(), d.createdAt());
     }
 
     private static CandidateView candidate(PlanningClient.Candidate c) {
@@ -392,10 +429,61 @@ public class PlanningController {
     }
 
     private static PlanView plan(TestPlan p) {
-        var scenarios = p.scenarios().stream()
-                .map(s -> new ScenarioView(s.scenarioKey(), s.seq(), s.title(), s.priority(), s.source()))
+        var scenarios = p.scenarios().stream().map(PlanningController::scenario).toList();
+        // Grouped in scenario order, so the UI renders capabilities in the order the plan
+        // presented them. A legacy plan has no capability on any row, which yields an empty
+        // list and makes the UI fall back to the flat table.
+        var capabilities = new ArrayList<CapabilityView>();
+        for (var s : p.scenarios()) {
+            if (s.capability() == null || s.capability().isBlank()) {
+                continue;
+            }
+            var last = capabilities.isEmpty() ? null : capabilities.get(capabilities.size() - 1);
+            if (last == null || !last.name().equals(s.capability())) {
+                capabilities.add(new CapabilityView(s.capability(), null, new ArrayList<>()));
+                last = capabilities.get(capabilities.size() - 1);
+            }
+            last.testCases().add(scenario(s));
+        }
+        // The capability description lives in the payload, not on the scenario rows.
+        var described = capabilities.stream()
+                .map(c -> new CapabilityView(c.name(), capabilityDescription(p, c.name()), c.testCases()))
                 .toList();
-        return new PlanView(p.testPlanId().toString(), p.generationId().toString(), p.overview(), p.scope(),
-                p.provenance(), scenarios, p.createdAt());
+
+        return new PlanView(p.testPlanId().toString(), p.generationId().toString(), p.planVersion(),
+                p.overview(),
+                new ScopeView(p.scope().inScope(), p.scope().outOfScope()),
+                p.architectureContext(),
+                p.requirements().stream()
+                        .map(r -> new RequirementView(r.id(), r.statement(), r.category(), r.sources(),
+                                r.evidence(), r.lifecyclePhase()))
+                        .toList(),
+                p.testDataRequirements().stream()
+                        .map(d -> new TestDataRequirementView(d.id(), d.name(), d.description(),
+                                d.attributes(), d.sourceOfTruth()))
+                        .toList(),
+                described, p.executionStrategy(), p.risks(), p.gaps(), p.provenance(), scenarios,
+                p.createdAt());
+    }
+
+    private static ScenarioView scenario(TestPlan.TestScenario s) {
+        return new ScenarioView(s.scenarioKey(), s.seq(), s.capability(), s.title(), s.priority(),
+                s.objective(), s.lifecyclePhase(), s.sources(), s.requirementIds(), s.preconditions(),
+                s.steps(), s.expectedResults(), s.testDataRequirements(), s.automationMapping(),
+                s.source());
+    }
+
+    @SuppressWarnings("unchecked")
+    private static String capabilityDescription(TestPlan p, String name) {
+        if (!(p.payload().get("capabilities") instanceof List<?> caps)) {
+            return null;
+        }
+        for (var c : caps) {
+            if (c instanceof Map<?, ?> m && name.equals(m.get("name"))) {
+                var d = ((Map<String, Object>) m).get("description");
+                return d == null ? null : String.valueOf(d);
+            }
+        }
+        return null;
     }
 }

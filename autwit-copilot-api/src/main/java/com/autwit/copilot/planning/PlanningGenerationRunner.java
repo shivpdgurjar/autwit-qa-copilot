@@ -44,30 +44,49 @@ public class PlanningGenerationRunner {
 
     private void runTestPlan(Generation gen, String workerId, PlanningProject project, PlanningSession session) {
         var selected = repo.listSelectedDocuments(project.projectId());
-        var docs = selected.stream()
-                .map(d -> new PlanningClient.Doc(d.sourceType().wire(), d.title(), d.textContent()))
-                .toList();
+
+        // Documents tagged `existing_tests` travel as a DISTINCT input, not folded into the
+        // corpus. That separation is what lets the generator treat them as evidence of
+        // intended coverage instead of rows to reproduce as new cases.
+        var corpus = new ArrayList<PlanningClient.Doc>();
+        var existingTests = new ArrayList<PlanningClient.Doc>();
+        for (var d : selected) {
+            var doc = new PlanningClient.Doc(d.sourceType().wire(), d.docRole().wire(), d.title(),
+                    d.textContent());
+            if (d.docRole() == DocRole.EXISTING_TESTS) {
+                existingTests.add(doc);
+            } else {
+                corpus.add(doc);
+            }
+        }
 
         // Seed from the SESSION lineage, not the project — so a re-plan (and later data) build on
         // whatever the session has generated so far (the reusable-history requirement).
         var request = new PlanningClient.TestPlanRequest(
-                project.featureKey(), project.featureDescription(), docs,
-                // Existing-test-cases as a distinct input is a pass-2 refinement; pass 1 folds
-                // everything selected into the corpus.
-                List.of(), session.latestResponseId());
+                project.featureKey(), project.featureDescription(), corpus, existingTests,
+                project.domain(), session.latestResponseId());
 
         var result = client.generateTestPlan(request);
 
+        // Flattened in capability order; the orchestrator already de-duplicated the ids, which
+        // the (test_plan_id, scenario_key) primary key depends on.
         var scenarios = new ArrayList<TestPlan.TestScenario>();
         int seq = 1;
-        for (var s : result.scenarios()) {
-            scenarios.add(new TestPlan.TestScenario(s.id(), seq++, s.title(), s.priority(), s.source()));
+        for (var cap : result.capabilities()) {
+            for (var s : cap.testCases()) {
+                scenarios.add(new TestPlan.TestScenario(
+                        s.id(), seq++, cap.name(), s.title(), s.priority(), s.objective(),
+                        s.lifecyclePhase(), s.sources(), s.requirementIds(), s.preconditions(),
+                        s.steps(), s.expectedResults(), s.testDataRequirements(),
+                        s.automationMapping(),
+                        s.sources().isEmpty() ? null : s.sources().get(0)));
+            }
         }
-        repo.insertPlan(project.projectId(), gen.generationId(), result.overview(), result.scope(),
-                result.provenance(), scenarios);
+        repo.insertPlan(project.projectId(), gen.generationId(), result, scenarios);
 
-        finish(gen, workerId, session, result.responseId(),
-                "plan_generated", "Generated a test plan (" + scenarios.size() + " scenarios)");
+        finish(gen, workerId, session, result.responseId(), "plan_generated",
+                "Generated a test plan (" + scenarios.size() + " cases across "
+                        + result.capabilities().size() + " capabilities)");
     }
 
     @SuppressWarnings("unchecked")
@@ -116,7 +135,8 @@ public class PlanningGenerationRunner {
 
         var selected = repo.listSelectedDocuments(project.projectId());
         var docs = selected.stream()
-                .map(d -> new PlanningClient.Doc(d.sourceType().wire(), d.title(), d.textContent()))
+                .map(d -> new PlanningClient.Doc(d.sourceType().wire(), d.docRole().wire(), d.title(),
+                        d.textContent()))
                 .toList();
         var resolutions = repo.listResolutions(reasoning.reasoningId()).stream()
                 .map(r -> new PlanningClient.ResolutionRef(r.prompt(), r.kind(), r.answer()))

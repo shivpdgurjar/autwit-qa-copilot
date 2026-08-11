@@ -75,7 +75,7 @@ class MigrationSmokeTest extends AbstractPostgresIT {
         var applied = jdbc.queryForList(
                 "select version, description, success from flyway_schema_history order by installed_rank");
 
-        assertThat(applied).hasSize(8);
+        assertThat(applied).hasSize(9);
         assertThat(applied.get(0)).containsEntry("version", "1").containsEntry("success", true);
         assertThat(applied.get(1)).containsEntry("version", "2").containsEntry("success", true);
         assertThat(applied.get(2)).containsEntry("version", "3").containsEntry("success", true);
@@ -89,6 +89,37 @@ class MigrationSmokeTest extends AbstractPostgresIT {
         assertThat(applied.get(6)).containsEntry("version", "7").containsEntry("success", true);
         // V8 — reasoning: planning_reasoning/analysis/finding/resolution + extended CHECKs.
         assertThat(applied.get(7)).containsEntry("version", "8").containsEntry("success", true);
+        // V9 — test plan v2: doc_role, project domain, plan payload/version, rich case columns.
+        assertThat(applied.get(8)).containsEntry("version", "9").containsEntry("success", true);
+    }
+
+    @Test
+    void v9AddsTheTestPlanV2ColumnsAndDropsThePriorityCheck() {
+        var planColumns = jdbc.queryForList(
+                "select column_name from information_schema.columns "
+                        + "where table_schema = 'autwit' and table_name = 'test_plan'", String.class);
+        assertThat(planColumns).contains("payload", "plan_version");
+
+        var caseColumns = jdbc.queryForList(
+                "select column_name from information_schema.columns "
+                        + "where table_schema = 'autwit' and table_name = 'test_scenario'", String.class);
+        assertThat(caseColumns).contains("capability", "objective", "lifecycle_phase", "sources",
+                "requirement_ids", "preconditions", "steps", "expected_results",
+                "test_data_requirements", "automation_mapping");
+
+        assertThat(jdbc.queryForList(
+                "select column_name from information_schema.columns where table_schema = 'autwit' "
+                        + "and table_name = 'source_document'", String.class)).contains("doc_role");
+        assertThat(jdbc.queryForList(
+                "select column_name from information_schema.columns where table_schema = 'autwit' "
+                        + "and table_name = 'planning_project'", String.class)).contains("domain");
+
+        // The priority CHECK is gone on purpose: an unexpected model value used to fail the
+        // whole generation at insert time instead of being normalised.
+        var checks = jdbc.queryForList(
+                "select conname from pg_constraint where conrelid = 'autwit.test_scenario'::regclass",
+                String.class);
+        assertThat(checks).doesNotContain("test_scenario_priority_check");
     }
 
     @Test

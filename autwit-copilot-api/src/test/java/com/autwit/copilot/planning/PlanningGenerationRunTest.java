@@ -29,10 +29,13 @@ class PlanningGenerationRunTest extends AbstractPostgresIT {
     @Autowired
     private PlanningGenerationWorker worker;
 
+    @Autowired
+    private PlanningClient planningClient;
+
     @Test
     void generatesAndPersistsATestPlan() {
-        var project = service.createProject("PAY-2481", "Payment retry logic", null, "m.alvarez", "qa2");
-        service.addTextDocument(project.projectId(), SourceType.PASTE, "spec", null, null,
+        var project = service.createProject("PAY-2481", "Payment retry logic", null, "m.alvarez", "qa2", null);
+        service.addTextDocument(project.projectId(), SourceType.PASTE, "requirement", "spec", null, null,
                 "Retry a failed charge with exponential backoff and idempotency.");
 
         var gen = service.generateTestPlan(project.projectId());
@@ -44,9 +47,26 @@ class PlanningGenerationRunTest extends AbstractPostgresIT {
                 .extracting(Generation::status).isEqualTo("succeeded");
 
         var plan = repo.findPlanByGeneration(gen.generationId()).orElseThrow();
+        assertThat(plan.planVersion()).isEqualTo(2);
         assertThat(plan.overview()).contains("retry");
         assertThat(plan.scenarios()).hasSize(5);
         assertThat(plan.scenarios().get(0).scenarioKey()).isEqualTo("TC-01");
+
+        // The point of the upgrade: a persisted case is materially richer than
+        // "TC-01 | title | priority | source".
+        var first = plan.scenarios().get(0);
+        assertThat(first.capability()).isEqualTo("Retry execution");
+        assertThat(first.objective()).isNotBlank();
+        assertThat(first.preconditions()).isNotEmpty();
+        assertThat(first.steps()).isNotEmpty();
+        assertThat(first.expectedResults()).isNotEmpty();
+        assertThat(first.requirementIds()).isNotEmpty();
+        assertThat(plan.scenarios()).extracting(TestPlan.TestScenario::capability)
+                .containsExactly("Retry execution", "Retry execution", "Idempotency",
+                        "Backoff and escalation", "Backoff and escalation");
+        assertThat(plan.requirements()).isNotEmpty();
+        assertThat(plan.scope().inScope()).isNotEmpty();
+        assertThat(plan.executionStrategy()).isNotBlank();
 
         // The chaining token is pinned on the SESSION head (V7) so the next generation reuses it.
         assertThat(repo.findSession(project.sessionId())).get()
@@ -54,9 +74,38 @@ class PlanningGenerationRunTest extends AbstractPostgresIT {
     }
 
     @Test
+    void existingTestDocumentsTravelAsADistinctInputRatherThanJoiningTheCorpus() {
+        // The whole "existing tests are evidence, not a template" contract depends on this
+        // split; before it, existing_test_cases was hardcoded empty and every document was
+        // folded into one corpus, so the model could only guess from the title.
+        var project = service.createProject("PAY-2481", "Payment retry logic", null, "m.alvarez",
+                "qa2", "oes");
+        service.addTextDocument(project.projectId(), SourceType.PASTE, "requirement", "spec", null,
+                null, "Retry a failed charge with exponential backoff.");
+        service.addTextDocument(project.projectId(), SourceType.PASTE, "existing_tests", "old cases",
+                null, null, "TC-99 legacy retry case");
+        service.addTextDocument(project.projectId(), SourceType.PASTE, "architecture", "design",
+                null, null, "The retry orchestrator sits after payment auth.");
+
+        var gen = service.generateTestPlan(project.projectId());
+        assertThat(worker.pollOnce()).isTrue();
+        assertThat(repo.findGeneration(gen.generationId())).get()
+                .extracting(Generation::status).isEqualTo("succeeded");
+
+        var request = ((FakePlanningClient) planningClient).lastTestPlanRequest();
+        assertThat(request.domain()).isEqualTo("oes");
+        assertThat(request.existingTestCases()).extracting(PlanningClient.Doc::title)
+                .containsExactly("old cases");
+        assertThat(request.sourceDocuments()).extracting(PlanningClient.Doc::title)
+                .containsExactlyInAnyOrder("spec", "design");
+        assertThat(request.sourceDocuments()).extracting(PlanningClient.Doc::role)
+                .containsExactlyInAnyOrder("requirement", "architecture");
+    }
+
+    @Test
     void generationPinsTheSessionLineageAndHistoryForReuse() {
-        var sp = service.createSession("m.alvarez", "qa2", "Retry", "PAY-2481", "Payment retry logic");
-        service.addTextDocument(sp.project().projectId(), SourceType.PASTE, "spec", null, null, "retry with backoff");
+        var sp = service.createSession("m.alvarez", "qa2", "Retry", "PAY-2481", "Payment retry logic", null);
+        service.addTextDocument(sp.project().projectId(), SourceType.PASTE, "requirement", "spec", null, null, "retry with backoff");
 
         service.generateTestPlan(sp.project().projectId());
         assertThat(worker.pollOnce()).isTrue();
@@ -73,8 +122,8 @@ class PlanningGenerationRunTest extends AbstractPostgresIT {
 
     @Test
     void analysisSurfacesFindingsAndGatesGeneration() {
-        var project = service.createProject("PAY-2481", "Payment retry logic", null, "m.alvarez", "qa2");
-        service.addTextDocument(project.projectId(), SourceType.PASTE, "spec", null, null,
+        var project = service.createProject("PAY-2481", "Payment retry logic", null, "m.alvarez", "qa2", null);
+        service.addTextDocument(project.projectId(), SourceType.PASTE, "requirement", "spec", null, null,
                 "Retry a failed charge; give up after N attempts.");
 
         var gen = service.analyzeDocuments(project.projectId());
@@ -96,8 +145,8 @@ class PlanningGenerationRunTest extends AbstractPostgresIT {
 
     @Test
     void resolvingAllFindingsClearsTheGateOnReanalysis() {
-        var project = service.createProject("PAY-2481", "Payment retry logic", null, "m.alvarez", "qa2");
-        service.addTextDocument(project.projectId(), SourceType.PASTE, "spec", null, null, "retry with backoff");
+        var project = service.createProject("PAY-2481", "Payment retry logic", null, "m.alvarez", "qa2", null);
+        service.addTextDocument(project.projectId(), SourceType.PASTE, "requirement", "spec", null, null, "retry with backoff");
 
         service.analyzeDocuments(project.projectId());
         assertThat(worker.pollOnce()).isTrue();
@@ -126,8 +175,8 @@ class PlanningGenerationRunTest extends AbstractPostgresIT {
 
     @Test
     void overrideUnlocksGenerationDespiteOpenFindings() {
-        var project = service.createProject("PAY-2481", "Payment retry logic", null, "m.alvarez", "qa2");
-        service.addTextDocument(project.projectId(), SourceType.PASTE, "spec", null, null, "retry with backoff");
+        var project = service.createProject("PAY-2481", "Payment retry logic", null, "m.alvarez", "qa2", null);
+        service.addTextDocument(project.projectId(), SourceType.PASTE, "requirement", "spec", null, null, "retry with backoff");
 
         service.analyzeDocuments(project.projectId());
         assertThat(worker.pollOnce()).isTrue();
@@ -146,7 +195,7 @@ class PlanningGenerationRunTest extends AbstractPostgresIT {
 
     @Test
     void generatesAndPersistsTestData() {
-        var project = service.createProject("PAY-2481", "Payment retry logic", null, null, "qa2");
+        var project = service.createProject("PAY-2481", "Payment retry logic", null, null, "qa2", null);
 
         var gen = service.generateTestData(project.projectId(),
                 List.of(Map.of("id", "TC-01", "title", "Retry succeeds"),

@@ -1,5 +1,6 @@
 package com.autwit.copilot.common;
 
+import java.util.List;
 import java.util.Map;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -26,6 +27,8 @@ public class Json {
     };
     private static final TypeReference<Map<String, String>> STRING_MAP = new TypeReference<>() {
     };
+    private static final TypeReference<List<String>> STRING_LIST = new TypeReference<>() {
+    };
 
     private final ObjectMapper mapper;
 
@@ -49,8 +52,22 @@ public class Json {
         return value == null ? "{}" : write(value);
     }
 
+    /** Writes a jsonb array column value, substituting an empty array for null. */
+    public String writeOrEmptyArray(Object value) {
+        return value == null ? "[]" : write(value);
+    }
+
     public Map<String, Object> readObject(String json) {
         return read(json, OBJECT_MAP);
+    }
+
+    /** Reads a jsonb string array; null or a non-array column reads as an empty list. */
+    public List<String> readStringArray(String json) {
+        if (json == null || json.isBlank()) {
+            return List.of();
+        }
+        var parsed = read(json, STRING_LIST);
+        return parsed == null ? List.of() : parsed;
     }
 
     public Map<String, String> readStringMap(String json) {

@@ -21,8 +21,8 @@ class PlanningServiceTest extends AbstractPostgresIT {
 
     @Test
     void addTextDocumentNormalisesAndHashes() {
-        var p = service.createProject("PAY-2481", "Payment retry", null, "m.alvarez", "qa2");
-        var doc = service.addTextDocument(p.projectId(), SourceType.PASTE, "spec", null, null,
+        var p = service.createProject("PAY-2481", "Payment retry", null, "m.alvarez", "qa2", null);
+        var doc = service.addTextDocument(p.projectId(), SourceType.PASTE, "requirement", "spec", null, null,
                 "line one\r\nline two\r\n");
         // CRLF normalised, trimmed; content_hash present.
         assertThat(doc.textContent()).isEqualTo("line one\nline two");
@@ -32,8 +32,8 @@ class PlanningServiceTest extends AbstractPostgresIT {
 
     @Test
     void binaryUploadsAreRejectedUntilPassTwo() {
-        var p = service.createProject("PAY-1", null, null, null, "qa2");
-        assertThatThrownBy(() -> service.addTextDocument(p.projectId(), SourceType.UPLOAD,
+        var p = service.createProject("PAY-1", null, null, null, "qa2", null);
+        assertThatThrownBy(() -> service.addTextDocument(p.projectId(), SourceType.UPLOAD, "requirement",
                 "design", "design.pdf", "application/pdf", "%PDF-1.7 ..."))
                 .isInstanceOf(ApiException.BadRequest.class)
                 .hasMessageContaining("PDF/DOCX");
@@ -41,7 +41,7 @@ class PlanningServiceTest extends AbstractPostgresIT {
 
     @Test
     void fetchContextPersistsCandidatesAndReturnsAConsoleLog() {
-        var p = service.createProject("PAY-2481", "Payment retry", null, null, "qa2");
+        var p = service.createProject("PAY-2481", "Payment retry", null, null, "qa2", null);
         var outcome = service.fetchContext(p.projectId(), List.of("PAY-2481"), List.of("PAY-DESIGN"));
 
         assertThat(outcome.documents()).hasSize(2)
@@ -53,7 +53,7 @@ class PlanningServiceTest extends AbstractPostgresIT {
 
     @Test
     void testPlanGenerationRequiresAtLeastOneSelectedSource() {
-        var p = service.createProject("PAY-1", null, null, null, "qa2");
+        var p = service.createProject("PAY-1", null, null, null, "qa2", null);
         assertThatThrownBy(() -> service.generateTestPlan(p.projectId()))
                 .isInstanceOf(ApiException.BadRequest.class)
                 .hasMessageContaining("at least one document");
@@ -61,7 +61,7 @@ class PlanningServiceTest extends AbstractPostgresIT {
 
     @Test
     void testDataGenerationRequiresScenarios() {
-        var p = service.createProject("PAY-1", null, null, null, "qa2");
+        var p = service.createProject("PAY-1", null, null, null, "qa2", null);
         assertThatThrownBy(() -> service.generateTestData(p.projectId(), List.of(), List.of(), 8, null))
                 .isInstanceOf(ApiException.BadRequest.class)
                 .hasMessageContaining("at least one scenario");
@@ -69,8 +69,8 @@ class PlanningServiceTest extends AbstractPostgresIT {
 
     @Test
     void generatingATestPlanEnqueuesAPendingJob() {
-        var p = service.createProject("PAY-2481", "Payment retry", null, null, "qa2");
-        service.addTextDocument(p.projectId(), SourceType.PASTE, "spec", null, null, "retry with backoff");
+        var p = service.createProject("PAY-2481", "Payment retry", null, null, "qa2", null);
+        service.addTextDocument(p.projectId(), SourceType.PASTE, "requirement", "spec", null, null, "retry with backoff");
         var gen = service.generateTestPlan(p.projectId());
         assertThat(gen.status()).isEqualTo("pending");
         assertThat(gen.generationType()).isEqualTo(GenerationType.TEST_PLAN);

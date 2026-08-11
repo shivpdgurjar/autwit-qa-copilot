@@ -1,9 +1,10 @@
 import { useRef, useState } from 'react';
-import type { SourceDocumentView } from '../../api/client';
+import type { DocRole, SourceDocumentView } from '../../api/client';
 import {
   useAddDocument,
   useDeleteDocument,
   useDocuments,
+  useSetDocRole,
   useSetSelected,
   useUploadDocument,
 } from '../../hooks/usePlanning';
@@ -15,6 +16,7 @@ export function InputsStage({ projectId, onNext }: { projectId: string; onNext: 
   const add = useAddDocument(projectId);
   const upload = useUploadDocument(projectId);
   const setSelected = useSetSelected(projectId);
+  const setDocRole = useSetDocRole(projectId);
   const remove = useDeleteDocument(projectId);
   const fileRef = useRef<HTMLInputElement>(null);
   const [paste, setPaste] = useState('');
@@ -109,6 +111,21 @@ export function InputsStage({ projectId, onNext }: { projectId: string; onNext: 
                 className="accent-sky-600"
               />
               <span className="flex-1 truncate text-[13px]">{d.title}</span>
+              {/* The role decides how the generator reads this document — tagging one as
+                  "Existing tests" is what stops its rows being reproduced as new cases. */}
+              <select
+                aria-label={`Role for ${d.title}`}
+                value={d.doc_role ?? 'requirement'}
+                onChange={(e) =>
+                  setDocRole.mutate({ documentId: d.document_id, docRole: e.target.value as DocRole })
+                }
+                className="rounded border border-ink-600 bg-ink-900 px-1.5 py-0.5 text-[11px] text-ink-300 outline-none focus:border-sky-600"
+              >
+                <option value="requirement">Requirement</option>
+                <option value="architecture">Architecture</option>
+                <option value="existing_tests">Existing tests</option>
+                <option value="domain_rules">Domain rules</option>
+              </select>
               <Mono className="rounded border border-ink-700 bg-ink-850 px-1.5 py-0.5 text-ink-400">
                 {d.source_type}
               </Mono>
