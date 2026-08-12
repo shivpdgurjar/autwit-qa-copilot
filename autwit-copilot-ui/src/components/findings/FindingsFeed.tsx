@@ -31,10 +31,12 @@ export function FindingsFeed({ findings }: { findings: Finding[] }) {
                 )}
               </div>
 
-              {/* Before/after only when the finding names a field -- a sum invariant
-                  carries values too, but they mean 'declared vs computed' rather than
-                  'was vs is', so labelling them → would be wrong. */}
-              {finding.field && (
+              {/* Before/after only when the finding actually carries a value. A field
+                  name alone isn't enough: analyser findings (cross-representation,
+                  classification) name a field but put expected/actual in the message
+                  prose, leaving before/after null -- rendering those as 'null → null' is
+                  noise, so suppress the row unless there's a real value to show. */}
+              {(finding.before_value != null || finding.after_value != null) && (
                 <div className="mt-1 flex items-center gap-1.5 text-[11px]">
                   <Mono className="rounded bg-red-950/40 px-1 py-0.5 text-red-300/90">
                     {stringify(finding.before_value)}
