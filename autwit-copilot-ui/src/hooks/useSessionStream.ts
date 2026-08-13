@@ -47,6 +47,34 @@ export function useSessionStream(
   useEffect(() => {
     const source = new EventSource(`/api/v1/sessions/${sessionId}/stream`);
 
+    // A skill emits a burst (run.queued -> started -> progress -> succeeded) in quick
+    // succession, and invalidating on each fires a burst of parallel refetches. Over a
+    // cross-VDI HTTP/1.1 connection that can saturate the browser's per-origin connection
+    // limit and make the first requests stall until one frees. So coalesce: refetch
+    // immediately on the first event of a burst, then at most once more per window while it
+    // settles. Still refetch-on-notify — a dropped hint stays harmless (invariant 4).
+    const REFETCH_WINDOW_MS = 250;
+    let cooldown: ReturnType<typeof setTimeout> | null = null;
+    let pending = false;
+    const doInvalidate = () => void queryClient.invalidateQueries({ queryKey: sessionKey(sessionId) });
+    const scheduleRefetch = () => {
+      if (cooldown === null) {
+        doInvalidate();
+        const tick = () => {
+          if (pending) {
+            pending = false;
+            doInvalidate();
+            cooldown = setTimeout(tick, REFETCH_WINDOW_MS);
+          } else {
+            cooldown = null;
+          }
+        };
+        cooldown = setTimeout(tick, REFETCH_WINDOW_MS);
+      } else {
+        pending = true;
+      }
+    };
+
     const refetch = (event: MessageEvent) => {
       let parsed: StreamEvent = {};
       try {
@@ -60,8 +88,8 @@ export function useSessionStream(
         onNoteRef.current?.(parsed);
       }
 
-      // The only thing any event does.
-      void queryClient.invalidateQueries({ queryKey: sessionKey(sessionId) });
+      // The only thing any event does — coalesced so a burst is not a request storm.
+      scheduleRefetch();
     };
 
     const types: StreamEventType[] = [
@@ -89,6 +117,7 @@ export function useSessionStream(
 
     return () => {
       source.close();
+      if (cooldown !== null) clearTimeout(cooldown);
       setStatus('closed');
     };
   }, [sessionId, queryClient]);

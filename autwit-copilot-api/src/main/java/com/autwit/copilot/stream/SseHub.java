@@ -85,7 +85,7 @@ public class SseHub {
                 // must still get the event, and truth is the session endpoint anyway.
                 log.debug("Dropping a dead SSE subscriber for session {}: {}", sessionId, e.toString());
                 remove(sessionId, emitter);
-                emitter.completeWithError(e);
+                safeCompleteWithError(emitter, e);
             }
         }
     }
@@ -105,7 +105,7 @@ public class SseHub {
                     emitter.send(SseEmitter.event().comment("keep-alive"));
                 } catch (Exception e) {
                     remove(sessionId, emitter);
-                    emitter.completeWithError(e);
+                    safeCompleteWithError(emitter, e);
                 }
             }
         });
@@ -118,6 +118,21 @@ public class SseHub {
 
     public int sessionCount() {
         return bySession.size();
+    }
+
+    /**
+     * Completes a dead emitter without letting that throw. Once the client has gone the
+     * async context is often already in an error state, and {@code completeWithError} then
+     * throws {@link IllegalStateException} on the calling (scheduled/publish) thread. The
+     * subscriber is already removed by the caller, so swallowing it just keeps the heartbeat
+     * and publish loops clean.
+     */
+    private static void safeCompleteWithError(SseEmitter emitter, Throwable cause) {
+        try {
+            emitter.completeWithError(cause);
+        } catch (Exception ignored) {
+            // Async context already finished/errored — nothing more to do.
+        }
     }
 
     private void remove(UUID sessionId, SseEmitter emitter) {

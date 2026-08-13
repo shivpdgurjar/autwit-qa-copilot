@@ -15,6 +15,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.context.request.WebRequest;
+import org.springframework.web.context.request.async.AsyncRequestNotUsableException;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
 /**
@@ -52,6 +53,21 @@ public class ProblemHandler extends ResponseEntityExceptionHandler {
         problem.setProperty("code", "validation_failed");
         problem.setProperty("errors", errors);
         return ResponseEntity.badRequest().body(problem);
+    }
+
+    /**
+     * The client went away mid-response — almost always an EventSource on
+     * {@code /sessions/{id}/stream} reconnecting, or a closed tab. The response is already
+     * gone, so there is nothing to write back; trying to serialise a JSON ProblemDetail onto
+     * a committed {@code text/event-stream} response only produces a second error
+     * ({@code HttpMessageNotWritableException}) and closes the stream abnormally, which makes
+     * the browser reconnect harder. A dropped SSE connection is expected (SseHub is
+     * fire-and-forget), so log at debug and return no body. Declared here, more specific than
+     * {@link #handleUnexpected}, so it wins the resolver.
+     */
+    @ExceptionHandler(AsyncRequestNotUsableException.class)
+    void handleClientDisconnected(AsyncRequestNotUsableException e) {
+        log.debug("Async request no longer usable (client disconnected): {}", e.getMessage());
     }
 
     @ExceptionHandler(Exception.class)
