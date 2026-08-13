@@ -43,8 +43,12 @@ export default function HomeRoute() {
   return (
     <div className="mx-auto max-w-5xl px-6 py-16">
       <div className="text-center">
-        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-sky-600">The Platform</p>
-        <h1 className="mt-2 text-3xl font-semibold text-navy-900">One platform, three connected capabilities</h1>
+        <img
+          src="/AutwitLogo.png"
+          alt="AutWit — Automate. Ace. Accelerate."
+          className="mx-auto h-16 w-auto"
+        />
+        <h1 className="mt-6 text-3xl font-semibold text-navy-900">One platform, three connected capabilities</h1>
         <p className="mx-auto mt-3 max-w-2xl text-slate-500">
           Plan the test. Execute it natively at speed. Validate it against real business outcomes.
         </p>
@@ -55,14 +59,14 @@ export default function HomeRoute() {
           <Link
             key={c.to}
             to={c.to}
-            className="group flex flex-col items-center rounded-2xl border border-slate-200 bg-white p-8 text-center shadow-sm transition-all hover:-translate-y-1 hover:border-sky-300 hover:shadow-lg"
+            title={c.desc}
+            className="group flex flex-col items-center rounded-2xl border border-slate-200 bg-white p-10 text-center shadow-sm transition-all hover:-translate-y-1 hover:border-sky-300 hover:shadow-lg"
           >
             <span className="grid size-20 place-items-center rounded-2xl bg-gradient-to-br from-navy-900 to-navy-950 shadow-inner">
               <img src={c.icon} alt="" className="size-11" />
             </span>
-            <span className="mt-3 text-xs font-semibold text-slate-300">{c.index}</span>
+            <span className="mt-4 text-xs font-semibold text-slate-300">{c.index}</span>
             <h2 className="mt-1 text-lg font-semibold text-navy-900 group-hover:text-sky-700">Autwit {c.label}</h2>
-            <p className="mt-2 text-sm leading-relaxed text-slate-500">{c.desc}</p>
           </Link>
         ))}
       </div>

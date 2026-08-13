@@ -46,11 +46,12 @@ export function AppShell() {
         >
           <HamburgerIcon open={open} />
         </button>
-        <Link to="/" onClick={close} className="flex items-center gap-2.5" title="AutWit — Automate. Ace. Accelerate.">
-          <span className="flex size-9 items-center justify-center overflow-hidden rounded-lg bg-white shadow-sm">
-            <img src="/AutwitLogo.png" alt="AutWit" className="h-7 w-auto max-w-none" />
+        {/* The logo is a wide 614×122 wordmark, so it sits in a white pill sized to its
+            aspect ratio — no square crop, no overflow-hidden — and needs no separate text. */}
+        <Link to="/" onClick={close} className="flex items-center" title="AutWit — Automate. Ace. Accelerate.">
+          <span className="flex h-10 items-center rounded-lg bg-white px-2.5 shadow-sm">
+            <img src="/AutwitLogo.png" alt="AutWit — Automate. Ace. Accelerate." className="h-7 w-auto" />
           </span>
-          <span className="text-sm font-semibold tracking-wide">AutWit</span>
         </Link>
       </header>
 
