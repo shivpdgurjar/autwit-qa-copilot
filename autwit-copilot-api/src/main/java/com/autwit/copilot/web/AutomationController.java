@@ -9,8 +9,10 @@ import java.util.UUID;
 import com.autwit.copilot.automation.AutomationRunClient;
 import com.autwit.copilot.automation.AutomationUnavailableException;
 import com.autwit.copilot.orchestrator.OrchestratorClient;
+import com.autwit.copilot.orchestrator.OrchestratorException;
 import com.autwit.copilot.orchestrator.dto.Envelope;
 import com.autwit.copilot.orchestrator.dto.InvokeRequest;
+import com.autwit.copilot.orchestrator.dto.Problem;
 import com.fasterxml.jackson.databind.JsonNode;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -141,10 +143,12 @@ public class AutomationController {
         Envelope envelope;
         try {
             envelope = orchestrator.execute(ANALYSIS_SKILL, request);
+        } catch (OrchestratorException e) {
+            return analysisNotice(runId, e);
         } catch (RuntimeException e) {
             log.warn("Test analysis for run {} failed: {}", runId, e.getMessage());
             return ResponseEntity.status(HttpStatus.BAD_GATEWAY)
-                    .body(errorHtml("The analysis could not be produced.", e.getMessage()));
+                    .body(noticeHtml("Analysis unavailable", "The analysis service could not be reached. Please try again.", false));
         }
 
         String html = envelope.artifactsOrEmpty().stream()
@@ -154,9 +158,31 @@ public class AutomationController {
                 .orElse(null);
 
         return html == null
-                ? ResponseEntity.status(HttpStatus.NOT_FOUND)
-                        .body(errorHtml("No analysis report was produced for this run.", null))
+                ? ResponseEntity.ok(noticeHtml("No analysis yet", "This run did not produce an analysis report.", true))
                 : ResponseEntity.ok(html);
+    }
+
+    /**
+     * Turns an orchestrator failure into a calm, path-free notice. The common case is simply
+     * an older run whose Allure results were never preserved — that is an expected empty state,
+     * not an error, so it renders as a friendly message (200) with no internal path exposed.
+     */
+    private ResponseEntity<String> analysisNotice(UUID runId, OrchestratorException e) {
+        Problem problem = e.problem();
+        String detail = problem == null || problem.detail() == null ? "" : problem.detail();
+
+        if (detail.toLowerCase().contains("no allure results")) {
+            return ResponseEntity.ok(noticeHtml(
+                    "No analysis for this run",
+                    "This run has no preserved test results, so there is nothing to analyze. Analysis is "
+                            + "available for runs executed after result preservation was enabled — re-run the "
+                            + "suite to analyze it.",
+                    true));
+        }
+
+        log.warn("Test analysis for run {} failed: {}", runId, e.getMessage());
+        String reason = problem != null && problem.title() != null ? problem.title() : "The analysis service reported an error.";
+        return ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(noticeHtml("Analysis unavailable", reason, false));
     }
 
     /** Best-effort lookup of a run's environment; the analyser still runs without it. */
@@ -193,11 +219,17 @@ public class AutomationController {
         return ids;
     }
 
-    private static String errorHtml(String message, String detail) {
-        String safeDetail = detail == null ? "" : "<p style=\"color:#64748b;font-size:12px\">" + escape(detail) + "</p>";
-        return "<!doctype html><html><body style=\"font:14px/1.5 system-ui;padding:24px;color:#334155\">"
-                + "<h3>Test analysis unavailable</h3><p>" + escape(message) + "</p>" + safeDetail
-                + "</body></html>";
+    /** A centered notice for the analysis iframe. `calm` = an expected empty state (not an error). */
+    private static String noticeHtml(String title, String message, boolean calm) {
+        String accent = calm ? "#334155" : "#b91c1c";
+        String glyph = calm ? "📭" : "⚠️";
+        return "<!doctype html><html><body style=\"margin:0;min-height:100vh;display:flex;align-items:center;"
+                + "justify-content:center;background:#f8fafc;color:#334155;"
+                + "font:14px/1.6 system-ui,-apple-system,Segoe UI,Roboto,sans-serif\">"
+                + "<div style=\"max-width:30rem;text-align:center;padding:2rem\">"
+                + "<div style=\"font-size:2rem;margin-bottom:.5rem\">" + glyph + "</div>"
+                + "<h3 style=\"margin:.25rem 0;color:" + accent + "\">" + escape(title) + "</h3>"
+                + "<p style=\"margin:0\">" + escape(message) + "</p></div></body></html>";
     }
 
     private static String escape(String s) {
