@@ -112,3 +112,12 @@ export function useCancelAutomationRun() {
 export function reportUrl(runId: string): string {
   return `/api/v1/automation/runs/${runId}/report`;
 }
+
+/**
+ * Same-origin URL for the AI test-analysis report, so it can be framed. Loading it runs the
+ * orchestrator's `testanalysis.analyze_run` skill (deterministic Allure analysis + cross-run
+ * flakiness + optional git correlation + LLM narrative) over the run's preserved results.
+ */
+export function analysisUrl(runId: string): string {
+  return `/api/v1/automation/runs/${runId}/analysis`;
+}

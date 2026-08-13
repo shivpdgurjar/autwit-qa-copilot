@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
+  analysisUrl,
   reportUrl,
   useAutomationRun,
   useAutomationRunLog,
@@ -19,7 +20,7 @@ import { AutomationStatusBadge, passRate } from './AutomationStatusBadge';
  */
 export default function AutomationRunRoute() {
   const { runId } = useParams<{ runId: string }>();
-  const [tab, setTab] = useState<'log' | 'report'>('log');
+  const [tab, setTab] = useState<'log' | 'report' | 'analysis'>('log');
 
   const run = useAutomationRun(runId);
   const active = isAutomationActive(run.data?.status);
@@ -87,6 +88,12 @@ export default function AutomationRunRoute() {
         <Tab active={tab === 'report'} onClick={() => setTab('report')} disabled={!r.reportUrl}>
           Report
         </Tab>
+        {/* Enabled once the run is terminal — a still-running run has no complete results
+            yet. The analyser degrades gracefully (a notice, not a broken frame) if a run
+            predates result preservation. */}
+        <Tab active={tab === 'analysis'} onClick={() => setTab('analysis')} disabled={active}>
+          Analysis
+        </Tab>
       </div>
 
       {tab === 'log' ? (
@@ -95,21 +102,35 @@ export default function AutomationRunRoute() {
             {log.data?.lines?.length ? log.data.lines.join('\n') : 'No output yet.'}
           </pre>
         </Card>
-      ) : r.reportUrl && runId ? (
+      ) : tab === 'report' ? (
+        r.reportUrl && runId ? (
+          <Card className="overflow-hidden p-0">
+            {/* Same-origin, so it frames. sandbox keeps the report's own scripts from
+                reaching the app around it; allow-scripts is required because the
+                single-file Allure report renders itself with JavaScript. */}
+            <iframe
+              title="Allure report"
+              src={reportUrl(runId)}
+              sandbox="allow-scripts allow-same-origin"
+              className="h-[36rem] w-full border-0"
+            />
+          </Card>
+        ) : (
+          <EmptyState>This run produced no report.</EmptyState>
+        )
+      ) : runId ? (
         <Card className="overflow-hidden p-0">
-          {/* Same-origin, so it frames. sandbox keeps the report's own scripts from
-              reaching the app around it; allow-scripts is required because the
-              single-file Allure report renders itself with JavaScript. */}
+          {/* The AI test-analysis report. Loading it runs the analyser over this run's
+              preserved Allure results; the response is a self-contained HTML document,
+              framed same-origin exactly like the Allure report. */}
           <iframe
-            title="Allure report"
-            src={reportUrl(runId)}
+            title="Test analysis report"
+            src={analysisUrl(runId)}
             sandbox="allow-scripts allow-same-origin"
-            className="h-[36rem] w-full border-0"
+            className="h-[42rem] w-full border-0"
           />
         </Card>
-      ) : (
-        <EmptyState>This run produced no report.</EmptyState>
-      )}
+      ) : null}
     </div>
   );
 }
