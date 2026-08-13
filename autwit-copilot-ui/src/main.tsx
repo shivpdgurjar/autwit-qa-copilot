@@ -1,9 +1,10 @@
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import SessionRoute from './routes/sessions/SessionRoute';
 import SessionListRoute from './routes/sessions/SessionListRoute';
+import HomeRoute from './routes/home/HomeRoute';
 import { AppShell } from './components/AppShell';
 import PlanListRoute from './routes/plan/PlanListRoute';
 import PlanRoute from './routes/plan/PlanRoute';
@@ -28,7 +29,7 @@ createRoot(document.getElementById('root')!).render(
       <BrowserRouter>
         <Routes>
           <Route element={<AppShell />}>
-            <Route path="/" element={<Navigate to="/sessions" replace />} />
+            <Route path="/" element={<HomeRoute />} />
             <Route path="/sessions" element={<SessionListRoute />} />
             <Route path="/sessions/:sessionId" element={<SessionRoute />} />
             <Route path="/plan" element={<PlanListRoute />} />

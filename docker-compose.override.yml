@@ -1,0 +1,6 @@
+# Local-only override (not committed). Wires copilot-api to the AUTWIT run service
+# running on the host at :8090. host.docker.internal is the host from inside the container.
+services:
+  api:
+    environment:
+      AUTWIT_RUN_SERVICE_URL: http://host.docker.internal:8090

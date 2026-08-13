@@ -24,6 +24,10 @@ export default defineConfig({
     // Vite listens on localhost only by default, which inside a container means the
     // published port accepts the connection and nothing answers it.
     host: true,
+    // Accessed from other machines by this box's network hostname, which keeps
+    // changing. `true` disables Vite's dev-server host check entirely so any hostname
+    // works. Acceptable here: this is an internal dev/QA server, not a public build.
+    allowedHosts: true,
     proxy: {
       // Same-origin in dev, so EventSource works without CORS. SSE needs the proxy
       // not to buffer: Vite's http-proxy streams by default, but the API must also

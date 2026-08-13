@@ -1,102 +1,115 @@
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
-import type { ReactNode } from 'react';
+import { useState } from 'react';
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 
 /**
- * The two-flavor shell. A slim deep-navy activity rail switches between the copilot's two
- * flavors — Execute (the session/evidence workspace) and Plan (Test Plan & Data Studio) —
- * each of which keeps its own chrome to the right. Route namespaces: /sessions/* vs /plan/*.
+ * The app shell: a fixed navy top bar carrying the AutWit mark + a hamburger, and a
+ * slide-in drawer that switches between the three capabilities — Studio (the
+ * session/evidence + skills workspace, /sessions), Planner (Test Plan & Data Studio,
+ * /plan) and Forge (the native run plane, /automation).
  *
- * The navy rail is the app's one piece of dark chrome: it anchors the light corporate ground
- * and makes the flavor switch read as product-level navigation, above either flavor's own
- * left rail (the planning wizard has a 4-step tracker) which stays light.
+ * Replaces the old always-on left rail: the rail is now a hamburger drawer so the content
+ * gets the full width, and the top bar keeps the brand anchored on every route. The three
+ * icons are the slide-3 platform marks (toolbox / clipboard / hammer), white line-art shown
+ * on a navy chip so they read on light ground.
  */
+
+interface NavItem {
+  to: string;
+  /** Path prefix that marks this item active. */
+  match: string;
+  label: string;
+  icon: string;
+  blurb: string;
+}
+
+export const NAV_ITEMS: NavItem[] = [
+  { to: '/plan', match: '/plan', label: 'Planner', icon: '/icon-planner.png', blurb: 'Test plans & data from live context' },
+  { to: '/automation', match: '/automation', label: 'Forge', icon: '/icon-forge.png', blurb: 'Native, event-driven suite runs' },
+  { to: '/sessions', match: '/sessions', label: 'Studio', icon: '/icon-studio.png', blurb: 'Purpose-built validation skills' },
+];
+
 export function AppShell() {
+  const [open, setOpen] = useState(false);
   const { pathname } = useLocation();
-  // /sessions is the execution flavor; /plan is planning; /automation is the run plane.
-  const flavor = pathname.startsWith('/plan')
-    ? 'plan'
-    : pathname.startsWith('/automation')
-      ? 'automation'
-      : 'execute';
+  const close = () => setOpen(false);
 
   return (
-    <div className="flex h-full">
-      <nav className="flex w-16 shrink-0 flex-col items-center gap-1 bg-gradient-to-b from-navy-900 to-navy-950 py-3">
-        {/* The wordmark is ~5:1, so the rail shows just its radial icon, on a light chip so it
-            reads on the navy ground regardless of the logo's own colors. */}
-        <div
-          className="mb-5 flex h-10 w-10 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-white shadow-sm"
-          title="AutWit — Automate. Ace. Accelerate."
+    <div className="flex h-full flex-col">
+      {/* Fixed top slice — the brand anchor, on every route. */}
+      <header className="fixed inset-x-0 top-0 z-40 flex h-14 items-center gap-2 bg-gradient-to-r from-navy-900 to-navy-950 px-3 text-white shadow-md">
+        <button
+          type="button"
+          onClick={() => setOpen((v) => !v)}
+          aria-label={open ? 'Close menu' : 'Open menu'}
+          aria-expanded={open}
+          className="grid size-10 place-items-center rounded-lg text-navy-100 transition-colors hover:bg-white/10"
         >
-          <img src="/AutwitLogo.png" alt="AutWit" className="h-8 w-auto max-w-none" />
-        </div>
-        <FlavorLink to="/sessions" active={flavor === 'execute'} label="Execute" icon={<PlayIcon />} />
-        <FlavorLink to="/plan" active={flavor === 'plan'} label="Plan" icon={<PlanIcon />} />
-        <FlavorLink
-          to="/automation"
-          active={flavor === 'automation'}
-          label="Runs"
-          icon={<AutomationIcon />}
-        />
-      </nav>
-      <div className="min-w-0 flex-1">
+          <HamburgerIcon open={open} />
+        </button>
+        <Link to="/" onClick={close} className="flex items-center gap-2.5" title="AutWit — Automate. Ace. Accelerate.">
+          <span className="flex size-9 items-center justify-center overflow-hidden rounded-lg bg-white shadow-sm">
+            <img src="/AutwitLogo.png" alt="AutWit" className="h-7 w-auto max-w-none" />
+          </span>
+          <span className="text-sm font-semibold tracking-wide">AutWit</span>
+        </Link>
+      </header>
+
+      {/* Drawer + scrim, below the top bar so the brand stays visible while navigating. */}
+      {open && <div className="fixed inset-0 top-14 z-30 bg-black/30" onClick={close} aria-hidden="true" />}
+      <aside
+        className={`fixed left-0 top-14 z-40 h-[calc(100%-3.5rem)] w-64 transform border-r border-slate-200 bg-white shadow-xl transition-transform duration-200 ${
+          open ? 'translate-x-0' : '-translate-x-full'
+        }`}
+      >
+        <nav className="flex flex-col gap-1 p-3">
+          {NAV_ITEMS.map((item) => {
+            const active = pathname.startsWith(item.match);
+            return (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                onClick={close}
+                className={`flex items-center gap-3 rounded-xl px-3 py-2.5 transition-colors ${
+                  active ? 'bg-sky-50 text-navy-900' : 'text-slate-600 hover:bg-slate-100'
+                }`}
+              >
+                <span className="grid size-9 shrink-0 place-items-center rounded-lg bg-gradient-to-br from-navy-900 to-navy-950">
+                  <img src={item.icon} alt="" className="size-5" />
+                </span>
+                <span className="min-w-0">
+                  <span className="block text-sm font-semibold">{item.label}</span>
+                  <span className="block truncate text-xs text-slate-400">{item.blurb}</span>
+                </span>
+              </NavLink>
+            );
+          })}
+        </nav>
+      </aside>
+
+      {/* Content sits below the fixed top bar. */}
+      <main className="mt-14 min-h-0 flex-1 overflow-auto">
         <Outlet />
-      </div>
+      </main>
     </div>
   );
 }
 
-function FlavorLink({
-  to,
-  active,
-  label,
-  icon,
-}: {
-  to: string;
-  active: boolean;
-  label: string;
-  icon: ReactNode;
-}) {
+/** Morphs between a hamburger and an X so the toggle reads its own state. */
+function HamburgerIcon({ open }: { open: boolean }) {
   return (
-    <NavLink
-      to={to}
-      title={label}
-      className={`flex w-12 flex-col items-center gap-1 rounded-xl py-2 text-[10px] font-medium transition-colors ${
-        active
-          ? 'bg-sky-600/25 text-navy-100'
-          : 'text-navy-300 hover:bg-white/5 hover:text-navy-100'
-      }`}
-    >
-      <span className="grid size-[19px] place-items-center">{icon}</span>
-      {label}
-    </NavLink>
-  );
-}
-
-/* lucide-style stroke icons, inline so they inherit currentColor and need no font/CDN. */
-function PlayIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-[19px]">
-      <polygon points="6 4 20 12 6 20 6 4" />
-    </svg>
-  );
-}
-
-function AutomationIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-[19px]">
-      <path d="M9 17H7A5 5 0 0 1 7 7h2" />
-      <path d="M15 7h2a5 5 0 1 1 0 10h-2" />
-      <path d="M8 12h8" />
-    </svg>
-  );
-}
-
-function PlanIcon() {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-[19px]">
-      <path d="M12 20h9" />
-      <path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z" />
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" className="size-5">
+      {open ? (
+        <>
+          <path d="M6 6l12 12" />
+          <path d="M18 6L6 18" />
+        </>
+      ) : (
+        <>
+          <path d="M3 6h18" />
+          <path d="M3 12h18" />
+          <path d="M3 18h18" />
+        </>
+      )}
     </svg>
   );
 }

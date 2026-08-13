@@ -51,26 +51,27 @@ export default function AutomationListRoute() {
       </header>
 
       <Card className="space-y-4 p-5">
-        <div className="grid gap-3 sm:grid-cols-4">
-          <label className="space-y-1">
+        <div className="grid items-start gap-3 sm:grid-cols-4">
+          <label className="flex flex-col gap-1">
             <span className="text-xs font-medium text-slate-600">Environment</span>
-            <Input value={env} onChange={(e) => setEnv(e.target.value)} placeholder="qa3" />
+            <Input className="w-full" value={env} onChange={(e) => setEnv(e.target.value)} placeholder="qa3" />
           </label>
-          <label className="space-y-1">
+          <label className="flex flex-col gap-1">
             <span className="text-xs font-medium text-slate-600">Suite</span>
-            <Input value={suite} onChange={(e) => setSuite(e.target.value)} placeholder="testng.xml" />
+            <Input className="w-full" value={suite} onChange={(e) => setSuite(e.target.value)} placeholder="testng.xml" />
           </label>
-          <label className="space-y-1">
+          <label className="flex flex-col gap-1">
             <span className="text-xs font-medium text-slate-600">Tags</span>
             <Input
+              className="w-full"
               value={tags}
               onChange={(e) => setTags(e.target.value)}
               placeholder="@bopic and not @wip"
             />
           </label>
-          <label className="space-y-1">
+          <label className="flex flex-col gap-1">
             <span className="text-xs font-medium text-slate-600">Started by</span>
-            <Input value={startedBy} onChange={(e) => setStartedBy(e.target.value)} placeholder="you" />
+            <Input className="w-full" value={startedBy} onChange={(e) => setStartedBy(e.target.value)} placeholder="you" />
           </label>
         </div>
 
