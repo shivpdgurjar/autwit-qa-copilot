@@ -174,7 +174,12 @@ export default function SessionRoute() {
         )}
       </div>
 
-      <SkillPalette sessionId={sessionId} open={palette} onClose={() => setPalette(false)} />
+      <SkillPalette
+        sessionId={sessionId}
+        orderId={session.subjects?.order_id}
+        open={palette}
+        onClose={() => setPalette(false)}
+      />
       <EvidencePicker
         sessionId={sessionId}
         open={analysis}

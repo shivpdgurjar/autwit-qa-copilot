@@ -16,6 +16,21 @@ import { missingRequired, pruneEmpty, SchemaForm, type JsonSchema } from './Sche
  */
 const HIDDEN_SKILL_PREFIXES = ['financial.', 'planning.'];
 
+/** Order-identifier fields to prefill from the session's order when a skill declares one. */
+const ORDER_ID_FIELDS = ['order_id', 'order_no', 'orderNumber'];
+
+/** Seeds a selected skill's form with the session's orderId for any order-id field it
+ *  declares — a default the tester can still edit, not a lock. */
+function orderDefaults(skill: Skill, orderId?: string): Record<string, unknown> {
+  if (!orderId) return {};
+  const properties = ((skill.input_schema ?? {}) as JsonSchema).properties ?? {};
+  const seed: Record<string, unknown> = {};
+  for (const field of ORDER_ID_FIELDS) {
+    if (field in properties) seed[field] = orderId;
+  }
+  return seed;
+}
+
 /**
  * The ⌘K palette.
  *
@@ -26,10 +41,13 @@ const HIDDEN_SKILL_PREFIXES = ['financial.', 'planning.'];
  */
 export function SkillPalette({
   sessionId,
+  orderId,
   open,
   onClose,
 }: {
   sessionId: string;
+  /** The session's order, prefilled into any order-id field of the chosen skill. */
+  orderId?: string;
   open: boolean;
   onClose: () => void;
 }) {
@@ -90,6 +108,12 @@ export function SkillPalette({
   const needsConfirm = selected?.side_effects === 'mutating';
   const blocked = missing.length > 0 || (needsConfirm && !confirmed);
 
+  // Selecting a skill seeds its form with the session's order (editable default).
+  const selectSkill = (skill: Skill) => {
+    setSelected(skill);
+    setInput(orderDefaults(skill, orderId));
+  };
+
   const submit = () => {
     if (!selected || blocked) return;
     invoke.mutate(
@@ -131,7 +155,7 @@ export function SkillPalette({
               {skills.map((skill) => (
                 <li key={skill.skill_name}>
                   <button
-                    onClick={() => setSelected(skill)}
+                    onClick={() => selectSkill(skill)}
                     disabled={skill.enabled === false}
                     title={skill.description ?? undefined}
                     className="w-full px-3.5 py-2.5 text-left hover:bg-ink-850 disabled:opacity-40"
