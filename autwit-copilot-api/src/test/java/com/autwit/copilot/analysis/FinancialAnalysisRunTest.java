@@ -93,6 +93,18 @@ class FinancialAnalysisRunTest extends AbstractPostgresIT {
                 // The non-PASS count the feed shows (orch v1.0.32 §5) — the fake emits one FAIL.
                 .contains("\"findings_actionable\": 1");
 
+        // Financial-forensics extras flow through into the JSONB summary: the routing tier
+        // and the generic narrative + derived facts (incl. the extensible REGULATORY_SURCHARGE
+        // component) are persisted verbatim for the UI to render.
+        assertThat(summary)
+                .contains("\"model_tier\": \"TERRA\"")
+                .contains("\"routing_score\": 8")
+                .contains("financial_narrative")
+                .contains("derived_financial_facts")
+                .contains("REGULATORY_SURCHARGE")
+                .contains("PROMOTION_RECALCULATION")
+                .contains("PAYMENT_VS_ORDER");
+
         // The FAIL finding reached the findings feed, severity-mapped ERROR → high.
         var feed = findings.listBySession(sessionId, null, null);
         assertThat(feed).hasSize(1);

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { isActive } from '../../api/client';
 import type {
   ArtifactRef,
@@ -988,6 +988,33 @@ function summaryNum(summary: ResultSummary | undefined, key: string): number | u
   return typeof v === 'number' && Number.isFinite(v) ? v : undefined;
 }
 
+function summaryObj(summary: ResultSummary | undefined, key: string): Record<string, unknown> | undefined {
+  const v = summary?.[key];
+  return v && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : undefined;
+}
+
+// Generic accessors for the open financial-narrative payload. It is deliberately
+// schema-loose (component/delta arrays, causal chains) so unknown future components
+// render with no code change — everything is read defensively and by iteration.
+const asArr = (v: unknown): unknown[] => (Array.isArray(v) ? v : []);
+const asObj = (v: unknown): Record<string, unknown> =>
+  v && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : {};
+const str = (v: unknown): string | undefined =>
+  typeof v === 'string' && v.length > 0 ? v : undefined;
+
+function statusTone(s: string | undefined): 'emerald' | 'red' | 'amber' | 'neutral' {
+  switch (s) {
+    case 'PASS':
+      return 'emerald';
+    case 'FAIL':
+      return 'red';
+    case 'WARNING':
+      return 'amber';
+    default:
+      return 'neutral';
+  }
+}
+
 /**
  * Watches the analysis run to its verdict.
  *
@@ -1054,6 +1081,9 @@ function RunVerdict({ runId }: { runId: string }) {
   const findingsActionable = summaryNum(summary, 'findings_actionable') ?? findingsTotal;
   const findingsPass = summaryNum(summary, 'findings_pass');
   const model = summaryText(summary, 'model');
+  const modelTier = summaryText(summary, 'model_tier');
+  const routingScore = summaryNum(summary, 'routing_score');
+  const narrative = summaryObj(summary, 'financial_narrative');
 
   return (
     <div className="rounded-lg border border-ink-700 bg-ink-900 p-3">
@@ -1064,6 +1094,12 @@ function RunVerdict({ runId }: { runId: string }) {
           <Badge tone="neutral">{overall ?? 'no verdict reported'}</Badge>
         )}
         {overall && verdict && <Mono className="text-ink-400">{overall}</Mono>}
+        {modelTier && (
+          <Badge tone={modelTier === 'TERRA' ? 'sky' : 'neutral'}>
+            {modelTier}
+            {routingScore !== undefined ? ` · ${routingScore}` : ''}
+          </Badge>
+        )}
         {confidence !== undefined && (
           <span className="ml-auto text-[11px]">
             <Muted>confidence</Muted>{' '}
@@ -1073,6 +1109,8 @@ function RunVerdict({ runId }: { runId: string }) {
       </div>
 
       {executive && <p className="mt-2.5 text-[12px] leading-relaxed text-ink-100">{executive}</p>}
+
+      {narrative && <FinancialForensics narrative={narrative} />}
 
       {/* AI status, muted — deterministic analysis is authoritative; the AI layer is a
           garnish and we say so honestly rather than hiding an UNAVAILABLE behind silence. */}
@@ -1118,6 +1156,207 @@ function RunVerdict({ runId }: { runId: string }) {
       <p className="mt-2.5 text-[11px] text-ink-400 italic">
         The individual findings appear in this session's findings feed.
       </p>
+    </div>
+  );
+}
+
+/**
+ * The generic financial-forensics narrative: state reconciliation, lifecycle transitions,
+ * and causal chains. Everything is rendered by ITERATING the model's arrays — component
+ * names, residual types and causal classifications are never hardcoded, so an unknown
+ * future component (e.g. REGULATORY_SURCHARGE) or a new lifecycle operation displays with
+ * no change here. Read-only and tolerant: a missing sub-field just renders as absent.
+ */
+function FinancialForensics({ narrative }: { narrative: Record<string, unknown> }) {
+  const states = asArr(narrative.states);
+  const transitions = asArr(narrative.transitions);
+  const chains = asArr(narrative.causalChains);
+  if (states.length === 0 && transitions.length === 0 && chains.length === 0) {
+    return null;
+  }
+  return (
+    <div className="mt-3 space-y-3 border-t border-ink-800 pt-3">
+      {states.length > 0 && (
+        <ForensicsSection title="State reconciliation">
+          {states.map((s, i) => (
+            <StateCard key={i} state={asObj(s)} />
+          ))}
+        </ForensicsSection>
+      )}
+      {transitions.length > 0 && (
+        <ForensicsSection title="Lifecycle transitions">
+          {transitions.map((t, i) => (
+            <TransitionCard key={i} t={asObj(t)} />
+          ))}
+        </ForensicsSection>
+      )}
+      {chains.length > 0 && (
+        <ForensicsSection title="Causal chains">
+          {chains.map((c, i) => (
+            <CausalChainCard key={i} c={asObj(c)} />
+          ))}
+        </ForensicsSection>
+      )}
+    </div>
+  );
+}
+
+function ForensicsSection({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <div>
+      <h4 className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-ink-500">{title}</h4>
+      <div className="space-y-1.5">{children}</div>
+    </div>
+  );
+}
+
+/** A generic list of {component[/subType]: amount} — never keyed on specific component names. */
+function ComponentList({ items }: { items: unknown[] }) {
+  if (items.length === 0) return null;
+  return (
+    <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5">
+      {items.map((raw, i) => {
+        const c = asObj(raw);
+        const name = [str(c.component), str(c.subType)].filter(Boolean).join(' · ');
+        return (
+          <span key={i} className="text-[11px]">
+            <Muted>{name || '—'}</Muted>{' '}
+            <Mono className="text-ink-200 tabular-nums">{str(c.amount) ?? '—'}</Mono>
+          </span>
+        );
+      })}
+    </div>
+  );
+}
+
+function StateCard({ state }: { state: Record<string, unknown> }) {
+  const eq = asObj(state.financialEquation);
+  const observations = asArr(state.observations);
+  return (
+    <div className="rounded border border-ink-800 bg-ink-950 px-2.5 py-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <Mono className="text-[12px] text-ink-100">{str(state.stateLabel) ?? 'state'}</Mono>
+        {str(state.status) && <Badge tone={statusTone(str(state.status))}>{str(state.status)}</Badge>}
+      </div>
+      {str(eq.expression) && (
+        <p className="mt-1 font-mono text-[11px] text-ink-300">{str(eq.expression)}</p>
+      )}
+      <ComponentList items={asArr(state.componentSummary)} />
+      {observations.length > 0 && (
+        <ul className="mt-1 list-disc space-y-0.5 pl-4 text-[11px] text-ink-300">
+          {observations.map((o, i) => (
+            <li key={i}>{String(o)}</li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
+
+function TransitionCard({ t }: { t: Record<string, unknown> }) {
+  const equations = asArr(t.equations);
+  const residuals = asArr(t.residuals);
+  return (
+    <div className="rounded border border-ink-800 bg-ink-950 px-2.5 py-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <Mono className="text-[12px] text-ink-100">
+          {str(t.fromState) ?? '?'} → {str(t.toState) ?? '?'}
+        </Mono>
+        {str(t.operation) && <Badge tone="neutral">{str(t.operation)}</Badge>}
+        {str(t.status) && <Badge tone={statusTone(str(t.status))}>{str(t.status)}</Badge>}
+        {(str(t.beforeGrandTotal) || str(t.afterGrandTotal)) && (
+          <span className="ml-auto text-[11px]">
+            <Mono className="text-ink-300 tabular-nums">{str(t.beforeGrandTotal) ?? '—'}</Mono>
+            <span className="text-ink-500"> → </span>
+            <Mono className="text-ink-200 tabular-nums">{str(t.afterGrandTotal) ?? '—'}</Mono>
+          </span>
+        )}
+      </div>
+      <ComponentList items={asArr(t.componentDeltas)} />
+      {equations.map((e, i) => (
+        <p key={i} className="mt-1 font-mono text-[11px] text-ink-300">
+          {String(e)}
+        </p>
+      ))}
+      {str(t.explanation) && (
+        <p className="mt-1 text-[11px] leading-relaxed text-ink-200">{str(t.explanation)}</p>
+      )}
+      {residuals.map((r, i) => (
+        <ResidualRow key={i} r={asObj(r)} />
+      ))}
+      <OperationImpact impact={asObj(t.operationImpact)} />
+    </div>
+  );
+}
+
+function ResidualRow({ r }: { r: Record<string, unknown> }) {
+  const explanations = asArr(r.possibleExplanations);
+  return (
+    <div className="mt-1.5 rounded border border-amber-900/40 bg-amber-950/10 px-2 py-1.5">
+      <div className="flex flex-wrap items-center gap-2 text-[11px]">
+        <Muted>residual</Muted>
+        <Mono className="text-ink-200">{str(r.type) ?? '—'}</Mono>
+        <Mono className="text-amber-300 tabular-nums">{str(r.amount) ?? '—'}</Mono>
+        {str(r.status) && <Badge tone="neutral">{str(r.status)}</Badge>}
+      </div>
+      {explanations.map((e, i) => {
+        const x = asObj(e);
+        const who = [str(x.componentType), str(x.componentName)].filter(Boolean).join(' · ');
+        return (
+          <p key={i} className="mt-0.5 text-[11px] text-ink-300">
+            ↳ {who || '—'} <Mono className="tabular-nums">{str(x.amount) ?? ''}</Mono>
+            {str(x.confidence) ? ` (${str(x.confidence)})` : ''}
+            {str(x.reason) ? ` — ${str(x.reason)}` : ''}
+          </p>
+        );
+      })}
+    </div>
+  );
+}
+
+function OperationImpact({ impact }: { impact: Record<string, unknown> }) {
+  const fields: Array<[string, string]> = [
+    ['requested', 'requestedValue'],
+    ['applied', 'appliedAdjustment'],
+    ['order Δ', 'orderLiabilityChange'],
+    ['payment Δ', 'paymentLiabilityChange'],
+    ['executed', 'executedCustomerTransaction'],
+  ];
+  const present = fields.filter(([, k]) => str(impact[k]) !== undefined);
+  if (present.length === 0) return null;
+  return (
+    <div className="mt-1 flex flex-wrap gap-x-3 gap-y-0.5">
+      {present.map(([label, k]) => (
+        <span key={k} className="text-[11px]">
+          <Muted>{label}</Muted>{' '}
+          <Mono className="text-ink-200 tabular-nums">{str(impact[k])}</Mono>
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function CausalChainCard({ c }: { c: Record<string, unknown> }) {
+  const steps = asArr(c.steps);
+  return (
+    <div className="rounded border border-ink-800 bg-ink-950 px-2.5 py-2">
+      <div className="flex flex-wrap items-center gap-2">
+        <Mono className="text-[12px] text-ink-100">{str(c.classification) ?? 'UNKNOWN'}</Mono>
+        {str(c.confidence) && <Badge tone="neutral">{str(c.confidence)}</Badge>}
+        {str(c.financialImpact) && (
+          <span className="ml-auto text-[11px]">
+            <Muted>impact</Muted>{' '}
+            <Mono className="text-ink-200 tabular-nums">{str(c.financialImpact)}</Mono>
+          </span>
+        )}
+      </div>
+      {steps.length > 0 && (
+        <ol className="mt-1 list-decimal space-y-0.5 pl-4 text-[11px] text-ink-300">
+          {steps.map((s, i) => (
+            <li key={i}>{String(s)}</li>
+          ))}
+        </ol>
+      )}
     </div>
   );
 }

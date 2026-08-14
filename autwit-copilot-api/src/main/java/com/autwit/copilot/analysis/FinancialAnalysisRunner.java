@@ -111,6 +111,24 @@ public class FinancialAnalysisRunner {
         summary.put("findings_fail", failCount);
         summary.put("model", result.model());
 
+        // Financial-forensics extras. Nested objects/arrays go straight into the JSONB
+        // result_summary (an open map) so the UI can read them defensively; null when the
+        // orchestrator did not produce them (older run, Luna with no narrative). Guarded
+        // like ai_unavailable_reason so absent stays absent rather than a literal null key.
+        summary.put("model_tier", result.modelTier());
+        if (result.routingScore() != null) {
+            summary.put("routing_score", result.routingScore());
+        }
+        if (result.routingSignals() != null) {
+            summary.put("routing_signals", result.routingSignals());
+        }
+        if (result.financialNarrative() != null) {
+            summary.put("financial_narrative", result.financialNarrative());
+        }
+        if (result.derivedFinancialFacts() != null) {
+            summary.put("derived_financial_facts", result.derivedFinancialFacts());
+        }
+
         if (!runs.succeed(run.runId(), run.workerId(), summary)) {
             throw new EnvelopePersister.LateResultException(run.runId());
         }
