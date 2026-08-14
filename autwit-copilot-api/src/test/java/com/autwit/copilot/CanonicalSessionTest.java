@@ -131,10 +131,16 @@ class CanonicalSessionTest extends AbstractPostgresIT {
                 .contains("Checked the order flow end to end.")
                 // The ignored columns must appear in the report itself -- if updated_at
                 // diffs vanish without explanation, nobody trusts it.
-                .contains("updated_at");
+                .contains("updated_at")
+                // The redesign: a table-of-contents, a Snapshots section, and the
+                // concrete field-level Field / Before -> After columns must all be present.
+                .contains("href=\"#findings\"")
+                .contains("id=\"snapshots\"")
+                .contains("<th>Field</th>");
 
         var md = reportBody("report.md");
-        assertThat(md).contains("# AutWit session report").contains("250.00").contains("| **critical** |");
+        assertThat(md).contains("# AutWit session report").contains("250.00").contains("| **critical** |")
+                .contains("## Snapshots").contains("| Field |");
     }
 
     @Test

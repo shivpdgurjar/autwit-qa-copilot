@@ -3,21 +3,25 @@
 - **Correlation id:** `[(${session.correlationId()})]`
 - **Env:** [(${session.env()})]
 - **Tester:** [(${session.testerId()})]
-- **Started:** [(${session.startedAt()})]
-- **Generated:** [(${generatedAt})]
+- **Started:** [(${fmt.time(session.startedAt())})]
+- **Generated:** [(${fmt.time(generatedAt)})]
 [# th:if="${notes}"]
 - **Notes:** [(${notes})]
 [/]
 
 ## Summary
 
-| | |
+| Metric | Count |
 |---|---|
-| Artifacts | [(${artifactCount})] |
-| Events | [(${eventCount})] |
-| Snapshots | [(${#lists.size(snapshots)})] |
-| Comparisons | [(${#lists.size(comparisons)})] |
 | Findings | [(${#lists.size(findings)})] |
+| Comparisons | [(${#lists.size(comparisons)})] |
+| Snapshots | [(${#lists.size(snapshots)})] |
+| Events | [(${eventCount})] |
+| Artifacts | [(${artifactCount})] |
+| Milestones | [(${#lists.size(milestones)})] |
+[# th:unless="${#lists.isEmpty(findings)}"]
+**Findings by severity:** [# th:each="sev : ${severityOrder}"][# th:if="${(findingCounts.get(sev) ?: 0) > 0}"]`[(${sev})] [(${findingCounts.get(sev) ?: 0})]`  [/][/]
+[/]
 
 ## Subjects under test
 
@@ -30,19 +34,31 @@
 [# th:if="${#lists.isEmpty(findings)}"]
 _No findings._
 [/][# th:unless="${#lists.isEmpty(findings)}"]
-| Severity | Category | Part | Entity | Message |
-|---|---|---|---|---|
-[# th:each="sev : ${severityOrder}"][# th:each="f : ${findings}" th:if="${f.severity() == sev}"]| **[(${f.severity()})]** | [(${f.category()})] | `[(${f.partKey()} ?: '—')]` | `[(${f.entityKey()} ?: '—')]` | [(${f.message()})] |
+| Severity | Category | Part | Entity | Field | Before → After | Message |
+|---|---|---|---|---|---|---|
+[# th:each="sev : ${severityOrder}"][# th:each="f : ${findings}" th:if="${f.severity() == sev}"]| **[(${f.severity()})]** | [(${f.category()})] | `[(${f.partKey()} ?: '—')]` | `[(${f.entityKey()} ?: '—')]` | `[(${f.field()} ?: '—')]` | [# th:if="${f.beforeValue() != null or f.afterValue() != null}"]`[(${fmt.value(f.beforeValue())})]` → `[(${fmt.value(f.afterValue())})]`[/][# th:unless="${f.beforeValue() != null or f.afterValue() != null}"]—[/] | [(${f.message()})] |
 [/][/]
+[/]
+
+## Snapshots
+[# th:if="${#lists.isEmpty(snapshots)}"]
+_No snapshots captured._
+[/][# th:each="snap : ${snapshots}"]
+### [(${snap.label()} ?: ${snap.scope()})] — [(${snap.status()})]  (captured [(${fmt.time(snap.capturedAt())})])
+
+| Part | Rows | Content hash |
+|---|---|---|
+[# th:each="p : ${snap.parts()}"]| `[(${p.partKey()})]` | [(${p.rowCount()} ?: '—')] | `[(${p.contentHash() != null} ? ${#strings.abbreviate(p.contentHash(), 16)} : '—')]` |
+[/]
 [/]
 
 ## Milestones
 [# th:if="${#lists.isEmpty(milestones)}"]
 _No milestones marked._
 [/][# th:unless="${#lists.isEmpty(milestones)}"]
-| # | Name | Status | Marked at |
-|---|---|---|---|
-[# th:each="m : ${milestones}"]| [(${m.seq()})] | [(${m.name()})] | [(${m.status()})] | [(${m.markedAt()})] |
+| # | Name | Status | Marked at | Note | Event cursor |
+|---|---|---|---|---|---|
+[# th:each="m : ${milestones}"]| [(${m.seq()})] | [(${m.name()})] | [(${m.status()})] | [(${fmt.time(m.markedAt())})] | [(${m.note()} ?: '—')] | `[(${m.eventCursor()})]` |
 [/]
 [/]
 
@@ -57,7 +73,14 @@ _No comparisons run._
 | Part | Added | Removed | Modified | Unchanged | Ignored columns |
 |---|---|---|---|---|---|
 [# th:each="p : ${c.partResults()}"]| `[(${p.partKey()})]` | [(${p.inconclusive()} ? '—' : ${p.rowsAdded()})] | [(${p.inconclusive()} ? '—' : ${p.rowsRemoved()})] | [(${p.inconclusive()} ? '—' : ${p.rowsModified()})] | [(${p.inconclusive()} ? '—' : ${p.rowsUnchanged()})] | [(${#lists.isEmpty(p.ignoredColumns())} ? 'none' : ${#strings.listJoin(p.ignoredColumns(), ', ')})] |
+[/][# th:with="cf=${findingsByComparison.get(c.comparisonId())}"][# th:if="${cf != null and !cf.isEmpty()}"]
+**Field-level detail:**
+
+| Severity | Part | Entity | Field | Before → After | Message |
+|---|---|---|---|---|---|
+[# th:each="f : ${cf}"]| [(${f.severity()})] | `[(${f.partKey()} ?: '—')]` | `[(${f.entityKey()} ?: '—')]` | `[(${f.field()} ?: '—')]` | [# th:if="${f.beforeValue() != null or f.afterValue() != null}"]`[(${fmt.value(f.beforeValue())})]` → `[(${fmt.value(f.afterValue())})]`[/][# th:unless="${f.beforeValue() != null or f.afterValue() != null}"]—[/] | [(${f.message()})] |
 [/]
+[/][/]
 [/]
 
 ## Timeline

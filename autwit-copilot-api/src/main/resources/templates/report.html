@@ -2,156 +2,342 @@
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
   <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title th:text="'AutWit session report — ' + ${session.correlationId()}">AutWit session report</title>
   <style>
-    :root { color-scheme: light dark; }
-    body { font: 15px/1.55 -apple-system, Segoe UI, Roboto, sans-serif; max-width: 60rem;
-           margin: 2rem auto; padding: 0 1rem; }
-    h1 { margin-bottom: .25rem; }
-    .sub { color: #666; margin-top: 0; }
-    table { border-collapse: collapse; width: 100%; margin: .5rem 0 1.5rem; }
-    th, td { text-align: left; padding: .4rem .6rem; border-bottom: 1px solid #ddd;
-             vertical-align: top; }
-    th { background: #f5f5f5; font-weight: 600; }
-    code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .9em; }
-    .sev { font-weight: 600; text-transform: uppercase; font-size: .75em; letter-spacing: .04em; }
-    .sev-critical { color: #b3001b; }
-    .sev-high     { color: #d64500; }
-    .sev-medium   { color: #9a6700; }
-    .sev-low      { color: #57606a; }
-    .sev-info     { color: #57606a; }
-    .verdict { display: inline-block; padding: .1rem .5rem; border-radius: .25rem;
-               font-weight: 600; font-size: .8em; text-transform: uppercase; }
-    .verdict-pass { background: #dafbe1; color: #116329; }
-    .verdict-fail { background: #ffebe9; color: #b3001b; }
-    .verdict-warn { background: #fff8c5; color: #7d4e00; }
-    .verdict-inconclusive { background: #eee; color: #444; }
-    .ignored { color: #666; font-size: .85em; }
-    .empty { color: #888; font-style: italic; }
+    :root {
+      color-scheme: light dark;
+      --bg: #fbfbfc; --card: #fff; --ink: #1b1f24; --muted: #5b636c;
+      --line: #e3e6ea; --line-strong: #d0d5da; --head: #f4f6f8;
+      --accent: #0b62d6; --code: #f2f3f5;
+      --crit: #b3001b; --high: #d64500; --med: #9a6700; --low: #57606a; --info: #57606a;
+      --pass-bg: #dafbe1; --pass-fg: #116329; --fail-bg: #ffebe9; --fail-fg: #b3001b;
+      --warn-bg: #fff8c5; --warn-fg: #7d4e00; --inc-bg: #eceef0; --inc-fg: #444;
+      --fail-row: #fff5f5;
+    }
     @media (prefers-color-scheme: dark) {
-      th { background: #222; } th, td { border-bottom-color: #333; }
-      .sub, .ignored, .empty { color: #999; }
+      :root {
+        --bg: #0d1117; --card: #161b22; --ink: #e6edf3; --muted: #9aa4ae;
+        --line: #262c34; --line-strong: #333b44; --head: #1c2027; --code: #1c2128;
+        --accent: #4f9dff;
+        --crit: #ff6b6b; --high: #ff9a52; --med: #e3b341; --low: #9aa4ae; --info: #9aa4ae;
+        --pass-bg: #12261a; --pass-fg: #5fd88a; --fail-bg: #2a1618; --fail-fg: #ff8087;
+        --warn-bg: #2a2410; --warn-fg: #e3b341; --inc-bg: #21262d; --inc-fg: #adbac7;
+        --fail-row: #21171a;
+      }
+    }
+    * { box-sizing: border-box; }
+    body { font: 15px/1.55 -apple-system, "Segoe UI", Roboto, sans-serif;
+           color: var(--ink); background: var(--bg); margin: 0; padding: 0 1rem 4rem; }
+    .wrap { max-width: 64rem; margin: 0 auto; }
+    header.hero { padding: 2rem 0 1rem; }
+    h1 { margin: 0 0 .35rem; font-size: 1.6rem; letter-spacing: -.01em; }
+    .sub { color: var(--muted); margin: 0; font-size: .92rem; }
+    .sub .dot { opacity: .5; margin: 0 .15rem; }
+    h2 { font-size: 1.15rem; margin: 0 0 .75rem; padding-top: .35rem; letter-spacing: -.01em; }
+    h3 { font-size: 1rem; margin: 1.1rem 0 .5rem; }
+    section { scroll-margin-top: 1rem; }
+    .card { background: var(--card); border: 1px solid var(--line);
+            border-radius: 12px; padding: 1.1rem 1.25rem; margin: 0 0 1.25rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,.03); }
+    /* Table of contents */
+    nav.toc { position: sticky; top: 0; z-index: 5; background: var(--bg);
+              padding: .6rem 0; margin-bottom: .5rem; border-bottom: 1px solid var(--line);
+              display: flex; flex-wrap: wrap; gap: .35rem; }
+    nav.toc a { text-decoration: none; color: var(--muted); font-size: .82rem;
+                padding: .2rem .6rem; border-radius: 999px; border: 1px solid var(--line); }
+    nav.toc a:hover { color: var(--accent); border-color: var(--accent); }
+    /* KPI + severity chips */
+    .kpis { display: flex; flex-wrap: wrap; gap: .6rem; margin: 0 0 .25rem; }
+    .kpi { flex: 1 1 6.5rem; background: var(--head); border: 1px solid var(--line);
+           border-radius: 10px; padding: .55rem .7rem; }
+    .kpi .n { font-size: 1.35rem; font-weight: 700; line-height: 1; }
+    .kpi .l { font-size: .72rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-top: .25rem; }
+    .chips { display: flex; flex-wrap: wrap; gap: .4rem; margin: .9rem 0 0; }
+    .chip { display: inline-flex; align-items: baseline; gap: .35rem;
+            border: 1px solid var(--line-strong); border-radius: 999px;
+            padding: .2rem .65rem; font-size: .8rem; font-weight: 600; }
+    .chip .c { font-variant-numeric: tabular-nums; }
+    .chip.sev-critical { color: var(--crit); border-color: var(--crit); }
+    .chip.sev-high { color: var(--high); border-color: var(--high); }
+    .chip.sev-medium { color: var(--med); border-color: var(--med); }
+    .chip.sev-low { color: var(--low); }
+    .chip.sev-info { color: var(--info); }
+    /* Tables */
+    .tw { overflow-x: auto; }
+    table { border-collapse: collapse; width: 100%; margin: .35rem 0 .25rem; font-size: .9rem; }
+    th, td { text-align: left; padding: .45rem .6rem; border-bottom: 1px solid var(--line);
+             vertical-align: top; }
+    th { background: var(--head); font-weight: 600; white-space: nowrap;
+         position: sticky; top: 0; }
+    tbody tr:last-child td { border-bottom: none; }
+    code, .mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .85em; }
+    .ba { white-space: nowrap; font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: .82em; }
+    .ba .b { color: var(--crit); } .ba .a { color: var(--pass-fg); } .ba .arw { color: var(--muted); margin: 0 .3rem; }
+    .sev { font-weight: 700; text-transform: uppercase; font-size: .72em; letter-spacing: .04em; white-space: nowrap; }
+    .sev-critical { color: var(--crit); } .sev-high { color: var(--high); }
+    .sev-medium { color: var(--med); } .sev-low { color: var(--low); } .sev-info { color: var(--info); }
+    .verdict { display: inline-block; padding: .12rem .55rem; border-radius: 6px;
+               font-weight: 700; font-size: .74rem; text-transform: uppercase; letter-spacing: .03em; }
+    .verdict-pass { background: var(--pass-bg); color: var(--pass-fg); }
+    .verdict-fail { background: var(--fail-bg); color: var(--fail-fg); }
+    .verdict-warn { background: var(--warn-bg); color: var(--warn-fg); }
+    .verdict-inconclusive { background: var(--inc-bg); color: var(--inc-fg); }
+    .pill { display: inline-block; padding: .05rem .45rem; border-radius: 6px; font-size: .72rem;
+            font-weight: 600; background: var(--inc-bg); color: var(--inc-fg); }
+    .pill-partial { background: var(--warn-bg); color: var(--warn-fg); }
+    .pill-complete { background: var(--pass-bg); color: var(--pass-fg); }
+    tr.row-fail td { background: var(--fail-row); }
+    .ignored { color: var(--muted); font-size: .85em; }
+    .empty { color: var(--muted); font-style: italic; margin: .25rem 0; }
+    .drill { margin: .5rem 0 0; }
+    .drill summary { cursor: pointer; color: var(--accent); font-size: .85rem; font-weight: 600; }
+    .meta-row th { width: 10rem; background: transparent; position: static; }
+    .meta-row td { color: var(--ink); }
+    hr { border: none; border-top: 1px solid var(--line); margin: 2rem 0 1rem; }
+    footer { color: var(--muted); font-size: .82rem; }
+    @media print {
+      nav.toc { display: none; }
+      body { padding: 0; } .card { box-shadow: none; break-inside: avoid; }
+      th { position: static; }
     }
   </style>
 </head>
 <body>
+<div class="wrap">
 
-<h1 th:text="${session.title()} ?: 'QA session'">QA session</h1>
-<p class="sub">
-  <span class="mono" th:text="${session.correlationId()}">autwit-qa2-…</span>
-  · <span th:text="${session.env()}">qa2</span>
-  · <span th:text="${session.testerId()}">priya</span>
-  · started <span th:text="${session.startedAt()}">…</span>
-</p>
+<header class="hero">
+  <h1 th:text="${session.title()} ?: 'QA session'">QA session</h1>
+  <p class="sub">
+    <span class="mono" th:text="${session.correlationId()}">autwit-qa2-…</span>
+    <span class="dot">·</span><span th:text="${session.env()}">qa2</span>
+    <span class="dot">·</span><span th:text="${session.testerId()}">priya</span>
+    <span class="dot">·</span>started <span th:text="${fmt.time(session.startedAt())}">…</span>
+  </p>
+</header>
 
-<h2>Summary</h2>
-<table>
-  <tr><th>Artifacts</th><td th:text="${artifactCount}">0</td></tr>
-  <tr><th>Events</th><td th:text="${eventCount}">0</td></tr>
-  <tr><th>Snapshots</th><td th:text="${#lists.size(snapshots)}">0</td></tr>
-  <tr><th>Comparisons</th><td th:text="${#lists.size(comparisons)}">0</td></tr>
-  <tr><th>Findings</th><td th:text="${#lists.size(findings)}">0</td></tr>
-  <tr th:if="${notes}"><th>Notes</th><td th:text="${notes}"></td></tr>
-</table>
+<nav class="toc">
+  <a href="#summary">Summary</a>
+  <a href="#findings">Findings</a>
+  <a href="#snapshots">Snapshots</a>
+  <a href="#comparisons">Comparisons</a>
+  <a href="#milestones">Milestones</a>
+  <a href="#timeline">Timeline</a>
+</nav>
 
-<h2>Subjects under test</h2>
-<table>
-  <tr th:each="s : ${session.subjects()}">
-    <th th:text="${s.key}">order_id</th>
-    <td class="mono" th:text="${s.value}">XXXX</td>
-  </tr>
-</table>
+<!-- ============================ SUMMARY ============================ -->
+<section id="summary" class="card">
+  <h2>Summary</h2>
+  <div class="kpis">
+    <div class="kpi"><div class="n" th:text="${#lists.size(findings)}">0</div><div class="l">Findings</div></div>
+    <div class="kpi"><div class="n" th:text="${#lists.size(comparisons)}">0</div><div class="l">Comparisons</div></div>
+    <div class="kpi"><div class="n" th:text="${#lists.size(snapshots)}">0</div><div class="l">Snapshots</div></div>
+    <div class="kpi"><div class="n" th:text="${eventCount}">0</div><div class="l">Events</div></div>
+    <div class="kpi"><div class="n" th:text="${artifactCount}">0</div><div class="l">Artifacts</div></div>
+    <div class="kpi"><div class="n" th:text="${#lists.size(milestones)}">0</div><div class="l">Milestones</div></div>
+  </div>
 
-<h2>Findings</h2>
-<p th:if="${#lists.isEmpty(findings)}" class="empty">No findings.</p>
-<table th:unless="${#lists.isEmpty(findings)}">
-  <thead>
-    <tr><th>Severity</th><th>Category</th><th>Part</th><th>Entity</th><th>Message</th></tr>
-  </thead>
-  <tbody>
-    <!-- Worst first: a report nobody reads past the first screen must lead with what matters. -->
+  <!-- Severity breakdown from findingCounts: the key findings at a glance, no pass/fail verdict. -->
+  <div class="chips" th:unless="${#lists.isEmpty(findings)}">
     <th:block th:each="sev : ${severityOrder}">
-      <tr th:each="f : ${findings}" th:if="${f.severity() == sev}">
-        <td><span class="sev" th:classappend="'sev-' + ${f.severity()}" th:text="${f.severity()}">high</span></td>
-        <td th:text="${f.category()}">consistency</td>
-        <td class="mono" th:text="${f.partKey()} ?: '—'">oms.orders</td>
-        <td class="mono" th:text="${f.entityKey()} ?: '—'">XXXX</td>
-        <td th:text="${f.message()}">…</td>
-      </tr>
+      <span th:if="${(findingCounts.get(sev) ?: 0) > 0}" class="chip" th:classappend="'sev-' + ${sev}">
+        <span th:text="${sev}">critical</span><span class="c" th:text="${findingCounts.get(sev) ?: 0}">0</span>
+      </span>
     </th:block>
-  </tbody>
-</table>
+  </div>
+  <p class="empty" th:if="${#lists.isEmpty(findings)}">No findings recorded.</p>
 
-<h2>Milestones</h2>
-<p th:if="${#lists.isEmpty(milestones)}" class="empty">No milestones marked.</p>
-<table th:unless="${#lists.isEmpty(milestones)}">
-  <thead><tr><th>#</th><th>Name</th><th>Status</th><th>Marked at</th><th>Event cursor</th></tr></thead>
-  <tbody>
-    <tr th:each="m : ${milestones}">
-      <td th:text="${m.seq()}">1</td>
-      <td th:text="${m.name()}">order_created</td>
-      <td th:text="${m.status()}">complete</td>
-      <td th:text="${m.markedAt()}">…</td>
-      <td class="mono" th:text="${m.eventCursor()}">{}</td>
-    </tr>
-  </tbody>
-</table>
-
-<h2>Comparisons</h2>
-<p th:if="${#lists.isEmpty(comparisons)}" class="empty">No comparisons run.</p>
-<div th:each="c : ${comparisons}" th:unless="${#lists.isEmpty(comparisons)}">
-  <h3>
-    <span th:text="${c.compareType()}">structural</span>
-    <span class="verdict" th:classappend="'verdict-' + ${c.verdict()}" th:text="${c.verdict()}">pass</span>
-  </h3>
-  <p th:text="${c.summary()}">…</p>
-  <table>
-    <thead>
-      <tr><th>Part</th><th>Added</th><th>Removed</th><th>Modified</th><th>Unchanged</th>
-          <th>Ignored columns</th></tr>
-    </thead>
+  <table th:if="${session.subjects() != null and !session.subjects().isEmpty()}" style="margin-top:1rem">
     <tbody>
-      <tr th:each="p : ${c.partResults()}">
-        <td class="mono" th:text="${p.partKey()}">oms.orders</td>
-        <td th:text="${p.inconclusive()} ? '—' : ${p.rowsAdded()}">0</td>
-        <td th:text="${p.inconclusive()} ? '—' : ${p.rowsRemoved()}">0</td>
-        <td th:text="${p.inconclusive()} ? '—' : ${p.rowsModified()}">0</td>
-        <td th:text="${p.inconclusive()} ? '—' : ${p.rowsUnchanged()}">0</td>
-        <!--
-          Always rendered, never omitted. If updated_at diffs vanish without
-          explanation, nobody trusts the report and the tool dies (BUILD_BRIEF §7).
-        -->
-        <td class="ignored"
-            th:text="${#lists.isEmpty(p.ignoredColumns())} ? 'none' : ${#strings.listJoin(p.ignoredColumns(), ', ')}">
-          none
-        </td>
-      </tr>
-      <tr th:each="p : ${c.partResults()}" th:if="${p.inconclusive()}">
-        <td colspan="6" class="ignored">
-          <strong th:text="${p.partKey()}">part</strong>: inconclusive —
-          <span th:text="${p.reason()}">reason</span>
-        </td>
+      <tr class="meta-row" th:each="s : ${session.subjects()}">
+        <th th:text="${s.key}">order_id</th>
+        <td class="mono" th:text="${s.value}">XXXX</td>
       </tr>
     </tbody>
   </table>
-</div>
+  <table th:if="${notes}" style="margin-top:.5rem">
+    <tbody><tr class="meta-row"><th>Notes</th><td th:text="${notes}"></td></tr></tbody>
+  </table>
+</section>
 
-<h2>Timeline</h2>
-<table>
-  <thead><tr><th>#</th><th>Kind</th><th>Actor</th><th>Status</th><th>Label</th></tr></thead>
-  <tbody>
-    <tr th:each="s : ${steps}">
-      <td th:text="${s.seq()}">1</td>
-      <td th:text="${s.kind()}">user_utterance</td>
-      <td th:text="${s.actor()}">user</td>
-      <td th:text="${s.status()}">succeeded</td>
-      <td th:text="${s.label()}">…</td>
-    </tr>
-  </tbody>
-</table>
+<!-- ============================ FINDINGS ============================ -->
+<section id="findings" class="card">
+  <h2>Findings</h2>
+  <p th:if="${#lists.isEmpty(findings)}" class="empty">No findings.</p>
+  <div class="tw" th:unless="${#lists.isEmpty(findings)}">
+    <table>
+      <thead>
+        <tr><th>Severity</th><th>Category</th><th>Part</th><th>Entity</th><th>Field</th>
+            <th>Before → After</th><th>Message</th></tr>
+      </thead>
+      <tbody>
+        <!-- Worst first: a report nobody reads past the first screen must lead with what matters. -->
+        <th:block th:each="sev : ${severityOrder}">
+          <tr th:each="f : ${findings}" th:if="${f.severity() == sev}">
+            <td><span class="sev" th:classappend="'sev-' + ${f.severity()}" th:text="${f.severity()}">high</span></td>
+            <td th:text="${f.category()}">consistency</td>
+            <td class="mono" th:text="${f.partKey()} ?: '—'">oms.orders</td>
+            <td class="mono" th:text="${f.entityKey()} ?: '—'">XXXX</td>
+            <td class="mono" th:text="${f.field()} ?: '—'">total_amount</td>
+            <td>
+              <span class="ba" th:if="${f.beforeValue() != null or f.afterValue() != null}">
+                <span class="b" th:text="${fmt.value(f.beforeValue())}">1200.00</span>
+                <span class="arw">→</span>
+                <span class="a" th:text="${fmt.value(f.afterValue())}">1450.00</span>
+              </span>
+              <span th:unless="${f.beforeValue() != null or f.afterValue() != null}">—</span>
+            </td>
+            <td th:text="${f.message()}">…</td>
+          </tr>
+        </th:block>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================ SNAPSHOTS ============================ -->
+<section id="snapshots" class="card">
+  <h2>Snapshots</h2>
+  <p th:if="${#lists.isEmpty(snapshots)}" class="empty">No snapshots captured.</p>
+  <div th:each="snap : ${snapshots}" th:unless="${#lists.isEmpty(snapshots)}">
+    <h3>
+      <span th:text="${snap.label()} ?: ${snap.scope()}">order_created</span>
+      <span class="pill" th:classappend="'pill-' + ${snap.status()}" th:text="${snap.status()}">complete</span>
+      <span class="ignored" th:text="'· captured ' + ${fmt.time(snap.capturedAt())}">…</span>
+    </h3>
+    <div class="tw">
+      <table>
+        <thead><tr><th>Part</th><th>Rows</th><th>Content hash</th></tr></thead>
+        <tbody>
+          <tr th:each="p : ${snap.parts()}">
+            <td class="mono" th:text="${p.partKey()}">oms.orders</td>
+            <td th:text="${p.rowCount()} ?: '—'">3</td>
+            <td class="mono ignored" th:text="${p.contentHash() != null} ? ${#strings.abbreviate(p.contentHash(), 16)} : '—'">…</td>
+          </tr>
+          <tr th:if="${#lists.isEmpty(snap.parts())}"><td colspan="3" class="empty">No parts.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- ============================ COMPARISONS ============================ -->
+<section id="comparisons" class="card">
+  <h2>Comparisons</h2>
+  <p th:if="${#lists.isEmpty(comparisons)}" class="empty">No comparisons run.</p>
+  <div th:each="c : ${comparisons}" th:unless="${#lists.isEmpty(comparisons)}"
+       th:with="cf=${findingsByComparison.get(c.comparisonId())}">
+    <h3>
+      <span th:text="${c.compareType()}">structural</span>
+      <span class="verdict" th:classappend="'verdict-' + ${c.verdict()}" th:text="${c.verdict()}">pass</span>
+    </h3>
+    <p class="sub" th:text="${c.summary()}">…</p>
+    <div class="tw">
+      <table>
+        <thead>
+          <tr><th>Part</th><th>Added</th><th>Removed</th><th>Modified</th><th>Unchanged</th>
+              <th>Ignored columns</th></tr>
+        </thead>
+        <tbody>
+          <tr th:each="p : ${c.partResults()}" th:classappend="${p.hasChanges()} ? 'row-fail'">
+            <td class="mono" th:text="${p.partKey()}">oms.orders</td>
+            <td th:text="${p.inconclusive()} ? '—' : ${p.rowsAdded()}">0</td>
+            <td th:text="${p.inconclusive()} ? '—' : ${p.rowsRemoved()}">0</td>
+            <td th:text="${p.inconclusive()} ? '—' : ${p.rowsModified()}">0</td>
+            <td th:text="${p.inconclusive()} ? '—' : ${p.rowsUnchanged()}">0</td>
+            <!--
+              Always rendered, never omitted. If updated_at diffs vanish without
+              explanation, nobody trusts the report and the tool dies (BUILD_BRIEF §7).
+            -->
+            <td class="ignored"
+                th:text="${#lists.isEmpty(p.ignoredColumns())} ? 'none' : ${#strings.listJoin(p.ignoredColumns(), ', ')}">
+              none
+            </td>
+          </tr>
+          <tr th:each="p : ${c.partResults()}" th:if="${p.inconclusive()}">
+            <td colspan="6" class="ignored">
+              <strong th:text="${p.partKey()}">part</strong>: inconclusive —
+              <span th:text="${p.reason()}">reason</span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Concrete drill-down: the field-level diffs this comparison's counts summarise away.
+         cf is bound on the enclosing div (th:with runs after th:each but before this th:if). -->
+    <details class="drill" th:if="${cf != null and !cf.isEmpty()}">
+      <summary th:text="'Field-level detail (' + ${#lists.size(cf)} + ')'">Field-level detail</summary>
+      <div class="tw">
+        <table>
+          <thead><tr><th>Severity</th><th>Part</th><th>Entity</th><th>Field</th>
+              <th>Before → After</th><th>Message</th></tr></thead>
+          <tbody>
+            <tr th:each="f : ${cf}">
+              <td><span class="sev" th:classappend="'sev-' + ${f.severity()}" th:text="${f.severity()}">info</span></td>
+              <td class="mono" th:text="${f.partKey()} ?: '—'">oms.orders</td>
+              <td class="mono" th:text="${f.entityKey()} ?: '—'">XXXX</td>
+              <td class="mono" th:text="${f.field()} ?: '—'">status</td>
+              <td>
+                <span class="ba" th:if="${f.beforeValue() != null or f.afterValue() != null}">
+                  <span class="b" th:text="${fmt.value(f.beforeValue())}">A</span>
+                  <span class="arw">→</span>
+                  <span class="a" th:text="${fmt.value(f.afterValue())}">B</span>
+                </span>
+                <span th:unless="${f.beforeValue() != null or f.afterValue() != null}">—</span>
+              </td>
+              <td th:text="${f.message()}">…</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </details>
+  </div>
+</section>
+
+<!-- ============================ MILESTONES ============================ -->
+<section id="milestones" class="card">
+  <h2>Milestones</h2>
+  <p th:if="${#lists.isEmpty(milestones)}" class="empty">No milestones marked.</p>
+  <div class="tw" th:unless="${#lists.isEmpty(milestones)}">
+    <table>
+      <thead><tr><th>#</th><th>Name</th><th>Status</th><th>Marked at</th><th>Note</th><th>Event cursor</th></tr></thead>
+      <tbody>
+        <tr th:each="m : ${milestones}">
+          <td th:text="${m.seq()}">1</td>
+          <td th:text="${m.name()}">order_created</td>
+          <td th:text="${m.status()}">complete</td>
+          <td th:text="${fmt.time(m.markedAt())}">…</td>
+          <td th:text="${m.note()} ?: '—'">—</td>
+          <td class="mono ignored" th:text="${m.eventCursor()}">{}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<!-- ============================ TIMELINE ============================ -->
+<section id="timeline" class="card">
+  <h2>Timeline</h2>
+  <div class="tw">
+    <table>
+      <thead><tr><th>#</th><th>Kind</th><th>Actor</th><th>Status</th><th>Label</th></tr></thead>
+      <tbody>
+        <tr th:each="s : ${steps}" th:classappend="${s.status() != null and #strings.contains(s.status(), 'fail')} ? 'row-fail'">
+          <td th:text="${s.seq()}">1</td>
+          <td th:text="${s.kind()}">user_utterance</td>
+          <td th:text="${s.actor()}">user</td>
+          <td th:text="${s.status()}">succeeded</td>
+          <td th:text="${s.label()}">…</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
 
 <hr>
-<p class="sub">Generated by AutWit Copilot at <span th:text="${generatedAt}">…</span>.</p>
+<footer>Generated by AutWit Copilot at <span th:text="${fmt.time(generatedAt)}">…</span>.</footer>
 
+</div>
 </body>
 </html>
