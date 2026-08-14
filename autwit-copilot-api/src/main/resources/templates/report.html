@@ -90,6 +90,9 @@
     tr.row-fail td { background: var(--fail-row); }
     .ignored { color: var(--muted); font-size: .85em; }
     .empty { color: var(--muted); font-style: italic; margin: .25rem 0; }
+    ul.msg { margin: 0; padding-left: 1.05rem; }
+    ul.msg li { margin: 0; }
+    ul.msg li + li { margin-top: .15rem; }
     .drill { margin: .5rem 0 0; }
     .drill summary { cursor: pointer; color: var(--accent); font-size: .85rem; font-weight: 600; }
     .meta-row th { width: 10rem; background: transparent; position: static; }
@@ -187,7 +190,7 @@
               </span>
               <span th:unless="${f.beforeValue() != null or f.afterValue() != null}">—</span>
             </td>
-            <td th:text="${f.message()}">…</td>
+            <td><ul class="msg"><li th:each="b : ${fmt.bullets(f.message())}" th:text="${b}">…</li></ul></td>
           </tr>
         </th:block>
       </tbody>
@@ -286,7 +289,7 @@
                 </span>
                 <span th:unless="${f.beforeValue() != null or f.afterValue() != null}">—</span>
               </td>
-              <td th:text="${f.message()}">…</td>
+              <td><ul class="msg"><li th:each="b : ${fmt.bullets(f.message())}" th:text="${b}">…</li></ul></td>
             </tr>
           </tbody>
         </table>

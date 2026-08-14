@@ -19,7 +19,7 @@ export function FindingsFeed({ findings }: { findings: Finding[] }) {
           <div className="flex items-start gap-2">
             <SeverityBadge severity={finding.severity!} />
             <div className="min-w-0 flex-1">
-              <p className="text-[12px] leading-snug text-ink-200">{finding.message}</p>
+              <FindingMessage message={finding.message} />
 
               <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[11px]">
                 {finding.category && <Muted>{finding.category}</Muted>}
@@ -70,6 +70,33 @@ export function FindingCounts({ counts }: { counts?: Record<string, number> }) {
       ))}
     </div>
   );
+}
+
+/**
+ * A finding's message as bullets. The analyser writes each explanation as one claim per
+ * line, so a multi-point message renders as a list rather than a wall of prose; a single
+ * line (deterministic findings) stays a plain paragraph so it does not read as a lone dot.
+ */
+function FindingMessage({ message }: { message?: string | null }) {
+  const points = toBullets(message ?? '');
+  if (points.length <= 1) {
+    return <p className="text-[12px] leading-snug text-ink-200">{message}</p>;
+  }
+  return (
+    <ul className="list-disc space-y-0.5 pl-4 text-[12px] leading-snug text-ink-200">
+      {points.map((point, i) => (
+        <li key={i}>{point}</li>
+      ))}
+    </ul>
+  );
+}
+
+/** Split on line breaks and strip any leading list marker the model may have emitted. */
+function toBullets(message: string): string[] {
+  return message
+    .split(/\r?\n/)
+    .map((line) => line.trim().replace(/^[-*•]\s*/, '').trim())
+    .filter((line) => line.length > 0);
 }
 
 function stringify(value: unknown): string {

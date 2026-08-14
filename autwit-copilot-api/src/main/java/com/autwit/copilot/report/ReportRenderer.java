@@ -142,6 +142,35 @@ public class ReportRenderer {
         public String value(Object v) {
             return v == null ? "—" : String.valueOf(v);
         }
+
+        /**
+         * A finding message split into bullet points. The analyser is asked to write each
+         * explanation as one claim per line; deterministic findings are a single line and
+         * become a single bullet. Any leading list marker is stripped so the template owns
+         * the bullet, not the text.
+         */
+        public List<String> bullets(String message) {
+            if (message == null || message.isBlank()) {
+                return List.of();
+            }
+            var out = new java.util.ArrayList<String>();
+            for (var raw : message.split("\\R")) {
+                var line = raw.strip().replaceFirst("^[-*•]\\s*", "").strip();
+                if (!line.isEmpty()) {
+                    out.add(line);
+                }
+            }
+            return out.isEmpty() ? List.of(message.strip()) : out;
+        }
+
+        /** The same points on one line for a Markdown table cell, which cannot hold a list. */
+        public String inlineBullets(String message) {
+            var points = bullets(message);
+            if (points.isEmpty()) {
+                return "—";
+            }
+            return points.size() == 1 ? points.get(0) : "• " + String.join(" • ", points);
+        }
     }
 
     private UUID store(UUID sessionId, UUID stepId, UUID runId, String name, ArtifactFormat format,

@@ -36,7 +36,7 @@ _No findings._
 [/][# th:unless="${#lists.isEmpty(findings)}"]
 | Severity | Category | Part | Entity | Field | Before → After | Message |
 |---|---|---|---|---|---|---|
-[# th:each="sev : ${severityOrder}"][# th:each="f : ${findings}" th:if="${f.severity() == sev}"]| **[(${f.severity()})]** | [(${f.category()})] | `[(${f.partKey()} ?: '—')]` | `[(${f.entityKey()} ?: '—')]` | `[(${f.field()} ?: '—')]` | [# th:if="${f.beforeValue() != null or f.afterValue() != null}"]`[(${fmt.value(f.beforeValue())})]` → `[(${fmt.value(f.afterValue())})]`[/][# th:unless="${f.beforeValue() != null or f.afterValue() != null}"]—[/] | [(${f.message()})] |
+[# th:each="sev : ${severityOrder}"][# th:each="f : ${findings}" th:if="${f.severity() == sev}"]| **[(${f.severity()})]** | [(${f.category()})] | `[(${f.partKey()} ?: '—')]` | `[(${f.entityKey()} ?: '—')]` | `[(${f.field()} ?: '—')]` | [# th:if="${f.beforeValue() != null or f.afterValue() != null}"]`[(${fmt.value(f.beforeValue())})]` → `[(${fmt.value(f.afterValue())})]`[/][# th:unless="${f.beforeValue() != null or f.afterValue() != null}"]—[/] | [(${fmt.inlineBullets(f.message())})] |
 [/][/]
 [/]
 
@@ -78,7 +78,7 @@ _No comparisons run._
 
 | Severity | Part | Entity | Field | Before → After | Message |
 |---|---|---|---|---|---|
-[# th:each="f : ${cf}"]| [(${f.severity()})] | `[(${f.partKey()} ?: '—')]` | `[(${f.entityKey()} ?: '—')]` | `[(${f.field()} ?: '—')]` | [# th:if="${f.beforeValue() != null or f.afterValue() != null}"]`[(${fmt.value(f.beforeValue())})]` → `[(${fmt.value(f.afterValue())})]`[/][# th:unless="${f.beforeValue() != null or f.afterValue() != null}"]—[/] | [(${f.message()})] |
+[# th:each="f : ${cf}"]| [(${f.severity()})] | `[(${f.partKey()} ?: '—')]` | `[(${f.entityKey()} ?: '—')]` | `[(${f.field()} ?: '—')]` | [# th:if="${f.beforeValue() != null or f.afterValue() != null}"]`[(${fmt.value(f.beforeValue())})]` → `[(${fmt.value(f.afterValue())})]`[/][# th:unless="${f.beforeValue() != null or f.afterValue() != null}"]—[/] | [(${fmt.inlineBullets(f.message())})] |
 [/]
 [/][/]
 [/]

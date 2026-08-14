@@ -63,7 +63,8 @@ class ReportTemplateRenderTest {
     private static Context context() {
         var financial = new Finding(UUID.randomUUID(), SID, CID, null, "critical", "financial",
                 "oms.orders", "order-1", "order_total_equals_line_items", "1200.00", "1450.00",
-                "Order total 1450.00 does not equal the sum of line items 1200.00 (delta 250.00).", T);
+                // A multi-line explanation renders as bullets, one point per line.
+                "- Order total is 1450.00\n- Sum of line items is 1200.00\n- Discrepancy of 250.00 (rewards excluded)", T);
         var changed = new Finding(UUID.randomUUID(), SID, CID, null, "info", "changed",
                 "oms.orders", "order-1", "status", "NEW", "FULFILLED",
                 "oms.orders.status changed from NEW to FULFILLED for order-1.", T);
@@ -136,7 +137,9 @@ class ReportTemplateRenderTest {
                 .contains("Field-level detail")          // per-comparison drill-down
                 .contains("updated_at")                  // ignored columns still surfaced
                 .contains("critical")                    // severity breakdown chip / table
-                .contains("row-fail");                   // the failed timeline step is marked
+                .contains("row-fail")                    // the failed timeline step is marked
+                .contains("<ul class=\"msg\">")          // messages render as bullets
+                .contains("Sum of line items is 1200.00"); // one bullet per explanation line
     }
 
     @Test
@@ -149,6 +152,7 @@ class ReportTemplateRenderTest {
                 .contains("| Field |")                   // findings table gained the column
                 .contains("| **critical** |")            // severity still bolded in the table
                 .contains("1200.00").contains("1450.00") // before -> after in markdown too
-                .contains("Field-level detail");
+                .contains("Field-level detail")
+                .contains("• Sum of line items is 1200.00"); // multi-point message inlined as bullets
     }
 }
