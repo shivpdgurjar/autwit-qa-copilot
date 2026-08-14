@@ -35,7 +35,7 @@ export function MessageList({
   if (steps.length === 0) {
     return (
       <EmptyState>
-        Tell the copilot what you did and it will capture the state around it.
+        Mark a milestone for what you did and the copilot will capture the state around it.
       </EmptyState>
     );
   }

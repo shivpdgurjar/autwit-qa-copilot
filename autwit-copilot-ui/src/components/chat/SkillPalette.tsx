@@ -136,12 +136,19 @@ export function SkillPalette({
                     className="w-full px-3.5 py-2.5 text-left hover:bg-ink-850 disabled:opacity-40"
                   >
                     <div className="flex items-center gap-2">
-                      <Mono className="text-ink-100">{skill.skill_name}</Mono>
-                      <Muted className="text-[11px]">{skill.version}</Muted>
+                      {/* Lead with the human-readable title; the dotted skill_name is the
+                          technical id, kept small alongside for reference and search. */}
+                      <span className="text-[13px] font-medium text-ink-100">
+                        {skill.title ?? skill.skill_name}
+                      </span>
                       {skill.side_effects === 'mutating' && <Badge tone="red">mutating</Badge>}
                       {skill.enabled === false && (
                         <Muted className="text-[10px] uppercase">disabled</Muted>
                       )}
+                    </div>
+                    <div className="mt-0.5 flex items-center gap-2">
+                      <Mono className="text-[11px] text-ink-500">{skill.skill_name}</Mono>
+                      <Muted className="text-[11px]">v{skill.version}</Muted>
                     </div>
                     {skill.description && (
                       <p className="mt-0.5 text-[12px] text-ink-400">{skill.description}</p>
@@ -157,8 +164,11 @@ export function SkillPalette({
               <button onClick={() => setSelected(null)} className="text-ink-400 hover:text-ink-100">
                 ←
               </button>
-              <Mono className="text-ink-100">{selected.skill_name}</Mono>
-              <Muted className="text-[11px]">{selected.version}</Muted>
+              <span className="text-[13px] font-medium text-ink-100">
+                {selected.title ?? selected.skill_name}
+              </span>
+              <Mono className="text-[11px] text-ink-500">{selected.skill_name}</Mono>
+              <Muted className="text-[11px]">v{selected.version}</Muted>
               <button
                 onClick={onClose}
                 className="ml-auto text-ink-400 hover:text-ink-100"

@@ -56,7 +56,7 @@ export function Timeline({
   (session.comparisons ?? []).forEach((c) => c.step_id && comparisonByStep.set(c.step_id, c));
 
   if (steps.length === 0) {
-    return <EmptyState>Nothing yet. Say what you did and the copilot will capture it.</EmptyState>;
+    return <EmptyState>Nothing yet. Mark a milestone and the copilot will capture the state.</EmptyState>;
   }
 
   return (

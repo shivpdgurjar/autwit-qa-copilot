@@ -60,6 +60,11 @@ export function Composer({
     );
   }
 
+  // For now the tester drives the session with Skills + Milestones; the free-text chat
+  // prompt is hidden. Flip SHOW_CHAT back to true to restore typed messages.
+  const SHOW_CHAT: boolean = false;
+  const SHOW_MILESTONES: boolean = true;
+
   return (
     <div className="border-t border-ink-700 p-2.5">
       {error != null && (
@@ -68,7 +73,7 @@ export function Composer({
         </p>
       )}
 
-      {milestoneName !== null && (
+      {SHOW_MILESTONES && milestoneName !== null && (
         <div className="mb-2 flex items-center gap-1.5">
           <Input
             autoFocus
@@ -87,39 +92,45 @@ export function Composer({
         </div>
       )}
 
-      <Textarea
-        rows={2}
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        onKeyDown={(e) => {
-          // Enter sends, Shift+Enter newlines. A tester narrating a flow types short
-          // lines and expects them to go.
-          if (e.key === 'Enter' && !e.shiftKey) {
-            e.preventDefault();
-            send();
-          }
-        }}
-        placeholder="Say what you did — “I created order XXXX”"
-        className="w-full resize-none text-sm"
-      />
+      {SHOW_CHAT && (
+        <Textarea
+          rows={2}
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onKeyDown={(e) => {
+            // Enter sends, Shift+Enter newlines. A tester narrating a flow types short
+            // lines and expects them to go.
+            if (e.key === 'Enter' && !e.shiftKey) {
+              e.preventDefault();
+              send();
+            }
+          }}
+          placeholder="Say what you did — “I created order XXXX”"
+          className="w-full resize-none text-sm"
+        />
+      )}
 
-      <div className="mt-1.5 flex items-center gap-2">
-        <Button variant="ghost" size="sm" onClick={() => setMilestoneName('')}>
-          📍 Milestone
-        </Button>
+      <div className={`flex items-center gap-2 ${SHOW_CHAT ? 'mt-1.5' : ''}`}>
+        {SHOW_MILESTONES && (
+          <Button variant="ghost" size="sm" onClick={() => setMilestoneName('')}>
+            📍 Milestone
+          </Button>
+        )}
         <Button variant="ghost" size="sm" onClick={onOpenPalette}>
           Skills
           <Mono className="rounded bg-ink-800 px-1 text-[10px] text-ink-400">⌘K</Mono>
         </Button>
 
-        <Button
-          size="sm"
-          className="ml-auto"
-          onClick={send}
-          disabled={!text.trim() || submit.isPending}
-        >
-          Send
-        </Button>
+        {SHOW_CHAT && (
+          <Button
+            size="sm"
+            className="ml-auto"
+            onClick={send}
+            disabled={!text.trim() || submit.isPending}
+          >
+            Send
+          </Button>
+        )}
       </div>
     </div>
   );
