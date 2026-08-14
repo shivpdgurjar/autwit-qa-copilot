@@ -133,11 +133,13 @@ export function SkillPalette({
                   <button
                     onClick={() => setSelected(skill)}
                     disabled={skill.enabled === false}
+                    title={skill.description ?? undefined}
                     className="w-full px-3.5 py-2.5 text-left hover:bg-ink-850 disabled:opacity-40"
                   >
                     <div className="flex items-center gap-2">
                       {/* Lead with the human-readable title; the dotted skill_name is the
-                          technical id, kept small alongside for reference and search. */}
+                          technical id, kept small alongside for reference and search. The
+                          description is moved to hover text on the row. */}
                       <span className="text-[13px] font-medium text-ink-100">
                         {skill.title ?? skill.skill_name}
                       </span>
@@ -150,9 +152,6 @@ export function SkillPalette({
                       <Mono className="text-[11px] text-ink-500">{skill.skill_name}</Mono>
                       <Muted className="text-[11px]">v{skill.version}</Muted>
                     </div>
-                    {skill.description && (
-                      <p className="mt-0.5 text-[12px] text-ink-400">{skill.description}</p>
-                    )}
                   </button>
                 </li>
               ))}
